@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { FluentProvider } from "@fluentui/react-components";
 
@@ -9,7 +9,12 @@ import "./styles.css";
 
 function Root() {
   const [themePref, setThemePref] = useState<ThemePreference>("system");
-  const theme = useSystemTheme(themePref);
+  const { theme, isDark } = useSystemTheme(themePref);
+
+  // Pin the document color-scheme so WebView2 doesn't auto-darken controls.
+  useEffect(() => {
+    document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+  }, [isDark]);
 
   return (
     <FluentProvider theme={theme} style={{ height: "100vh" }}>

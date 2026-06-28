@@ -16,6 +16,8 @@ the project follows phased iterations (see `README.md`).
 - Frontend device list (Fluent UI) with clickable rows, active-device badge,
   per-row switching spinner, refresh, and an error MessageBar.
 - Minimal system tray (Show / Quit).
+- Pinned the document `color-scheme` (synced to the resolved theme) so WebView2
+  stops auto-darkening controls — dropdowns rendered light in dark mode.
 
 ### Phase 0 — Scaffold & infra
 - Bootstrapped Tauri v2 + React 19 + Vite 6 + TypeScript (pnpm) project.

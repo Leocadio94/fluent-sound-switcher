@@ -1,4 +1,8 @@
 :root {
+  /* Declare both schemes so WebView2 respects our explicit (Fluent) theming
+     instead of applying its own auto-dark heuristic to form controls. The
+     active scheme is pinned at runtime from the resolved theme. */
+  color-scheme: light dark;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
