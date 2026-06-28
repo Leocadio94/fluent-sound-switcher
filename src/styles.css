@@ -1,0 +1,20 @@
+:root {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+/* Fluent's webLightTheme/webDarkTheme paint their own surface via
+   FluentProvider; keep the document background in sync to avoid a flash. */
+body {
+  overflow: hidden;
+}

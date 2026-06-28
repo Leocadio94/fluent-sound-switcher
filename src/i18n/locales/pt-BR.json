@@ -1,0 +1,22 @@
+{
+  "app": {
+    "title": "Fluent Sound Switcher",
+    "subtitle": "Troque dispositivos de áudio do Windows com estilo Fluent 2"
+  },
+  "common": {
+    "output": "Saída",
+    "input": "Entrada",
+    "active": "Ativo",
+    "refresh": "Atualizar",
+    "settings": "Configurações",
+    "loading": "Carregando...",
+    "noDevices": "Nenhum dispositivo encontrado"
+  },
+  "settings": {
+    "language": "Idioma",
+    "theme": "Tema",
+    "theme.system": "Seguir o sistema",
+    "theme.light": "Claro",
+    "theme.dark": "Escuro"
+  }
+}
