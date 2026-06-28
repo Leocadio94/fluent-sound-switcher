@@ -9,8 +9,9 @@
     "active": "Ativo",
     "refresh": "Atualizar",
     "settings": "Configurações",
-    "loading": "Carregando...",
-    "noDevices": "Nenhum dispositivo encontrado"
+    "loading": "Carregando dispositivos...",
+    "noDevices": "Nenhum dispositivo encontrado",
+    "error": "Erro"
   },
   "settings": {
     "language": "Idioma",

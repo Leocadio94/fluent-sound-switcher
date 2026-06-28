@@ -6,6 +6,17 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 1 — Audio core
+- Added the isolated `audio/` module (Windows Core Audio over COM):
+  - `enumerator.rs` lists active output/input endpoints with friendly names and
+    flags the current defaults.
+  - `policy.rs` switches the default device for all roles via the undocumented
+    `IPolicyConfig` COM interface (declared with the `windows` crate).
+- Exposed `list_audio_devices` / `set_default_audio_device` Tauri commands.
+- Frontend device list (Fluent UI) with clickable rows, active-device badge,
+  per-row switching spinner, refresh, and an error MessageBar.
+- Minimal system tray (Show / Quit).
+
 ### Phase 0 — Scaffold & infra
 - Bootstrapped Tauri v2 + React 19 + Vite 6 + TypeScript (pnpm) project.
 - Added Fluent UI React v9 with light/dark theme that follows the OS color scheme.

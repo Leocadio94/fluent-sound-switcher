@@ -1,14 +1,21 @@
 import { useTranslation } from "react-i18next";
 import {
   Body1,
+  Button,
   Dropdown,
+  MessageBar,
+  MessageBarBody,
   Option,
-  Subtitle1,
-  Title1,
+  Spinner,
+  Title2,
+  Tooltip,
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
+import { ArrowClockwiseRegular } from "@fluentui/react-icons";
 
+import DeviceList from "./views/DeviceList";
+import { useDevices } from "./hooks/useDevices";
 import { SUPPORTED_LANGUAGES } from "./i18n";
 import type { ThemePreference } from "./theme/useSystemTheme";
 
@@ -18,28 +25,35 @@ const useStyles = makeStyles({
     boxSizing: "border-box",
     display: "flex",
     flexDirection: "column",
-    gap: tokens.spacingVerticalL,
-    padding: tokens.spacingHorizontalXXL,
+    backgroundColor: tokens.colorNeutralBackground2,
   },
   header: {
     display: "flex",
-    flexDirection: "column",
-    gap: tokens.spacingVerticalXS,
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: tokens.spacingHorizontalM,
+    padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalXL}`,
+    borderBottom: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
   },
-  controls: {
+  headerControls: {
     display: "flex",
-    gap: tokens.spacingHorizontalL,
-    flexWrap: "wrap",
+    alignItems: "center",
+    gap: tokens.spacingHorizontalS,
   },
-  field: {
+  content: {
     display: "flex",
     flexDirection: "column",
-    gap: tokens.spacingVerticalXS,
-    minWidth: "220px",
+    gap: tokens.spacingVerticalXL,
+    padding: tokens.spacingHorizontalXL,
+    overflowY: "auto",
   },
-  placeholder: {
-    marginTop: tokens.spacingVerticalXL,
-    color: tokens.colorNeutralForeground3,
+  centered: {
+    display: "flex",
+    justifyContent: "center",
+    padding: tokens.spacingVerticalXXL,
+  },
+  langDropdown: {
+    minWidth: "150px",
   },
 });
 
@@ -53,25 +67,23 @@ const THEME_OPTIONS: ThemePreference[] = ["system", "light", "dark"];
 export default function App({ themePref, onThemePrefChange }: AppProps) {
   const styles = useStyles();
   const { t, i18n } = useTranslation();
+  const { devices, loading, error, refresh, switchTo, switching } =
+    useDevices();
 
   return (
     <div className={styles.root}>
-      <div className={styles.header}>
-        <Title1>{t("app.title")}</Title1>
-        <Subtitle1>{t("app.subtitle")}</Subtitle1>
-      </div>
-
-      <div className={styles.controls}>
-        <div className={styles.field}>
-          <Body1>{t("settings.language")}</Body1>
+      <header className={styles.header}>
+        <Title2>{t("app.title")}</Title2>
+        <div className={styles.headerControls}>
           <Dropdown
+            className={styles.langDropdown}
             value={
               SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language)?.label ??
               i18n.language
             }
             selectedOptions={[i18n.language]}
             onOptionSelect={(_, data) => {
-              if (data.optionValue) i18n.changeLanguage(data.optionValue);
+              if (data.optionValue) void i18n.changeLanguage(data.optionValue);
             }}
           >
             {SUPPORTED_LANGUAGES.map((lang) => (
@@ -80,10 +92,6 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
               </Option>
             ))}
           </Dropdown>
-        </div>
-
-        <div className={styles.field}>
-          <Body1>{t("settings.theme")}</Body1>
           <Dropdown
             value={t(`settings.theme.${themePref}`)}
             selectedOptions={[themePref]}
@@ -98,13 +106,42 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
               </Option>
             ))}
           </Dropdown>
+          <Tooltip content={t("common.refresh")} relationship="label">
+            <Button
+              icon={<ArrowClockwiseRegular />}
+              appearance="subtle"
+              onClick={() => void refresh()}
+              disabled={loading}
+            />
+          </Tooltip>
         </div>
-      </div>
+      </header>
 
-      <Body1 className={styles.placeholder}>
-        {/* Fase 1 substitui isto pela lista de dispositivos real. */}
-        {t("common.loading")}
-      </Body1>
+      <main className={styles.content}>
+        {error && (
+          <MessageBar intent="error">
+            <MessageBarBody>
+              {t("common.error")}: {error}
+            </MessageBarBody>
+          </MessageBar>
+        )}
+
+        {loading ? (
+          <div className={styles.centered}>
+            <Spinner label={t("common.loading")} />
+          </div>
+        ) : (
+          <DeviceList
+            devices={devices}
+            switching={switching}
+            onSwitch={(device) => void switchTo(device)}
+          />
+        )}
+
+        {!loading && devices.length === 0 && !error && (
+          <Body1>{t("common.noDevices")}</Body1>
+        )}
+      </main>
     </div>
   );
 }

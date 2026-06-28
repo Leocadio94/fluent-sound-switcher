@@ -9,8 +9,9 @@
     "active": "Active",
     "refresh": "Refresh",
     "settings": "Settings",
-    "loading": "Loading...",
-    "noDevices": "No devices found"
+    "loading": "Loading devices...",
+    "noDevices": "No devices found",
+    "error": "Error"
   },
   "settings": {
     "language": "Language",
