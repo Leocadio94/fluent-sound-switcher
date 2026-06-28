@@ -5,6 +5,7 @@ import {
   Caption1,
   Spinner,
   Subtitle2,
+  Tooltip,
   makeStyles,
   mergeClasses,
   tokens,
@@ -13,6 +14,8 @@ import {
   CheckmarkCircleFilled,
   MicRegular,
   Speaker2Regular,
+  StarFilled,
+  StarRegular,
 } from "@fluentui/react-icons";
 
 import type { AudioDevice, DeviceDirection } from "../lib/tauri";
@@ -37,25 +40,33 @@ const useStyles = makeStyles({
   row: {
     display: "flex",
     alignItems: "center",
-    gap: tokens.spacingHorizontalM,
-    padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalM}`,
+    gap: tokens.spacingHorizontalS,
+    paddingRight: tokens.spacingHorizontalS,
     borderRadius: tokens.borderRadiusLarge,
     border: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
     backgroundColor: tokens.colorNeutralBackground1,
-    cursor: "pointer",
-    textAlign: "left",
-    width: "100%",
-    boxSizing: "border-box",
-    ":hover": {
-      backgroundColor: tokens.colorNeutralBackground1Hover,
-    },
-    ":active": {
-      backgroundColor: tokens.colorNeutralBackground1Pressed,
-    },
   },
   rowActive: {
     border: `${tokens.strokeWidthThin} solid ${tokens.colorBrandStroke1}`,
     backgroundColor: tokens.colorBrandBackground2,
+  },
+  switchButton: {
+    display: "flex",
+    alignItems: "center",
+    gap: tokens.spacingHorizontalM,
+    flexGrow: 1,
+    minWidth: 0,
+    padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalM}`,
+    border: "none",
+    background: "none",
+    color: tokens.colorNeutralForeground1,
+    font: "inherit",
+    textAlign: "left",
+    cursor: "pointer",
+    borderRadius: tokens.borderRadiusLarge,
+    ":disabled": {
+      cursor: "default",
+    },
   },
   rowIcon: {
     fontSize: "20px",
@@ -68,6 +79,28 @@ const useStyles = makeStyles({
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
   },
+  starButton: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    width: "32px",
+    height: "32px",
+    padding: 0,
+    border: "none",
+    background: "none",
+    borderRadius: tokens.borderRadiusMedium,
+    cursor: "pointer",
+    fontSize: "20px",
+    color: tokens.colorNeutralForeground3,
+    ":hover": {
+      backgroundColor: tokens.colorSubtleBackgroundHover,
+      color: tokens.colorNeutralForeground1,
+    },
+  },
+  starActive: {
+    color: tokens.colorPaletteMarigoldForeground1,
+  },
   empty: {
     color: tokens.colorNeutralForeground3,
     padding: tokens.spacingVerticalS,
@@ -79,6 +112,8 @@ interface DeviceSectionProps {
   devices: AudioDevice[];
   switching: string | null;
   onSwitch: (device: AudioDevice) => void;
+  isFavorite: (direction: DeviceDirection, id: string) => boolean;
+  onToggleFavorite: (direction: DeviceDirection, id: string) => void;
 }
 
 function DeviceSection({
@@ -86,6 +121,8 @@ function DeviceSection({
   devices,
   switching,
   onSwitch,
+  isFavorite,
+  onToggleFavorite,
 }: DeviceSectionProps) {
   const styles = useStyles();
   const { t } = useTranslation();
@@ -103,32 +140,60 @@ function DeviceSection({
         {devices.length === 0 && (
           <Caption1 className={styles.empty}>{t("common.noDevices")}</Caption1>
         )}
-        {devices.map((device) => (
-          <button
-            key={device.id}
-            type="button"
-            disabled={switching !== null}
-            className={mergeClasses(
-              styles.row,
-              device.isDefault && styles.rowActive,
-            )}
-            onClick={() => onSwitch(device)}
-          >
-            <Icon className={styles.rowIcon} />
-            <Body1 className={styles.rowName}>{device.name}</Body1>
-            {switching === device.id ? (
-              <Spinner size="tiny" />
-            ) : device.isDefault ? (
-              <Badge
-                appearance="tint"
-                color="brand"
-                icon={<CheckmarkCircleFilled />}
+        {devices.map((device) => {
+          const favorite = isFavorite(direction, device.id);
+          return (
+            <div
+              key={device.id}
+              className={mergeClasses(
+                styles.row,
+                device.isDefault && styles.rowActive,
+              )}
+            >
+              <button
+                type="button"
+                disabled={switching !== null}
+                className={styles.switchButton}
+                onClick={() => onSwitch(device)}
               >
-                {t("common.active")}
-              </Badge>
-            ) : null}
-          </button>
-        ))}
+                <Icon className={styles.rowIcon} />
+                <Body1 className={styles.rowName}>{device.name}</Body1>
+              </button>
+
+              {switching === device.id ? (
+                <Spinner size="tiny" />
+              ) : device.isDefault ? (
+                <Badge
+                  appearance="tint"
+                  color="brand"
+                  icon={<CheckmarkCircleFilled />}
+                >
+                  {t("common.active")}
+                </Badge>
+              ) : null}
+
+              <Tooltip
+                content={
+                  favorite
+                    ? t("devices.removeFromCycle")
+                    : t("devices.addToCycle")
+                }
+                relationship="label"
+              >
+                <button
+                  type="button"
+                  className={mergeClasses(
+                    styles.starButton,
+                    favorite && styles.starActive,
+                  )}
+                  onClick={() => onToggleFavorite(direction, device.id)}
+                >
+                  {favorite ? <StarFilled /> : <StarRegular />}
+                </button>
+              </Tooltip>
+            </div>
+          );
+        })}
       </div>
     </section>
   );
@@ -138,30 +203,31 @@ interface DeviceListProps {
   devices: AudioDevice[];
   switching: string | null;
   onSwitch: (device: AudioDevice) => void;
+  isFavorite: (direction: DeviceDirection, id: string) => boolean;
+  onToggleFavorite: (direction: DeviceDirection, id: string) => void;
+  showOnlyFavorites: boolean;
 }
 
 export default function DeviceList({
   devices,
   switching,
   onSwitch,
+  isFavorite,
+  onToggleFavorite,
+  showOnlyFavorites,
 }: DeviceListProps) {
-  const outputs = devices.filter((d) => d.direction === "output");
-  const inputs = devices.filter((d) => d.direction === "input");
+  const visible = showOnlyFavorites
+    ? devices.filter((d) => isFavorite(d.direction, d.id))
+    : devices;
+  const outputs = visible.filter((d) => d.direction === "output");
+  const inputs = visible.filter((d) => d.direction === "input");
+
+  const sectionProps = { switching, onSwitch, isFavorite, onToggleFavorite };
 
   return (
     <>
-      <DeviceSection
-        direction="output"
-        devices={outputs}
-        switching={switching}
-        onSwitch={onSwitch}
-      />
-      <DeviceSection
-        direction="input"
-        devices={inputs}
-        switching={switching}
-        onSwitch={onSwitch}
-      />
+      <DeviceSection direction="output" devices={outputs} {...sectionProps} />
+      <DeviceSection direction="input" devices={inputs} {...sectionProps} />
     </>
   );
 }

@@ -7,6 +7,7 @@ import {
   MessageBarBody,
   Option,
   Spinner,
+  Switch,
   Title2,
   Tooltip,
   makeStyles,
@@ -16,6 +17,7 @@ import { ArrowClockwiseRegular } from "@fluentui/react-icons";
 
 import DeviceList from "./views/DeviceList";
 import { useDevices } from "./hooks/useDevices";
+import { useFavorites } from "./hooks/useFavorites";
 import { SUPPORTED_LANGUAGES } from "./i18n";
 import type { ThemePreference } from "./theme/useSystemTheme";
 
@@ -47,6 +49,10 @@ const useStyles = makeStyles({
     padding: tokens.spacingHorizontalXL,
     overflowY: "auto",
   },
+  toolbar: {
+    display: "flex",
+    justifyContent: "flex-end",
+  },
   centered: {
     display: "flex",
     justifyContent: "center",
@@ -69,6 +75,12 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
   const { t, i18n } = useTranslation();
   const { devices, loading, error, refresh, switchTo, switching } =
     useDevices();
+  const {
+    isFavorite,
+    toggleFavorite,
+    showOnlyFavorites,
+    setShowOnlyFavorites,
+  } = useFavorites();
 
   return (
     <div className={styles.root}>
@@ -131,11 +143,24 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
             <Spinner label={t("common.loading")} />
           </div>
         ) : (
-          <DeviceList
-            devices={devices}
-            switching={switching}
-            onSwitch={(device) => void switchTo(device)}
-          />
+          <>
+            <div className={styles.toolbar}>
+              <Switch
+                checked={showOnlyFavorites}
+                onChange={(_, data) => setShowOnlyFavorites(data.checked)}
+                label={t("devices.onlyFavorites")}
+                labelPosition="before"
+              />
+            </div>
+            <DeviceList
+              devices={devices}
+              switching={switching}
+              onSwitch={(device) => void switchTo(device)}
+              isFavorite={isFavorite}
+              onToggleFavorite={toggleFavorite}
+              showOnlyFavorites={showOnlyFavorites}
+            />
+          </>
         )}
 
         {!loading && devices.length === 0 && !error && (

@@ -13,6 +13,11 @@
     "noDevices": "No devices found",
     "error": "Error"
   },
+  "devices": {
+    "onlyFavorites": "Favorites only",
+    "addToCycle": "Add to cycle list",
+    "removeFromCycle": "Remove from cycle list"
+  },
   "settings": {
     "language": "Language",
     "theme": "Theme",

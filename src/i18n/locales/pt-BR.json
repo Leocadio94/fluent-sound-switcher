@@ -13,6 +13,11 @@
     "noDevices": "Nenhum dispositivo encontrado",
     "error": "Erro"
   },
+  "devices": {
+    "onlyFavorites": "Somente favoritos",
+    "addToCycle": "Adicionar à lista de ciclo",
+    "removeFromCycle": "Remover da lista de ciclo"
+  },
   "settings": {
     "language": "Idioma",
     "theme": "Tema",

@@ -6,6 +6,13 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 2 — Device list management
+- Per-device favorite toggle (star) marking which devices join the cycle list
+  used by hotkeys later; persisted to an AppData store (`config.json`).
+- "Favorites only" filter switch, also persisted.
+- Refactored device rows to separate the switch action from the favorite/badge
+  controls; added `lib/config.ts` (store wrapper) and the `useFavorites` hook.
+
 ### Phase 1 — Audio core
 - Added the isolated `audio/` module (Windows Core Audio over COM):
   - `enumerator.rs` lists active output/input endpoints with friendly names and
