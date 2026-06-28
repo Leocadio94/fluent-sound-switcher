@@ -18,6 +18,15 @@
     "addToCycle": "Add to cycle list",
     "removeFromCycle": "Remove from cycle list"
   },
+  "hotkeys": {
+    "title": "Keyboard shortcuts",
+    "cycleOutput": "Cycle output",
+    "cycleInput": "Cycle input",
+    "toggleMute": "Toggle mic mute",
+    "press": "Press keys...",
+    "none": "None",
+    "close": "Close"
+  },
   "settings": {
     "language": "Language",
     "theme": "Theme",

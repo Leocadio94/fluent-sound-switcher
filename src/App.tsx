@@ -13,11 +13,14 @@ import {
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
-import { ArrowClockwiseRegular } from "@fluentui/react-icons";
+import { useState } from "react";
+import { ArrowClockwiseRegular, KeyboardRegular } from "@fluentui/react-icons";
 
 import DeviceList from "./views/DeviceList";
+import HotkeysDialog from "./views/HotkeysDialog";
 import { useDevices } from "./hooks/useDevices";
 import { useFavorites } from "./hooks/useFavorites";
+import { useHotkeys } from "./hooks/useHotkeys";
 import { SUPPORTED_LANGUAGES } from "./i18n";
 import type { ThemePreference } from "./theme/useSystemTheme";
 
@@ -81,6 +84,8 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
     showOnlyFavorites,
     setShowOnlyFavorites,
   } = useFavorites();
+  const { hotkeys, setBinding } = useHotkeys();
+  const [hotkeysOpen, setHotkeysOpen] = useState(false);
 
   return (
     <div className={styles.root}>
@@ -118,6 +123,13 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
               </Option>
             ))}
           </Dropdown>
+          <Tooltip content={t("hotkeys.title")} relationship="label">
+            <Button
+              icon={<KeyboardRegular />}
+              appearance="subtle"
+              onClick={() => setHotkeysOpen(true)}
+            />
+          </Tooltip>
           <Tooltip content={t("common.refresh")} relationship="label">
             <Button
               icon={<ArrowClockwiseRegular />}
@@ -128,6 +140,13 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
           </Tooltip>
         </div>
       </header>
+
+      <HotkeysDialog
+        open={hotkeysOpen}
+        onOpenChange={setHotkeysOpen}
+        hotkeys={hotkeys}
+        onChange={setBinding}
+      />
 
       <main className={styles.content}>
         {error && (

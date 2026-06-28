@@ -1,5 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 
+import type { Hotkeys } from "./config";
+
 export type DeviceDirection = "output" | "input";
 
 export interface AudioDevice {
@@ -17,4 +19,19 @@ export function listAudioDevices(): Promise<AudioDevice[]> {
 /** Switches the system default device (all roles) to the given endpoint id. */
 export function setDefaultAudioDevice(deviceId: string): Promise<void> {
   return invoke<void>("set_default_audio_device", { deviceId });
+}
+
+/** Toggles the default mic mute; resolves to the new muted state. */
+export function toggleMicMute(): Promise<boolean> {
+  return invoke<boolean>("toggle_mic_mute");
+}
+
+/** Reads whether the default microphone is muted. */
+export function getMicMuted(): Promise<boolean> {
+  return invoke<boolean>("get_mic_muted");
+}
+
+/** Re-registers the global shortcuts from the given bindings. */
+export function updateHotkeys(bindings: Hotkeys): Promise<void> {
+  return invoke<void>("update_hotkeys", { bindings });
 }

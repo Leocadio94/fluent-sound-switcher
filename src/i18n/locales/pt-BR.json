@@ -18,6 +18,15 @@
     "addToCycle": "Adicionar à lista de ciclo",
     "removeFromCycle": "Remover da lista de ciclo"
   },
+  "hotkeys": {
+    "title": "Atalhos de teclado",
+    "cycleOutput": "Ciclar saída",
+    "cycleInput": "Ciclar entrada",
+    "toggleMute": "Mutar/desmutar microfone",
+    "press": "Pressione as teclas...",
+    "none": "Nenhum",
+    "close": "Fechar"
+  },
   "settings": {
     "language": "Idioma",
     "theme": "Tema",

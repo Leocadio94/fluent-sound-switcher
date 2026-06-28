@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
 
 import {
   listAudioDevices,
@@ -54,6 +55,15 @@ export function useDevices(): UseDevices {
 
   useEffect(() => {
     void refresh();
+  }, [refresh]);
+
+  // A hotkey-driven switch on the backend emits "device-changed"; refresh so
+  // the active badge follows along.
+  useEffect(() => {
+    const unlisten = listen("device-changed", () => void refresh());
+    return () => {
+      void unlisten.then((off) => off());
+    };
   }, [refresh]);
 
   return { devices, loading, error, refresh, switchTo, switching };

@@ -6,6 +6,17 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 3 — Global hotkeys
+- Global shortcuts (tauri-plugin-global-shortcut) for: cycle output, cycle
+  input, toggle mic mute. Defaults: Ctrl+Alt+F11 / F12 / M.
+- Cycle walks the persisted favorites in order (wraps around); falls back to all
+  active devices when no favorites are set.
+- Backend reads the store file directly for favorites/bindings (`config.rs`),
+  emits `device-changed` / `mic-mute-changed`; the UI refreshes on those.
+- Mic mute core via `IAudioEndpointVolume` (`audio/volume.rs`).
+- Hotkeys editor dialog with a key-capture input; bindings persist to the store
+  and re-register the shortcuts live.
+
 ### Phase 2 — Device list management
 - Per-device favorite toggle (star) marking which devices join the cycle list
   used by hotkeys later; persisted to an AppData store (`config.json`).
