@@ -14,13 +14,20 @@ import {
   tokens,
 } from "@fluentui/react-components";
 import { useState } from "react";
-import { ArrowClockwiseRegular, KeyboardRegular } from "@fluentui/react-icons";
+import {
+  ArrowClockwiseRegular,
+  MicProhibitedFilled,
+  MicRegular,
+  SettingsRegular,
+} from "@fluentui/react-icons";
 
 import DeviceList from "./views/DeviceList";
-import HotkeysDialog from "./views/HotkeysDialog";
+import SettingsDialog from "./views/SettingsDialog";
 import { useDevices } from "./hooks/useDevices";
 import { useFavorites } from "./hooks/useFavorites";
 import { useHotkeys } from "./hooks/useHotkeys";
+import { useMute } from "./hooks/useMute";
+import { useMuteIndicator } from "./hooks/useMuteIndicator";
 import { SUPPORTED_LANGUAGES } from "./i18n";
 import type { ThemePreference } from "./theme/useSystemTheme";
 
@@ -85,7 +92,9 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
     setShowOnlyFavorites,
   } = useFavorites();
   const { hotkeys, setBinding } = useHotkeys();
-  const [hotkeysOpen, setHotkeysOpen] = useState(false);
+  const { indicator, setField: setIndicatorField } = useMuteIndicator();
+  const { muted, toggle: toggleMute } = useMute();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <div className={styles.root}>
@@ -123,11 +132,21 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
               </Option>
             ))}
           </Dropdown>
-          <Tooltip content={t("hotkeys.title")} relationship="label">
+          <Tooltip
+            content={muted ? t("muteIndicator.muted") : t("muteIndicator.live")}
+            relationship="label"
+          >
             <Button
-              icon={<KeyboardRegular />}
+              icon={muted ? <MicProhibitedFilled /> : <MicRegular />}
+              appearance={muted ? "primary" : "subtle"}
+              onClick={toggleMute}
+            />
+          </Tooltip>
+          <Tooltip content={t("settings.title")} relationship="label">
+            <Button
+              icon={<SettingsRegular />}
               appearance="subtle"
-              onClick={() => setHotkeysOpen(true)}
+              onClick={() => setSettingsOpen(true)}
             />
           </Tooltip>
           <Tooltip content={t("common.refresh")} relationship="label">
@@ -141,11 +160,13 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
         </div>
       </header>
 
-      <HotkeysDialog
-        open={hotkeysOpen}
-        onOpenChange={setHotkeysOpen}
+      <SettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
         hotkeys={hotkeys}
-        onChange={setBinding}
+        onHotkeyChange={setBinding}
+        indicator={indicator}
+        onIndicatorChange={setIndicatorField}
       />
 
       <main className={styles.content}>

@@ -4,6 +4,8 @@ mod audio;
 mod commands;
 mod config;
 mod hotkeys;
+mod mute;
+mod overlay;
 mod tray;
 
 /// Simple connectivity check used by the frontend to confirm the backend is up.
@@ -24,11 +26,16 @@ pub fn run() {
                 .build(),
         )
         .manage(hotkeys::HotkeyState::default())
+        .manage(mute::MuteState::default())
         .setup(|app| {
-            tray::build(app.handle())?;
-            if let Err(e) = hotkeys::register_all(app.handle()) {
+            let handle = app.handle();
+            tray::build(handle)?;
+            if let Err(e) = hotkeys::register_all(handle) {
                 eprintln!("[hotkeys] initial registration failed: {e}");
             }
+            overlay::configure(handle);
+            // Read the real mic state and sync the tray icon + overlay.
+            mute::refresh(handle);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -38,6 +45,7 @@ pub fn run() {
             commands::toggle_mic_mute,
             commands::get_mic_muted,
             commands::update_hotkeys,
+            commands::refresh_mute_indicator,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Fluent Sound Switcher");

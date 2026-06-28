@@ -16,10 +16,21 @@ pub fn set_default_audio_device(device_id: String) -> Result<(), String> {
     audio::set_default_device(&device_id).map_err(|e| e.to_string())
 }
 
-/// Toggles the default microphone mute, returning the new muted state.
+/// Toggles the default microphone mute, returning the new muted state. Updates
+/// the tray icon and overlay too.
 #[tauri::command]
-pub fn toggle_mic_mute() -> Result<bool, String> {
-    audio::toggle_mic_mute().map_err(|e| e.to_string())
+pub fn toggle_mic_mute(app: tauri::AppHandle) -> Result<bool, String> {
+    let muted = audio::toggle_mic_mute().map_err(|e| e.to_string())?;
+    crate::mute::apply(&app, muted);
+    Ok(muted)
+}
+
+/// Re-applies the overlay visibility/position after the user changes the mute
+/// indicator settings.
+#[tauri::command]
+pub fn refresh_mute_indicator(app: tauri::AppHandle) -> Result<(), String> {
+    crate::overlay::update(&app, crate::mute::current(&app));
+    Ok(())
 }
 
 /// Reads whether the default microphone is currently muted.

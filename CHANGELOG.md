@@ -6,6 +6,17 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 4 — Mic mute & status overlay
+- Tray icon now reflects the mic mute state (mic-on / mic-off icons) with a
+  matching tooltip, plus a "toggle mute" menu item.
+- On-screen mute overlay: a transparent, click-through, always-on-top window
+  that survives fullscreen apps. Configurable visibility (always / only muted /
+  only live / never) and screen position; persisted.
+- Header mic button reflecting/toggling mute, and a Settings dialog (replacing
+  the hotkeys-only dialog) with hotkeys + mute-indicator sections.
+- Central mute state (`mute.rs`) keeps tray, overlay and frontend in sync via
+  the `mic-mute-changed` / `overlay-state` events.
+
 ### Phase 3 — Global hotkeys
 - Global shortcuts (tauri-plugin-global-shortcut) for: cycle output, cycle
   input, toggle mic mute. Defaults: Ctrl+Alt+F11 / F12 / M.

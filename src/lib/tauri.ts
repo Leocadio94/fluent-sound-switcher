@@ -35,3 +35,8 @@ export function getMicMuted(): Promise<boolean> {
 export function updateHotkeys(bindings: Hotkeys): Promise<void> {
   return invoke<void>("update_hotkeys", { bindings });
 }
+
+/** Re-applies overlay visibility/position after a settings change. */
+export function refreshMuteIndicator(): Promise<void> {
+  return invoke<void>("refresh_mute_indicator");
+}

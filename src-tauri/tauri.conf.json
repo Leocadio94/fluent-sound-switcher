@@ -12,6 +12,7 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Fluent Sound Switcher",
         "width": 900,
         "height": 640,
@@ -20,6 +21,20 @@
         "resizable": true,
         "fullscreen": false,
         "visible": true
+      },
+      {
+        "label": "overlay",
+        "url": "index.html",
+        "width": 240,
+        "height": 64,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": false,
+        "focus": false,
+        "shadow": false,
+        "visible": false
       }
     ],
     "security": {

@@ -27,7 +27,29 @@
     "none": "Nenhum",
     "close": "Fechar"
   },
+  "muteIndicator": {
+    "title": "Indicador de mute",
+    "mode": "Quando mostrar",
+    "position": "Posição",
+    "modes": {
+      "always": "Sempre",
+      "mutedOnly": "Só quando mudo",
+      "unmutedOnly": "Só quando ativo",
+      "hidden": "Nunca"
+    },
+    "positions": {
+      "topCenter": "Topo (centro)",
+      "bottomCenter": "Base (centro)",
+      "topLeft": "Topo (esquerda)",
+      "topRight": "Topo (direita)",
+      "bottomLeft": "Base (esquerda)",
+      "bottomRight": "Base (direita)"
+    },
+    "muted": "Microfone mudo",
+    "live": "Microfone ativo"
+  },
   "settings": {
+    "title": "Configurações",
     "language": "Idioma",
     "theme": "Tema",
     "theme.system": "Seguir o sistema",

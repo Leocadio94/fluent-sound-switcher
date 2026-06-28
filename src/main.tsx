@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { FluentProvider } from "@fluentui/react-components";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import App from "./App";
+import Overlay from "./views/Overlay";
 import { useSystemTheme, type ThemePreference } from "./theme/useSystemTheme";
 import "./i18n";
 import "./styles.css";
@@ -23,8 +25,8 @@ function Root() {
   );
 }
 
+const isOverlay = getCurrentWindow().label === "overlay";
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <Root />
-  </React.StrictMode>,
+  <React.StrictMode>{isOverlay ? <Overlay /> : <Root />}</React.StrictMode>,
 );

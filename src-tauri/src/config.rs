@@ -35,6 +35,25 @@ impl Default for HotkeyConfig {
     }
 }
 
+/// On-screen mute indicator (overlay) preferences.
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct MuteIndicator {
+    /// "always" | "mutedOnly" | "unmutedOnly" | "hidden".
+    pub mode: String,
+    /// "topCenter" | "bottomCenter" | "topLeft" | "topRight" | "bottomLeft" | "bottomRight".
+    pub position: String,
+}
+
+impl Default for MuteIndicator {
+    fn default() -> Self {
+        Self {
+            mode: "mutedOnly".to_string(),
+            position: "bottomCenter".to_string(),
+        }
+    }
+}
+
 fn store_path(app: &AppHandle) -> Option<PathBuf> {
     app.path().app_data_dir().ok().map(|d| d.join(STORE_FILE))
 }
@@ -75,4 +94,12 @@ pub fn hotkeys(app: &AppHandle) -> HotkeyConfig {
         cycle_input: pick("cycleInput", DEFAULT_CYCLE_INPUT),
         toggle_mute: pick("toggleMute", DEFAULT_TOGGLE_MUTE),
     }
+}
+
+/// Mute indicator preferences, falling back to defaults when unset.
+pub fn mute_indicator(app: &AppHandle) -> MuteIndicator {
+    read(app)
+        .get("muteIndicator")
+        .and_then(|v| serde_json::from_value(v.clone()).ok())
+        .unwrap_or_default()
 }

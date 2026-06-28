@@ -48,11 +48,7 @@ fn perform(app: AppHandle, action: Action) {
         match action {
             Action::CycleOutput => cycle(&app, "output"),
             Action::CycleInput => cycle(&app, "input"),
-            Action::ToggleMute => {
-                if let Ok(muted) = crate::audio::toggle_mic_mute() {
-                    let _ = app.emit("mic-mute-changed", muted);
-                }
-            }
+            Action::ToggleMute => crate::mute::toggle(&app),
         }
     });
 }

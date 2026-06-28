@@ -23,10 +23,36 @@ export const DEFAULT_HOTKEYS: Hotkeys = {
   toggleMute: "Ctrl+Alt+M",
 };
 
+export type MuteIndicatorMode =
+  | "always"
+  | "mutedOnly"
+  | "unmutedOnly"
+  | "hidden";
+
+export type OverlayPosition =
+  | "topCenter"
+  | "bottomCenter"
+  | "topLeft"
+  | "topRight"
+  | "bottomLeft"
+  | "bottomRight";
+
+/** On-screen mute overlay preferences. */
+export interface MuteIndicator {
+  mode: MuteIndicatorMode;
+  position: OverlayPosition;
+}
+
+export const DEFAULT_MUTE_INDICATOR: MuteIndicator = {
+  mode: "mutedOnly",
+  position: "bottomCenter",
+};
+
 const STORE_FILE = "config.json";
 const FAVORITES_KEY = "favorites";
 const ONLY_FAVORITES_KEY = "showOnlyFavorites";
 const HOTKEYS_KEY = "hotkeys";
+const MUTE_INDICATOR_KEY = "muteIndicator";
 
 let storePromise: Promise<Store> | null = null;
 
@@ -39,6 +65,7 @@ function getStore(): Promise<Store> {
         [FAVORITES_KEY]: EMPTY_FAVORITES,
         [ONLY_FAVORITES_KEY]: false,
         [HOTKEYS_KEY]: DEFAULT_HOTKEYS,
+        [MUTE_INDICATOR_KEY]: DEFAULT_MUTE_INDICATOR,
       },
     });
   }
@@ -78,6 +105,17 @@ export async function loadHotkeys(): Promise<Hotkeys> {
 export async function saveHotkeys(hotkeys: Hotkeys): Promise<void> {
   const store = await getStore();
   await store.set(HOTKEYS_KEY, hotkeys);
+}
+
+export async function loadMuteIndicator(): Promise<MuteIndicator> {
+  const store = await getStore();
+  const stored = await store.get<Partial<MuteIndicator>>(MUTE_INDICATOR_KEY);
+  return { ...DEFAULT_MUTE_INDICATOR, ...stored };
+}
+
+export async function saveMuteIndicator(value: MuteIndicator): Promise<void> {
+  const store = await getStore();
+  await store.set(MUTE_INDICATOR_KEY, value);
 }
 
 export type { DeviceDirection };
