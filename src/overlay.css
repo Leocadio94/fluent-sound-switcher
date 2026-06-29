@@ -1,19 +1,5 @@
-/* The overlay window is transparent; only the pill is painted. */
-html,
-body,
-#root {
-  background: transparent !important;
-}
-
-#root {
-  /* Center the pill in the window so the box-shadow/glow has room and never
-     gets clipped by the window edges. */
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
+/* The overlay window's transparency and centering live in styles.css (scoped by
+   data-window) so they don't leak into the main window. */
 .overlay-pill {
   display: flex;
   align-items: center;

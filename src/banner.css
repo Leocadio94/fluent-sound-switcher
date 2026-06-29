@@ -1,17 +1,5 @@
-/* The banner window is transparent; only the pill is painted. */
-html,
-body,
-#root {
-  background: transparent !important;
-}
-
-#root {
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
+/* The banner window's transparency and centering live in styles.css (scoped by
+   data-window) so they don't leak into the main window. */
 .banner-pill {
   display: flex;
   align-items: center;

@@ -22,3 +22,27 @@ body,
 body {
   overflow: hidden;
 }
+
+/* The auxiliary windows (overlay/flyout/banner) are transparent so only their
+   pill/card is painted. Scoped by data-window so these rules never affect the
+   main window (which must fill its area). */
+:root[data-window="overlay"],
+:root[data-window="overlay"] body,
+:root[data-window="overlay"] #root,
+:root[data-window="flyout"],
+:root[data-window="flyout"] body,
+:root[data-window="flyout"] #root,
+:root[data-window="banner"],
+:root[data-window="banner"] body,
+:root[data-window="banner"] #root {
+  background: transparent !important;
+}
+
+/* Center the pill in the overlay/banner windows so the glow has room. */
+:root[data-window="overlay"] #root,
+:root[data-window="banner"] #root {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

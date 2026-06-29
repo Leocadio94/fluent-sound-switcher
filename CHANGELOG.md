@@ -13,6 +13,9 @@ the project follows phased iterations (see `README.md`).
 - "Start with Windows" (autostart plugin) and "Start minimized to tray": when
   auto-launched with `--autostart` and start-minimized is on, the main window
   stays hidden in the tray.
+- Fixed the auxiliary windows' transparent/centered CSS leaking into the global
+  bundle and shrinking the main window (a black gutter on the left). The rules
+  are now scoped per window via a `data-window` attribute.
 
 ### Phase 6 — Device-change notifications
 - When the default device changes (hotkey cycle or flyout pick), notify via any

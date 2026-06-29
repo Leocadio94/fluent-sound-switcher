@@ -54,6 +54,9 @@ function BannerRoot() {
 }
 
 const label = getCurrentWindow().label;
+// Lets CSS scope transparent/centered styling to the auxiliary windows only,
+// so the global bundle doesn't shrink the main window.
+document.documentElement.dataset.window = label;
 
 function content() {
   switch (label) {
