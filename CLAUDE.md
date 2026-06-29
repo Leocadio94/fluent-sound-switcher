@@ -54,4 +54,6 @@ cargo check --manifest-path src-tauri/Cargo.toml
 
 - Phased iterations. One phase per iteration, commit at the end of each.
 - Update `CHANGELOG.md` per phase and keep this file current.
-- Icons under `src-tauri/icons/` are placeholders until Phase 10.
+- App icons live in `src-tauri/icons/`, generated from `icons/logo.svg` via
+  `pnpm tauri icon icons/logo.svg` (regenerate after editing the SVG). The tray
+  mic-state icons (`mic-on.png`/`mic-off.png`) are separate and hand-made.

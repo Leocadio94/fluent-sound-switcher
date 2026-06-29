@@ -6,6 +6,17 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 11 — Branding & distribution
+- New visual identity: a Fluent squircle icon (speaker + swap arrows, blue→teal
+  gradient) generated from `icons/logo.svg` into the full icon set; updated the
+  bundle icon list and the web favicon. Removed the placeholder icons.
+- Rewrote the README around the now-shipping features, with install (and a
+  SmartScreen note), hotkey/CLI usage, and release instructions.
+- Added a GitHub Actions release workflow (`.github/workflows/release.yml`):
+  pushing a `v*` tag builds the Windows installers and publishes a draft
+  release. Updater signing is wired via secrets but stays off until a key and
+  `plugins.updater.pubkey` are configured.
+
 ### Phase 10 follow-ups
 - Device-change banner now fires on manual in-app switches too, not only
   hotkey/flyout switches.

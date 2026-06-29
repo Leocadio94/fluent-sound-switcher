@@ -1,0 +1,35 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="80" x2="940" y2="980" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2E9BFF"/>
+      <stop offset="0.55" stop-color="#1C7DEB"/>
+      <stop offset="1" stop-color="#00C6B0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fluent squircle tile -->
+  <rect x="0" y="0" width="1024" height="1024" rx="232" ry="232" fill="url(#bg)"/>
+
+  <g fill="#FFFFFF" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Speaker (lower-left), facing right -->
+    <path stroke="none"
+          d="M 232 556
+             L 232 700
+             L 348 700
+             L 472 784
+             L 472 472
+             L 348 556
+             Z"/>
+
+    <!-- Sound waves off the speaker mouth -->
+    <path fill="none" stroke-width="34" d="M 520 552 Q 588 628 520 704"/>
+    <path fill="none" stroke-width="34" d="M 580 520 Q 678 628 580 736"/>
+
+    <!-- Swap arrows (upper-right): top points right, bottom points left -->
+    <path fill="none" stroke-width="36" d="M 560 352 L 792 352"/>
+    <path fill="none" stroke-width="36" d="M 752 312 L 800 352 L 752 392"/>
+
+    <path fill="none" stroke-width="36" d="M 800 452 L 568 452"/>
+    <path fill="none" stroke-width="36" d="M 608 412 L 560 452 L 608 492"/>
+  </g>
+</svg>

@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🔊 Fluent Sound Switcher
+<img src="src-tauri/icons/128x128@2x.png" width="120" alt="Fluent Sound Switcher" />
+
+# Fluent Sound Switcher
 
 **Switch your Windows 11 audio devices instantly — with a UI that actually looks like Windows 11.**
 
@@ -9,66 +11,137 @@
 [![Rust](https://img.shields.io/badge/Rust-stable-000000?logo=rust&logoColor=white)](https://www.rust-lang.org)
 [![Fluent UI](https://img.shields.io/badge/Fluent_2-design-0078D4?logo=microsoft&logoColor=white)](https://fluent2.microsoft.design/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+[![Release](https://img.shields.io/github/v/release/Leocadio94/fluent-sound-switcher?include_prereleases&sort=semver)](https://github.com/Leocadio94/fluent-sound-switcher/releases)
 
 </div>
-
-> ⚠️ **Early development.** Built in phased iterations — see the roadmap below.
 
 A modern, lightweight alternative to [SoundSwitch](https://github.com/belphemur/soundswitch)
 for Windows 11. Same core idea — quickly switch playback/recording devices and
 toggle your mic — but built on [Tauri](https://tauri.app) with a native-feeling
-[Fluent 2](https://fluent2.microsoft.design/) interface, and it fixes the
-fullscreen overlay problem that hides notifications behind the taskbar in apps
-like Steam Big Picture.
+[Fluent 2](https://fluent2.microsoft.design/) interface. It also fixes
+SoundSwitch's long-standing annoyance where the on-screen popup hides **behind
+the taskbar in fullscreen apps** like Steam Big Picture — our overlay renders on
+top, every time.
 
-## ✨ Planned features
+> ⚠️ **Early development (`0.1.x`).** Functional and usable, polishing toward a
+> first release. Built in phased iterations.
 
-- 🔁 Switch between a curated list of input/output devices (pick which ones show up).
-- ⌨️ Customizable global hotkeys to cycle devices and toggle mute.
-- 🎙️ Mic mute with configurable status indicators (tray icon + optional on-screen banner).
-- 🖥️ On-screen overlay that stays visible **over fullscreen games**.
-- 📍 Tray icon reflecting the current device and mute state.
-- 🗂️ Per-app audio profiles *(experimental, later phase)*.
-- 🔔 Switch notifications: native toast, on-screen banner, or sound.
-- 🧰 CLI with the same actions as the GUI.
-- 🌍 Multi-language — **pt-BR** (default) and **en**.
-- 💾 Local config stored in AppData.
+## ✨ Features
+
+- 🔁 **Switch** output/input devices from a curated favorites list (you choose which show up).
+- ⌨️ **Global hotkeys** to cycle output, cycle input, and toggle mic mute — fully rebindable.
+- 🎙️ **Mic mute** with a configurable on-screen indicator (always / only-muted / only-live / never) and a tray icon that reflects the state.
+- 🖥️ **Fullscreen-safe overlay & banner** — topmost and click-through, visible *over* fullscreen games.
+- 🟦 **Tray quick-switch flyout** (left-click) and a context menu (right-click); works over fullscreen apps.
+- 🔔 **Switch notifications** — any mix of a native Windows toast, an on-screen banner, and a sound.
+- 🔌 **Auto-switch on connect** *(optional)* — plug in a TV/monitor with audio and it can grab the default output.
+- 🖼️ **Output-device tray icon** *(optional)* — a second tray icon mirroring the current output, using the icon Windows shows for it.
+- 🧰 **CLI** with the same actions as the GUI (`list`, `switch`, `cycle`, `mute`).
+- 🚀 **Start with Windows** (optionally minimized to tray).
+- 🌍 **Multi-language** — **pt-BR** (default) and **en**.
+- 💾 Local config in `%APPDATA%`, no account, no telemetry.
+
+## 📦 Install
+
+Grab the latest installer from the [**Releases**](https://github.com/Leocadio94/fluent-sound-switcher/releases) page:
+
+- **`.msi`** (Windows Installer) or **`.exe`** (NSIS setup) — either works.
+
+> 🛡️ **SmartScreen note:** the binaries are not code-signed yet, so Windows
+> SmartScreen may warn on first run. Click **More info → Run anyway**. (Code
+> signing is on the roadmap.)
+
+## 🎮 Usage
+
+### Hotkeys (defaults — change them in Settings)
+
+| Action            | Shortcut        |
+| ----------------- | --------------- |
+| Cycle output      | `Ctrl+Alt+F11`  |
+| Cycle input       | `Ctrl+Alt+F12`  |
+| Toggle mic mute   | `Ctrl+Alt+M`    |
+
+Cycling walks your favorites in order (wraps around); with no favorites set it
+falls back to all active devices.
+
+### Tray
+
+- **Left-click** — quick-switch flyout (favorites + mute toggle).
+- **Right-click** — Open, Settings, Playback devices, toggle mute, Quit.
+
+### CLI
+
+The same executable doubles as a CLI — run it with a subcommand and it performs
+the action and exits without opening the GUI:
+
+```powershell
+fluent-sound-switcher list [output|input]   # list devices (id, name, * = default)
+fluent-sound-switcher switch <id|name>      # set default device (matches by id or name)
+fluent-sound-switcher cycle <output|input>  # cycle to the next favorite
+fluent-sound-switcher mute [toggle|on|off]  # microphone mute (default: toggle)
+fluent-sound-switcher --version
+fluent-sound-switcher --help
+```
 
 ## 🛠️ Tech stack
 
-| Layer    | Tech                                              |
-| -------- | ------------------------------------------------- |
-| Shell    | Tauri v2                                          |
-| Frontend | React 19 + Vite 6 + TypeScript + Fluent UI React v9 |
-| Backend  | Rust + `windows` crate (Core Audio / COM)         |
-| i18n     | react-i18next                                     |
-| Config   | Tauri `store` plugin                              |
+| Layer    | Tech                                                |
+| -------- | --------------------------------------------------- |
+| Shell    | Tauri v2                                             |
+| Frontend | React 19 + Vite 6 + TypeScript + Fluent UI React v9  |
+| Backend  | Rust + `windows` crate (Core Audio / COM)           |
+| i18n     | react-i18next                                        |
+| Config   | Tauri `store` plugin (`%APPDATA%/com.fluentsoundswitcher.app/config.json`) |
+
+Switching the default device uses the undocumented `IPolicyConfig` COM interface
+(the same mechanism the Windows Sound control panel uses); device-arrival
+monitoring uses `IMMNotificationClient`.
 
 ## 🚀 Development
 
 ```bash
 pnpm install
-pnpm tauri:dev      # run the app
+pnpm tauri:dev      # run the app (Vite + Rust)
 pnpm tauri:build    # build installers (msi + nsis)
+pnpm lint           # frontend typecheck (tsc --noEmit)
+cargo check --manifest-path src-tauri/Cargo.toml   # backend check
 ```
 
-Requires Node, pnpm, and the Rust toolchain (Windows 11 target).
+Requires Node, pnpm, and the Rust toolchain on a Windows 11 target.
+
+## 🚢 Releases
+
+Tagging a commit `v*` (e.g. `v0.1.0`) triggers the
+[release workflow](.github/workflows/release.yml): it builds the Windows
+installers and publishes them to a GitHub Release.
+
+<details>
+<summary>Enabling auto-update (maintainers)</summary>
+
+The Tauri updater is wired but disabled until a signing key exists:
+
+1. `pnpm tauri signer generate -w ~/.tauri/fss.key`
+2. Add repo secrets `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`.
+3. Put the public key in `tauri.conf.json` under `plugins.updater.pubkey` and add the updater endpoint.
+
+</details>
 
 ## 🗺️ Roadmap
 
-| Phase | Scope |
-| ----- | ----- |
-| 0 ✅ | Scaffold & infra (Tauri + React + Fluent + i18n) |
-| 1     | Audio core — enumerate + switch default device (de-risk) |
-| 2     | Device list management & filtering |
-| 3     | Global hotkeys |
-| 4     | Mic mute + status overlay (fullscreen-safe) |
-| 5     | Switch notifications (toast / banner / sound) |
-| 6     | Full settings UI |
-| 7     | CLI parity |
-| 8     | Per-app audio profiles (experimental) |
-| 9     | Auto-switch on monitor/TV connect (optional) |
-| 10    | Polish, branding, GitHub Actions release + auto-update |
+| Status | Item |
+| ------ | ---- |
+| ✅ | Audio core — enumerate + switch default device |
+| ✅ | Device list, favorites & filtering |
+| ✅ | Global hotkeys |
+| ✅ | Mic mute + fullscreen-safe status overlay |
+| ✅ | Switch notifications (toast / banner / sound) |
+| ✅ | Tray quick-switch flyout & menu |
+| ✅ | Full tabbed settings + start-with-Windows |
+| ✅ | CLI parity |
+| ✅ | Auto-switch on connect + live external-change sync |
+| ✅ | Branding, icons & distribution workflow |
+| ⏳ | Code signing & auto-update rollout |
+| 🔮 | Per-app audio profiles *(experimental)* |
 
 ## 📄 License
 
