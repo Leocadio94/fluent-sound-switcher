@@ -18,6 +18,9 @@
     "addToCycle": "Adicionar à lista de ciclo",
     "removeFromCycle": "Remover da lista de ciclo"
   },
+  "flyout": {
+    "empty": "Marque dispositivos favoritos (★) na janela principal para trocar rápido por aqui."
+  },
   "hotkeys": {
     "title": "Atalhos de teclado",
     "cycleOutput": "Ciclar saída",

@@ -13,7 +13,8 @@ import {
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
 import {
   ArrowClockwiseRegular,
   MicProhibitedFilled,
@@ -95,6 +96,14 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
   const { indicator, setField: setIndicatorField } = useMuteIndicator();
   const { muted, toggle: toggleMute } = useMute();
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // The tray "Configurações" item asks the main window to open settings.
+  useEffect(() => {
+    const unlisten = listen("open-settings", () => setSettingsOpen(true));
+    return () => {
+      void unlisten.then((off) => off());
+    };
+  }, []);
 
   return (
     <div className={styles.root}>

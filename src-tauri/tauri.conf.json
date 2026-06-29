@@ -35,6 +35,20 @@
         "focus": false,
         "shadow": false,
         "visible": false
+      },
+      {
+        "label": "flyout",
+        "url": "index.html",
+        "width": 300,
+        "height": 220,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": false,
+        "focus": false,
+        "shadow": false,
+        "visible": false
       }
     ],
     "security": {

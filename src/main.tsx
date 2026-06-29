@@ -5,6 +5,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import App from "./App";
 import Overlay from "./views/Overlay";
+import Flyout from "./views/Flyout";
 import { useSystemTheme, type ThemePreference } from "./theme/useSystemTheme";
 import "./i18n";
 import "./styles.css";
@@ -25,8 +26,29 @@ function Root() {
   );
 }
 
-const isOverlay = getCurrentWindow().label === "overlay";
+/** Themed wrapper for the transparent tray flyout window. */
+function FlyoutRoot() {
+  const { theme, isDark } = useSystemTheme("system");
+  useEffect(() => {
+    document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+  }, [isDark]);
+  return (
+    <FluentProvider theme={theme} style={{ background: "transparent" }}>
+      <Flyout />
+    </FluentProvider>
+  );
+}
+
+const label = getCurrentWindow().label;
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>{isOverlay ? <Overlay /> : <Root />}</React.StrictMode>,
+  <React.StrictMode>
+    {label === "overlay" ? (
+      <Overlay />
+    ) : label === "flyout" ? (
+      <FlyoutRoot />
+    ) : (
+      <Root />
+    )}
+  </React.StrictMode>,
 );

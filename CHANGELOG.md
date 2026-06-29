@@ -6,6 +6,16 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 5 — Tray quick-switch flyout & menu
+- Left-clicking the tray icon opens a compact quick-switch flyout listing the
+  favorite output/input devices; picking one switches and closes it. It is an
+  always-on-top, taskbar-anchored window that stays usable over fullscreen apps
+  (the popup SoundSwitch hides behind the taskbar), and dismisses on blur.
+- Auto-sizes to its content; positioned above the taskbar via the work area.
+- Expanded the right-click tray menu: Open, Settings (opens the main window and
+  the settings dialog), Playback devices (Windows sound panel), toggle mute,
+  Quit.
+
 ### Phase 4 — Mic mute & status overlay
 - Tray icon now reflects the mic mute state (mic-on / mic-off icons) with a
   matching tooltip, plus a "toggle mute" menu item.

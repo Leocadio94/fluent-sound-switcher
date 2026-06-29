@@ -33,6 +33,18 @@ pub fn refresh_mute_indicator(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// Resizes the quick-switch flyout to fit its content (logical px height).
+#[tauri::command]
+pub fn set_flyout_size(app: tauri::AppHandle, height: f64) {
+    crate::flyout::set_size(&app, height);
+}
+
+/// Hides the quick-switch flyout (after a device is picked).
+#[tauri::command]
+pub fn close_flyout(app: tauri::AppHandle) {
+    crate::flyout::hide(&app);
+}
+
 /// Reads whether the default microphone is currently muted.
 #[tauri::command]
 pub fn get_mic_muted() -> Result<bool, String> {

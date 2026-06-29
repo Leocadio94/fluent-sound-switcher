@@ -3,6 +3,7 @@
 mod audio;
 mod commands;
 mod config;
+mod flyout;
 mod hotkeys;
 mod mute;
 mod overlay;
@@ -34,6 +35,7 @@ pub fn run() {
                 eprintln!("[hotkeys] initial registration failed: {e}");
             }
             overlay::configure(handle);
+            flyout::configure(handle);
             // Read the real mic state and sync the tray icon + overlay.
             mute::refresh(handle);
             Ok(())
@@ -46,6 +48,8 @@ pub fn run() {
             commands::get_mic_muted,
             commands::update_hotkeys,
             commands::refresh_mute_indicator,
+            commands::set_flyout_size,
+            commands::close_flyout,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Fluent Sound Switcher");

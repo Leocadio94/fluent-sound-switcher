@@ -40,3 +40,13 @@ export function updateHotkeys(bindings: Hotkeys): Promise<void> {
 export function refreshMuteIndicator(): Promise<void> {
   return invoke<void>("refresh_mute_indicator");
 }
+
+/** Resizes the quick-switch flyout to fit its content (logical px height). */
+export function setFlyoutSize(height: number): Promise<void> {
+  return invoke<void>("set_flyout_size", { height });
+}
+
+/** Hides the quick-switch flyout. */
+export function closeFlyout(): Promise<void> {
+  return invoke<void>("close_flyout");
+}
