@@ -26,6 +26,21 @@ top, every time.
 > ⚠️ **Early development (`0.1.x`).** Functional and usable, polishing toward a
 > first release. Built in phased iterations.
 
+## 📸 Screenshots
+
+<div align="center">
+
+![Main window — device list with favorites, active device, and header controls](docs/screenshots/main.png)
+
+</div>
+
+<div align="center">
+
+<img src="docs/screenshots/settings.png" width="49%" alt="Settings — General tab" />
+<img src="docs/screenshots/hotkeys.png" width="49%" alt="Settings — Hotkeys tab" />
+
+</div>
+
 ## ✨ Features
 
 - 🔁 **Switch** output/input devices from a curated favorites list (you choose which show up).
