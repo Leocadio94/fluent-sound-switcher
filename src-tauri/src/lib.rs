@@ -66,6 +66,9 @@ pub fn run() {
             }
             // Read the real mic state and sync the tray icon + overlay.
             mute::refresh(handle);
+            // Watch for device arrivals/removals: mirror external default
+            // changes into the GUI and optionally auto-switch on connect.
+            audio::events::start(handle);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

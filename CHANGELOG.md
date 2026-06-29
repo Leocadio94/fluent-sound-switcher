@@ -6,6 +6,20 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 10 — Auto-switch on connect & live external-change sync
+- Backend now watches audio device arrivals/removals via `IMMNotificationClient`
+  (`audio/events.rs`), registered for the process lifetime.
+- Optional auto-switch: when an output device connects (e.g. a TV or monitor
+  with audio is plugged in), it can grab the system default. Configurable via a
+  master toggle plus a rule — "favorites only" (default) or "any device". Off by
+  default. Setting the default never loops (the resulting default-changed
+  callback only mirrors, never switches), and the add/state-changed double event
+  is idempotent (already-default is skipped).
+- Bonus regardless of auto-switch: external default-device changes (Windows
+  sound panel, the CLI, another app) now refresh the open GUI live, so the
+  active badge and tray stay current.
+- (Phase 9 — per-app audio profiles — deferred.)
+
 ### Phase 8 — CLI parity
 - The same binary doubles as a CLI: launched with a subcommand it runs that and
   exits without starting the GUI (audio ops are global COM calls, so it works

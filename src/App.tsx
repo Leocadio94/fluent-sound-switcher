@@ -28,6 +28,7 @@ import { useHotkeys } from "./hooks/useHotkeys";
 import { useMute } from "./hooks/useMute";
 import { useMuteIndicator } from "./hooks/useMuteIndicator";
 import { useNotifications } from "./hooks/useNotifications";
+import { useAutoSwitch } from "./hooks/useAutoSwitch";
 import { previewNotification } from "./lib/tauri";
 import type { ThemePreference } from "./theme/useSystemTheme";
 
@@ -89,6 +90,7 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
   const { hotkeys, setBinding } = useHotkeys();
   const { indicator, setField: setIndicatorField } = useMuteIndicator();
   const { notifications, setField: setNotificationField } = useNotifications();
+  const { autoSwitch, setField: setAutoSwitchField } = useAutoSwitch();
   const { muted, toggle: toggleMute } = useMute();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -145,6 +147,8 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
         notifications={notifications}
         onNotificationChange={setNotificationField}
         onPreviewNotification={() => void previewNotification()}
+        autoSwitch={autoSwitch}
+        onAutoSwitchChange={setAutoSwitchField}
       />
 
       <main className={styles.content}>

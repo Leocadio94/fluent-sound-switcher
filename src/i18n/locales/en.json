@@ -66,6 +66,15 @@
     "bannerPosition": "Banner position",
     "test": "Test notification"
   },
+  "autoSwitch": {
+    "enabled": "Switch on connect",
+    "hint": "When an output device connects (a TV/monitor with audio), make it the default.",
+    "mode": "Which devices",
+    "modes": {
+      "favoritesOnly": "Favorites only",
+      "any": "Any device"
+    }
+  },
   "settings": {
     "title": "Settings",
     "tabs": {

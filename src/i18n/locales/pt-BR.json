@@ -66,6 +66,15 @@
     "bannerPosition": "Posição do banner",
     "test": "Testar notificação"
   },
+  "autoSwitch": {
+    "enabled": "Trocar ao conectar",
+    "hint": "Quando um dispositivo de saída conecta (TV/monitor com áudio), assume como padrão.",
+    "mode": "Quais dispositivos",
+    "modes": {
+      "favoritesOnly": "Apenas favoritos",
+      "any": "Qualquer dispositivo"
+    }
+  },
   "settings": {
     "title": "Configurações",
     "tabs": {

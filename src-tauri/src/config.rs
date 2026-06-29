@@ -145,6 +145,34 @@ pub fn notifications(app: &AppHandle) -> NotificationConfig {
         .unwrap_or_default()
 }
 
+/// Auto-switch-on-connect preferences. When a device connects (e.g. a TV or
+/// monitor with audio is plugged in) it can grab the default output.
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct AutoSwitchConfig {
+    /// Master toggle.
+    pub enabled: bool,
+    /// "favoritesOnly" (only output favorites may grab default) | "any".
+    pub mode: String,
+}
+
+impl Default for AutoSwitchConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            mode: "favoritesOnly".to_string(),
+        }
+    }
+}
+
+/// Auto-switch preferences, falling back to defaults when unset.
+pub fn auto_switch(app: &AppHandle) -> AutoSwitchConfig {
+    read(app)
+        .get("autoSwitch")
+        .and_then(|v| serde_json::from_value(v.clone()).ok())
+        .unwrap_or_default()
+}
+
 /// Whether the app should start hidden to the tray when auto-launched.
 pub fn start_minimized(app: &AppHandle) -> bool {
     read(app)

@@ -5,6 +5,7 @@
 //! default device through the undocumented `IPolicyConfig` interface.
 
 mod enumerator;
+pub mod events;
 mod policy;
 mod volume;
 

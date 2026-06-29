@@ -24,6 +24,8 @@ import { useGeneral } from "../hooks/useGeneral";
 import { SUPPORTED_LANGUAGES } from "../i18n";
 import type { ThemePreference } from "../theme/useSystemTheme";
 import type {
+  AutoSwitchConfig,
+  AutoSwitchMode,
   Hotkeys,
   MuteIndicator,
   MuteIndicatorMode,
@@ -67,6 +69,7 @@ const POSITIONS: OverlayPosition[] = [
   "bottomRight",
 ];
 const STYLES: OverlayStyle[] = ["full", "icon"];
+const AUTO_SWITCH_MODES: AutoSwitchMode[] = ["favoritesOnly", "any"];
 const HOTKEY_ACTIONS: { key: keyof Hotkeys; labelKey: string }[] = [
   { key: "cycleOutput", labelKey: "hotkeys.cycleOutput" },
   { key: "cycleInput", labelKey: "hotkeys.cycleInput" },
@@ -93,6 +96,11 @@ interface SettingsDialogProps {
     value: NotificationConfig[K],
   ) => void;
   onPreviewNotification: () => void;
+  autoSwitch: AutoSwitchConfig;
+  onAutoSwitchChange: <K extends keyof AutoSwitchConfig>(
+    key: K,
+    value: AutoSwitchConfig[K],
+  ) => void;
 }
 
 export default function SettingsDialog(props: SettingsDialogProps) {
@@ -108,6 +116,8 @@ export default function SettingsDialog(props: SettingsDialogProps) {
     notifications,
     onNotificationChange,
     onPreviewNotification,
+    autoSwitch,
+    onAutoSwitchChange,
   } = props;
   const styles = useStyles();
   const { t, i18n } = useTranslation();
@@ -195,6 +205,40 @@ export default function SettingsDialog(props: SettingsDialogProps) {
                     disabled={!general.autostart}
                     onChange={(_, d) => general.setStartMinimized(d.checked)}
                   />
+                </Field>
+                <Field
+                  className={styles.row}
+                  label={t("autoSwitch.enabled")}
+                  hint={t("autoSwitch.hint")}
+                  orientation="horizontal"
+                >
+                  <Switch
+                    checked={autoSwitch.enabled}
+                    onChange={(_, d) =>
+                      onAutoSwitchChange("enabled", d.checked)
+                    }
+                  />
+                </Field>
+                <Field
+                  className={styles.row}
+                  label={t("autoSwitch.mode")}
+                  orientation="horizontal"
+                >
+                  <Dropdown
+                    disabled={!autoSwitch.enabled}
+                    value={t(`autoSwitch.modes.${autoSwitch.mode}`)}
+                    selectedOptions={[autoSwitch.mode]}
+                    onOptionSelect={(_, d) =>
+                      d.optionValue &&
+                      onAutoSwitchChange("mode", d.optionValue as AutoSwitchMode)
+                    }
+                  >
+                    {AUTO_SWITCH_MODES.map((m) => (
+                      <Option key={m} value={m}>
+                        {t(`autoSwitch.modes.${m}`)}
+                      </Option>
+                    ))}
+                  </Dropdown>
                 </Field>
               </>
             )}

@@ -67,12 +67,27 @@ export const DEFAULT_NOTIFICATIONS: NotificationConfig = {
   bannerPosition: "topCenter",
 };
 
+/** When a newly-connected output may grab the default: only curated favorites, or any device. */
+export type AutoSwitchMode = "favoritesOnly" | "any";
+
+/** Auto-switch-on-connect preferences (e.g. plug a TV/monitor → switch to it). */
+export interface AutoSwitchConfig {
+  enabled: boolean;
+  mode: AutoSwitchMode;
+}
+
+export const DEFAULT_AUTO_SWITCH: AutoSwitchConfig = {
+  enabled: false,
+  mode: "favoritesOnly",
+};
+
 const STORE_FILE = "config.json";
 const FAVORITES_KEY = "favorites";
 const ONLY_FAVORITES_KEY = "showOnlyFavorites";
 const HOTKEYS_KEY = "hotkeys";
 const MUTE_INDICATOR_KEY = "muteIndicator";
 const NOTIFICATIONS_KEY = "notifications";
+const AUTO_SWITCH_KEY = "autoSwitch";
 const START_MINIMIZED_KEY = "startMinimized";
 
 let storePromise: Promise<Store> | null = null;
@@ -88,6 +103,7 @@ function getStore(): Promise<Store> {
         [HOTKEYS_KEY]: DEFAULT_HOTKEYS,
         [MUTE_INDICATOR_KEY]: DEFAULT_MUTE_INDICATOR,
         [NOTIFICATIONS_KEY]: DEFAULT_NOTIFICATIONS,
+        [AUTO_SWITCH_KEY]: DEFAULT_AUTO_SWITCH,
       },
     });
   }
@@ -149,6 +165,17 @@ export async function loadNotifications(): Promise<NotificationConfig> {
 export async function saveNotifications(value: NotificationConfig): Promise<void> {
   const store = await getStore();
   await store.set(NOTIFICATIONS_KEY, value);
+}
+
+export async function loadAutoSwitch(): Promise<AutoSwitchConfig> {
+  const store = await getStore();
+  const stored = await store.get<Partial<AutoSwitchConfig>>(AUTO_SWITCH_KEY);
+  return { ...DEFAULT_AUTO_SWITCH, ...stored };
+}
+
+export async function saveAutoSwitch(value: AutoSwitchConfig): Promise<void> {
+  const store = await getStore();
+  await store.set(AUTO_SWITCH_KEY, value);
 }
 
 export async function loadStartMinimized(): Promise<boolean> {
