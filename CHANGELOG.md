@@ -6,6 +6,15 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 10 follow-ups
+- Device-change banner now fires on manual in-app switches too, not only
+  hotkey/flyout switches.
+- Optional second tray icon mirroring the current default output device, using
+  the icon Windows shows for it in the Sound control panel (extracted from the
+  endpoint's icon path; falls back to the app icon). Tooltip shows the device
+  name. The mic stays the primary icon. Toggle in Settings → General; on by
+  default. Updates on every default-output change (ours, the CLI, or external).
+
 ### Phase 10 — Auto-switch on connect & live external-change sync
 - Backend now watches audio device arrivals/removals via `IMMNotificationClient`
   (`audio/events.rs`), registered for the process lifetime.

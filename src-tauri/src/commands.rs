@@ -84,6 +84,13 @@ pub fn close_flyout(app: tauri::AppHandle) {
     crate::flyout::hide(&app);
 }
 
+/// Shows/hides the output-device tray icon live (passed directly to avoid racing
+/// the store's async write).
+#[tauri::command]
+pub fn set_device_icon(app: tauri::AppHandle, enabled: bool) {
+    crate::tray::set_device_visible(&app, enabled);
+}
+
 /// Reads whether the default microphone is currently muted.
 #[tauri::command]
 pub fn get_mic_muted() -> Result<bool, String> {

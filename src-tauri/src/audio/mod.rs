@@ -9,7 +9,7 @@ pub mod events;
 mod policy;
 mod volume;
 
-pub use enumerator::{list_devices, AudioDevice};
+pub use enumerator::{default_output, list_devices, AudioDevice};
 pub use policy::set_default_device;
 pub use volume::{is_mic_muted, set_mic_mute, toggle_mic_mute};
 

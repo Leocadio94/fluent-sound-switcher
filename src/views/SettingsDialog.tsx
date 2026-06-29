@@ -208,6 +208,17 @@ export default function SettingsDialog(props: SettingsDialogProps) {
                 </Field>
                 <Field
                   className={styles.row}
+                  label={t("settings.showDeviceIcon")}
+                  hint={t("settings.showDeviceIconHint")}
+                  orientation="horizontal"
+                >
+                  <Switch
+                    checked={general.showDeviceIcon}
+                    onChange={(_, d) => general.setShowDeviceIcon(d.checked)}
+                  />
+                </Field>
+                <Field
+                  className={styles.row}
                   label={t("autoSwitch.enabled")}
                   hint={t("autoSwitch.hint")}
                   orientation="horizontal"

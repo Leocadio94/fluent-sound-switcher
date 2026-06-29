@@ -89,6 +89,7 @@ const MUTE_INDICATOR_KEY = "muteIndicator";
 const NOTIFICATIONS_KEY = "notifications";
 const AUTO_SWITCH_KEY = "autoSwitch";
 const START_MINIMIZED_KEY = "startMinimized";
+const SHOW_DEVICE_ICON_KEY = "showDeviceIcon";
 
 let storePromise: Promise<Store> | null = null;
 
@@ -186,6 +187,16 @@ export async function loadStartMinimized(): Promise<boolean> {
 export async function saveStartMinimized(value: boolean): Promise<void> {
   const store = await getStore();
   await store.set(START_MINIMIZED_KEY, value);
+}
+
+export async function loadShowDeviceIcon(): Promise<boolean> {
+  const store = await getStore();
+  return (await store.get<boolean>(SHOW_DEVICE_ICON_KEY)) ?? true;
+}
+
+export async function saveShowDeviceIcon(value: boolean): Promise<void> {
+  const store = await getStore();
+  await store.set(SHOW_DEVICE_ICON_KEY, value);
 }
 
 export type { DeviceDirection };

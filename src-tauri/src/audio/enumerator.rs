@@ -39,6 +39,13 @@ pub fn list_devices() -> windows::core::Result<Vec<AudioDevice>> {
     }
 }
 
+/// The current default output (render) device, if any.
+pub fn default_output() -> windows::core::Result<Option<AudioDevice>> {
+    Ok(list_devices()?
+        .into_iter()
+        .find(|d| d.direction == "output" && d.is_default))
+}
+
 unsafe fn collect(
     enumerator: &IMMDeviceEnumerator,
     flow: EDataFlow,

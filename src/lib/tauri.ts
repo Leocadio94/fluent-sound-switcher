@@ -72,3 +72,8 @@ export function setFlyoutSize(height: number): Promise<void> {
 export function closeFlyout(): Promise<void> {
   return invoke<void>("close_flyout");
 }
+
+/** Shows/hides the output-device tray icon immediately. */
+export function setDeviceIcon(enabled: boolean): Promise<void> {
+  return invoke<void>("set_device_icon", { enabled });
+}

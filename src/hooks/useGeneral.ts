@@ -1,13 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { loadStartMinimized, saveStartMinimized } from "../lib/config";
-import { getAutostart, setAutostart as apiSetAutostart } from "../lib/tauri";
+import {
+  loadShowDeviceIcon,
+  loadStartMinimized,
+  saveShowDeviceIcon,
+  saveStartMinimized,
+} from "../lib/config";
+import {
+  getAutostart,
+  setAutostart as apiSetAutostart,
+  setDeviceIcon as apiSetDeviceIcon,
+} from "../lib/tauri";
 
 interface UseGeneral {
   autostart: boolean;
   setAutostart: (value: boolean) => void;
   startMinimized: boolean;
   setStartMinimized: (value: boolean) => void;
+  showDeviceIcon: boolean;
+  setShowDeviceIcon: (value: boolean) => void;
 }
 
 /**
@@ -17,12 +28,14 @@ interface UseGeneral {
 export function useGeneral(): UseGeneral {
   const [autostart, setAutostartState] = useState(false);
   const [startMinimized, setStartMinimizedState] = useState(false);
+  const [showDeviceIcon, setShowDeviceIconState] = useState(true);
 
   useEffect(() => {
     void getAutostart()
       .then(setAutostartState)
       .catch(() => {});
     void loadStartMinimized().then(setStartMinimizedState);
+    void loadShowDeviceIcon().then(setShowDeviceIconState);
   }, []);
 
   const setAutostart = useCallback((value: boolean) => {
@@ -35,5 +48,19 @@ export function useGeneral(): UseGeneral {
     void saveStartMinimized(value);
   }, []);
 
-  return { autostart, setAutostart, startMinimized, setStartMinimized };
+  const setShowDeviceIcon = useCallback((value: boolean) => {
+    setShowDeviceIconState(value);
+    void saveShowDeviceIcon(value);
+    // Apply live so the tray updates without waiting on the store write.
+    void apiSetDeviceIcon(value).catch(() => {});
+  }, []);
+
+  return {
+    autostart,
+    setAutostart,
+    startMinimized,
+    setStartMinimized,
+    showDeviceIcon,
+    setShowDeviceIcon,
+  };
 }

@@ -9,7 +9,7 @@
 use tauri::{AppHandle, Emitter};
 use windows::core::{implement, Result, PCWSTR};
 use windows::Win32::Media::Audio::{
-    eConsole, EDataFlow, ERole, IMMDeviceEnumerator, IMMNotificationClient,
+    eConsole, eRender, EDataFlow, ERole, IMMDeviceEnumerator, IMMNotificationClient,
     IMMNotificationClient_Impl, MMDeviceEnumerator, DEVICE_STATE, DEVICE_STATE_ACTIVE,
 };
 use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
@@ -25,7 +25,7 @@ struct Notifier {
 impl IMMNotificationClient_Impl for Notifier_Impl {
     fn OnDefaultDeviceChanged(
         &self,
-        _flow: EDataFlow,
+        flow: EDataFlow,
         role: ERole,
         _id: &PCWSTR,
     ) -> Result<()> {
@@ -33,6 +33,10 @@ impl IMMNotificationClient_Impl for Notifier_Impl {
         // Mirror it to the GUI. Console role only, to avoid firing three times.
         if role == eConsole {
             let _ = self.app.emit("device-changed", ());
+            // The output default moved — refresh the device tray icon.
+            if flow == eRender {
+                crate::tray::refresh_device_icon(&self.app);
+            }
         }
         Ok(())
     }

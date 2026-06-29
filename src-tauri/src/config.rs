@@ -180,3 +180,11 @@ pub fn start_minimized(app: &AppHandle) -> bool {
         .and_then(|v| v.as_bool())
         .unwrap_or(false)
 }
+
+/// Whether to show the second tray icon reflecting the current output device.
+pub fn show_device_icon(app: &AppHandle) -> bool {
+    read(app)
+        .get("showDeviceIcon")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true)
+}

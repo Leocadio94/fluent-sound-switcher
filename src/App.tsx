@@ -177,7 +177,7 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
             <DeviceList
               devices={devices}
               switching={switching}
-              onSwitch={(device) => void switchTo(device)}
+              onSwitch={(device) => void switchTo(device, true)}
               isFavorite={isFavorite}
               onToggleFavorite={toggleFavorite}
               showOnlyFavorites={showOnlyFavorites}

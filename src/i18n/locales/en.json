@@ -85,6 +85,8 @@
     },
     "autostart": "Start with Windows",
     "startMinimized": "Start minimized (to tray)",
+    "showDeviceIcon": "Device icon in tray",
+    "showDeviceIconHint": "Second icon showing the current output (the microphone stays primary).",
     "language": "Language",
     "theme": "Theme",
     "theme.system": "Follow system",

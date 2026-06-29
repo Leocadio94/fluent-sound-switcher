@@ -5,6 +5,7 @@ mod banner;
 pub mod cli;
 mod commands;
 mod config;
+mod device_icon;
 mod flyout;
 mod hotkeys;
 mod mute;
@@ -84,6 +85,7 @@ pub fn run() {
             commands::preview_notification,
             commands::get_autostart,
             commands::set_autostart,
+            commands::set_device_icon,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Fluent Sound Switcher");
