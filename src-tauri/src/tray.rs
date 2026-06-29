@@ -59,11 +59,28 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         true,
         None::<&str>,
     )?;
+    let check_updates = MenuItem::with_id(
+        app,
+        "check_updates",
+        "Verificar atualizações",
+        true,
+        None::<&str>,
+    )?;
     let quit = MenuItem::with_id(app, "quit", "Sair", true, None::<&str>)?;
     let sep = PredefinedMenuItem::separator(app)?;
+    let sep2 = PredefinedMenuItem::separator(app)?;
     Menu::with_items(
         app,
-        &[&show, &settings, &sound_panel, &sep, &toggle_mute, &quit],
+        &[
+            &show,
+            &settings,
+            &sound_panel,
+            &sep,
+            &toggle_mute,
+            &sep2,
+            &check_updates,
+            &quit,
+        ],
     )
 }
 
@@ -76,6 +93,7 @@ fn on_menu_event(app: &AppHandle, event: tauri::menu::MenuEvent) {
         }
         "sound_panel" => open_sound_panel(),
         "toggle_mute" => crate::mute::toggle(app),
+        "check_updates" => crate::updater::check(app, false),
         "quit" => app.exit(0),
         _ => {}
     }

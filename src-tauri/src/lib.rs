@@ -12,6 +12,7 @@ mod mute;
 mod notify;
 mod overlay;
 mod tray;
+mod updater;
 
 use tauri::Manager;
 
@@ -25,6 +26,7 @@ fn ping() -> String {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::default().build())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
@@ -70,6 +72,8 @@ pub fn run() {
             // Watch for device arrivals/removals: mirror external default
             // changes into the GUI and optionally auto-switch on connect.
             audio::events::start(handle);
+            // Silent check for a newer signed release on startup.
+            updater::check(handle, true);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

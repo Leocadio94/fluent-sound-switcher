@@ -130,16 +130,29 @@ Tagging a commit `v*` (e.g. `v0.1.0`) triggers the
 [release workflow](.github/workflows/release.yml): it builds the Windows
 installers and publishes them to a GitHub Release.
 
+Auto-update is configured (`tauri-plugin-updater`): the updater public key is in
+`tauri.conf.json`, the endpoint points at the GitHub Releases `latest.json`, and
+the workflow signs the artifacts. The app checks on startup and via the tray's
+**Verificar atualizações** item.
+
 <details>
-<summary>Enabling auto-update (maintainers)</summary>
+<summary>One-time maintainer setup</summary>
 
-The Tauri updater is wired but disabled until a signing key exists:
+The release signing key is held outside the repo. Add the private key as a repo
+secret so CI can sign updates (the public key is already committed):
 
-1. `pnpm tauri signer generate -w ~/.tauri/fss.key`
-2. Add repo secrets `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`.
-3. Put the public key in `tauri.conf.json` under `plugins.updater.pubkey` and add the updater endpoint.
+```bash
+gh secret set TAURI_SIGNING_PRIVATE_KEY < ~/.tauri/fss-updater.key
+# the key was generated with an empty password, so no password secret is needed
+```
+
+To rotate the key: `pnpm tauri signer generate -w ~/.tauri/fss-updater.key -f`,
+then update `plugins.updater.pubkey` in `tauri.conf.json` and re-set the secret.
 
 </details>
+
+> 🔏 **Code signing** (the Authenticode certificate that removes the SmartScreen
+> warning) is separate and still pending — it needs a paid cert.
 
 ## 🗺️ Roadmap
 
@@ -155,7 +168,8 @@ The Tauri updater is wired but disabled until a signing key exists:
 | ✅ | CLI parity |
 | ✅ | Auto-switch on connect + live external-change sync |
 | ✅ | Branding, icons & distribution workflow |
-| ⏳ | Code signing & auto-update rollout |
+| ✅ | Auto-update (Tauri updater, signed, via GitHub Releases) |
+| ⏳ | Code signing (Authenticode cert — removes the SmartScreen warning) |
 | 🔮 | Per-app audio profiles *(experimental)* |
 
 ## 📄 License

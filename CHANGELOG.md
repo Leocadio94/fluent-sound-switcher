@@ -6,6 +6,15 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Auto-update (Phase 11 follow-up)
+- Wired `tauri-plugin-updater`: the release workflow produces signed update
+  artifacts + a `latest.json`, the public key lives in `tauri.conf.json`, and the
+  endpoint points at the GitHub Releases `latest` download.
+- A silent check runs on startup; the tray gains a "Verificar atualizações" item.
+  On a newer signed version the app downloads, installs and restarts, notifying
+  along the way.
+- Bumped to `0.1.1` for the first tagged release.
+
 ### Phase 11 — Branding & distribution
 - New visual identity: a Fluent squircle icon (speaker + swap arrows, blue→teal
   gradient) generated from `icons/logo.svg` into the full icon set; updated the

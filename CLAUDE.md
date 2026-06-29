@@ -20,16 +20,17 @@ Picture).
 - **Backend**: Rust (Tauri v2). Windows audio via the `windows` crate 0.58
   (Core Audio COM) + `windows-core` 0.58.
 - **Tauri plugins**: `store` (config), `global-shortcut`, `notification`,
-  `autostart`.
+  `autostart`, `updater` (signed auto-update via GitHub Releases; pubkey in
+  `tauri.conf.json`, private key kept outside the repo at `~/.tauri/`).
 - **Package manager**: pnpm. **Identifier**: `com.fluentsoundswitcher.app`
   (config at `%APPDATA%/com.fluentsoundswitcher.app/config.json`).
 
 ## Status
 
-Phases 0–8, 10, 11 done; the app is feature-complete and builds installers.
-Remaining: code signing + auto-update rollout (workflow wired, key not yet
-generated) and per-app profiles (Phase 9, experimental, deferred). The phase
-numbering in `CHANGELOG.md` is the source of truth.
+Phases 0–8, 10, 11 done; the app is feature-complete, builds installers, and has
+signed auto-update wired. Remaining: code signing (Authenticode cert, removes the
+SmartScreen warning) and per-app profiles (Phase 9, experimental, deferred). The
+phase numbering in `CHANGELOG.md` is the source of truth.
 
 ## Commands
 
