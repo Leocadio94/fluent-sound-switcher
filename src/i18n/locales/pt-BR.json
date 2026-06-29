@@ -69,7 +69,10 @@
   "settings": {
     "title": "Configurações",
     "tabs": {
-      "general": "Geral"
+      "general": "Geral",
+      "hotkeys": "Atalhos",
+      "mute": "Indicador",
+      "notifications": "Notificações"
     },
     "autostart": "Iniciar com o Windows",
     "startMinimized": "Iniciar minimizado (na bandeja)",

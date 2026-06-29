@@ -125,9 +125,9 @@ export default function SettingsDialog(props: SettingsDialogProps) {
             onTabSelect={(_, d) => setTab(d.value as TabValue)}
           >
             <Tab value="general">{t("settings.tabs.general")}</Tab>
-            <Tab value="hotkeys">{t("hotkeys.title")}</Tab>
-            <Tab value="mute">{t("muteIndicator.title")}</Tab>
-            <Tab value="notifications">{t("notifications.title")}</Tab>
+            <Tab value="hotkeys">{t("settings.tabs.hotkeys")}</Tab>
+            <Tab value="mute">{t("settings.tabs.mute")}</Tab>
+            <Tab value="notifications">{t("settings.tabs.notifications")}</Tab>
           </TabList>
 
           <DialogContent className={styles.content}>

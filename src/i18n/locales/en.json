@@ -69,7 +69,10 @@
   "settings": {
     "title": "Settings",
     "tabs": {
-      "general": "General"
+      "general": "General",
+      "hotkeys": "Shortcuts",
+      "mute": "Indicator",
+      "notifications": "Notifications"
     },
     "autostart": "Start with Windows",
     "startMinimized": "Start minimized (to tray)",
