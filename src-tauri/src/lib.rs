@@ -1,11 +1,13 @@
 //! Fluent Sound Switcher — Tauri backend entry point.
 
 mod audio;
+mod banner;
 mod commands;
 mod config;
 mod flyout;
 mod hotkeys;
 mod mute;
+mod notify;
 mod overlay;
 mod tray;
 
@@ -21,6 +23,7 @@ fn ping() -> String {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::default().build())
+        .plugin(tauri_plugin_notification::init())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app, shortcut, event| {
@@ -38,6 +41,7 @@ pub fn run() {
             }
             overlay::configure(handle);
             flyout::configure(handle);
+            banner::configure(handle);
             // Closing the main window hides it to the tray instead of quitting,
             // so the tray "Abrir" can bring it back.
             if let Some(main) = handle.get_webview_window("main") {
@@ -63,6 +67,7 @@ pub fn run() {
             commands::refresh_mute_indicator,
             commands::set_flyout_size,
             commands::close_flyout,
+            commands::preview_notification,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Fluent Sound Switcher");

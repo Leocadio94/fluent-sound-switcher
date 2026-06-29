@@ -12,7 +12,7 @@ interface UseDevices {
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
-  switchTo: (device: AudioDevice) => Promise<void>;
+  switchTo: (device: AudioDevice, notify?: boolean) => Promise<void>;
   switching: string | null;
 }
 
@@ -38,11 +38,11 @@ export function useDevices(): UseDevices {
   }, []);
 
   const switchTo = useCallback(
-    async (device: AudioDevice) => {
+    async (device: AudioDevice, notify = false) => {
       setSwitching(device.id);
       setError(null);
       try {
-        await setDefaultAudioDevice(device.id);
+        await setDefaultAudioDevice(device.id, notify);
         await refresh();
       } catch (e) {
         setError(String(e));

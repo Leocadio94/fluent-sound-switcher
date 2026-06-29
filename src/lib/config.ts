@@ -52,11 +52,27 @@ export const DEFAULT_MUTE_INDICATOR: MuteIndicator = {
   style: "full",
 };
 
+/** Device-change notification preferences. */
+export interface NotificationConfig {
+  native: boolean;
+  banner: boolean;
+  sound: boolean;
+  bannerPosition: OverlayPosition;
+}
+
+export const DEFAULT_NOTIFICATIONS: NotificationConfig = {
+  native: false,
+  banner: true,
+  sound: false,
+  bannerPosition: "topCenter",
+};
+
 const STORE_FILE = "config.json";
 const FAVORITES_KEY = "favorites";
 const ONLY_FAVORITES_KEY = "showOnlyFavorites";
 const HOTKEYS_KEY = "hotkeys";
 const MUTE_INDICATOR_KEY = "muteIndicator";
+const NOTIFICATIONS_KEY = "notifications";
 
 let storePromise: Promise<Store> | null = null;
 
@@ -70,6 +86,7 @@ function getStore(): Promise<Store> {
         [ONLY_FAVORITES_KEY]: false,
         [HOTKEYS_KEY]: DEFAULT_HOTKEYS,
         [MUTE_INDICATOR_KEY]: DEFAULT_MUTE_INDICATOR,
+        [NOTIFICATIONS_KEY]: DEFAULT_NOTIFICATIONS,
       },
     });
   }
@@ -120,6 +137,17 @@ export async function loadMuteIndicator(): Promise<MuteIndicator> {
 export async function saveMuteIndicator(value: MuteIndicator): Promise<void> {
   const store = await getStore();
   await store.set(MUTE_INDICATOR_KEY, value);
+}
+
+export async function loadNotifications(): Promise<NotificationConfig> {
+  const store = await getStore();
+  const stored = await store.get<Partial<NotificationConfig>>(NOTIFICATIONS_KEY);
+  return { ...DEFAULT_NOTIFICATIONS, ...stored };
+}
+
+export async function saveNotifications(value: NotificationConfig): Promise<void> {
+  const store = await getStore();
+  await store.set(NOTIFICATIONS_KEY, value);
 }
 
 export type { DeviceDirection };

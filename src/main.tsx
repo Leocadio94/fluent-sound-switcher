@@ -6,6 +6,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import App from "./App";
 import Overlay from "./views/Overlay";
 import Flyout from "./views/Flyout";
+import Banner from "./views/Banner";
 import { useSystemTheme, type ThemePreference } from "./theme/useSystemTheme";
 import "./i18n";
 import "./styles.css";
@@ -39,16 +40,34 @@ function FlyoutRoot() {
   );
 }
 
+/** Themed wrapper for the transparent device-change banner window. */
+function BannerRoot() {
+  const { theme, isDark } = useSystemTheme("system");
+  useEffect(() => {
+    document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+  }, [isDark]);
+  return (
+    <FluentProvider theme={theme} style={{ background: "transparent" }}>
+      <Banner />
+    </FluentProvider>
+  );
+}
+
 const label = getCurrentWindow().label;
 
+function content() {
+  switch (label) {
+    case "overlay":
+      return <Overlay />;
+    case "flyout":
+      return <FlyoutRoot />;
+    case "banner":
+      return <BannerRoot />;
+    default:
+      return <Root />;
+  }
+}
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    {label === "overlay" ? (
-      <Overlay />
-    ) : label === "flyout" ? (
-      <FlyoutRoot />
-    ) : (
-      <Root />
-    )}
-  </React.StrictMode>,
+  <React.StrictMode>{content()}</React.StrictMode>,
 );

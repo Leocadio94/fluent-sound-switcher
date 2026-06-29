@@ -10,10 +10,29 @@ pub fn list_audio_devices() -> Result<Vec<AudioDevice>, String> {
     audio::list_devices().map_err(|e| e.to_string())
 }
 
-/// Switches the system default device to `device_id` (all roles).
+/// Switches the system default device to `device_id` (all roles). When `notify`
+/// is set (hotkey/flyout switches), fires a device-change notification.
 #[tauri::command]
-pub fn set_default_audio_device(device_id: String) -> Result<(), String> {
-    audio::set_default_device(&device_id).map_err(|e| e.to_string())
+pub fn set_default_audio_device(
+    app: tauri::AppHandle,
+    device_id: String,
+    notify: bool,
+) -> Result<(), String> {
+    audio::set_default_device(&device_id).map_err(|e| e.to_string())?;
+    if notify {
+        if let Ok(devices) = audio::list_devices() {
+            if let Some(device) = devices.iter().find(|d| d.id == device_id) {
+                crate::notify::device_changed(&app, &device.name, device.direction);
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Triggers a sample notification so the user can preview their settings.
+#[tauri::command]
+pub fn preview_notification(app: tauri::AppHandle) {
+    crate::notify::device_changed(&app, "Headset", "output");
 }
 
 /// Toggles the default microphone mute, returning the new muted state. Updates

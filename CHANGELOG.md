@@ -6,6 +6,15 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 6 — Device-change notifications
+- When the default device changes (hotkey cycle or flyout pick), notify via any
+  combination of: an on-screen banner (transient, topmost, fullscreen-safe), a
+  native Windows toast, and/or a short sound (bundled wav via `PlaySound`).
+- Each channel is individually toggleable, with a configurable banner position
+  and a "test notification" button; all persisted.
+- Manual switches in the main window don't notify (the `notify` flag is only set
+  for hotkey/flyout switches).
+
 ### Phase 5 — Tray quick-switch flyout & menu
 - Left-clicking the tray icon opens a compact quick-switch flyout listing the
   favorite output/input devices; picking one switches and closes it. It is an

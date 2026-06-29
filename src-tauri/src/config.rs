@@ -62,6 +62,31 @@ impl Default for MuteIndicator {
     }
 }
 
+/// Device-change notification preferences.
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct NotificationConfig {
+    /// Native Windows toast.
+    pub native: bool,
+    /// On-screen banner (fullscreen-safe).
+    pub banner: bool,
+    /// Play a short sound.
+    pub sound: bool,
+    /// Banner position, same vocabulary as the mute overlay.
+    pub banner_position: String,
+}
+
+impl Default for NotificationConfig {
+    fn default() -> Self {
+        Self {
+            native: false,
+            banner: true,
+            sound: false,
+            banner_position: "topCenter".to_string(),
+        }
+    }
+}
+
 fn store_path(app: &AppHandle) -> Option<PathBuf> {
     app.path().app_data_dir().ok().map(|d| d.join(STORE_FILE))
 }
@@ -108,6 +133,14 @@ pub fn hotkeys(app: &AppHandle) -> HotkeyConfig {
 pub fn mute_indicator(app: &AppHandle) -> MuteIndicator {
     read(app)
         .get("muteIndicator")
+        .and_then(|v| serde_json::from_value(v.clone()).ok())
+        .unwrap_or_default()
+}
+
+/// Notification preferences, falling back to defaults when unset.
+pub fn notifications(app: &AppHandle) -> NotificationConfig {
+    read(app)
+        .get("notifications")
         .and_then(|v| serde_json::from_value(v.clone()).ok())
         .unwrap_or_default()
 }

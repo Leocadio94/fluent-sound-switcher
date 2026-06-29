@@ -58,6 +58,14 @@
     "muted": "Microphone muted",
     "live": "Microphone live"
   },
+  "notifications": {
+    "title": "Device-change notification",
+    "banner": "On-screen banner",
+    "native": "Windows notification",
+    "sound": "Play sound",
+    "bannerPosition": "Banner position",
+    "test": "Test notification"
+  },
   "settings": {
     "title": "Settings",
     "language": "Language",

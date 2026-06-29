@@ -58,6 +58,14 @@
     "muted": "Microfone mudo",
     "live": "Microfone ativo"
   },
+  "notifications": {
+    "title": "Notificação ao trocar dispositivo",
+    "banner": "Banner na tela",
+    "native": "Notificação do Windows",
+    "sound": "Tocar som",
+    "bannerPosition": "Posição do banner",
+    "test": "Testar notificação"
+  },
   "settings": {
     "title": "Configurações",
     "language": "Idioma",

@@ -49,6 +49,20 @@
         "focus": false,
         "shadow": false,
         "visible": false
+      },
+      {
+        "label": "banner",
+        "url": "index.html",
+        "width": 340,
+        "height": 80,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": false,
+        "focus": false,
+        "shadow": false,
+        "visible": false
       }
     ],
     "security": {

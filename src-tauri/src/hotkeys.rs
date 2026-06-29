@@ -57,6 +57,7 @@ fn cycle(app: &AppHandle, direction: &str) {
     let favorites = config::favorites(app, direction);
     if let Ok(Some(device)) = crate::audio::cycle_default(direction, &favorites) {
         let _ = app.emit("device-changed", &device);
+        crate::notify::device_changed(app, &device.name, device.direction);
     }
 }
 

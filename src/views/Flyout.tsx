@@ -111,7 +111,7 @@ export default function Flyout() {
   }, [loading, outputs.length, inputs.length, isEmpty]);
 
   const pick = async (device: AudioDevice) => {
-    await switchTo(device);
+    await switchTo(device, true);
     await closeFlyout();
   };
 

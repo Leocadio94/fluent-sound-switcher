@@ -13,6 +13,7 @@ import {
   Field,
   Option,
   Subtitle2,
+  Switch,
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
@@ -22,6 +23,7 @@ import type {
   Hotkeys,
   MuteIndicator,
   MuteIndicatorMode,
+  NotificationConfig,
   OverlayPosition,
   OverlayStyle,
 } from "../lib/config";
@@ -83,6 +85,12 @@ interface SettingsDialogProps {
     key: K,
     value: MuteIndicator[K],
   ) => void;
+  notifications: NotificationConfig;
+  onNotificationChange: <K extends keyof NotificationConfig>(
+    key: K,
+    value: NotificationConfig[K],
+  ) => void;
+  onPreviewNotification: () => void;
 }
 
 export default function SettingsDialog({
@@ -92,6 +100,9 @@ export default function SettingsDialog({
   onHotkeyChange,
   indicator,
   onIndicatorChange,
+  notifications,
+  onNotificationChange,
+  onPreviewNotification,
 }: SettingsDialogProps) {
   const styles = useStyles();
   const { t } = useTranslation();
@@ -193,6 +204,72 @@ export default function SettingsDialog({
                   ))}
                 </Dropdown>
               </Field>
+            </section>
+
+            <Divider />
+
+            <section className={styles.section}>
+              <Subtitle2 className={styles.sectionTitle}>
+                {t("notifications.title")}
+              </Subtitle2>
+              <Field
+                className={styles.row}
+                label={t("notifications.banner")}
+                orientation="horizontal"
+              >
+                <Switch
+                  checked={notifications.banner}
+                  onChange={(_, d) => onNotificationChange("banner", d.checked)}
+                />
+              </Field>
+              <Field
+                className={styles.row}
+                label={t("notifications.native")}
+                orientation="horizontal"
+              >
+                <Switch
+                  checked={notifications.native}
+                  onChange={(_, d) => onNotificationChange("native", d.checked)}
+                />
+              </Field>
+              <Field
+                className={styles.row}
+                label={t("notifications.sound")}
+                orientation="horizontal"
+              >
+                <Switch
+                  checked={notifications.sound}
+                  onChange={(_, d) => onNotificationChange("sound", d.checked)}
+                />
+              </Field>
+              <Field
+                className={styles.row}
+                label={t("notifications.bannerPosition")}
+                orientation="horizontal"
+              >
+                <Dropdown
+                  value={t(
+                    `muteIndicator.positions.${notifications.bannerPosition}`,
+                  )}
+                  selectedOptions={[notifications.bannerPosition]}
+                  onOptionSelect={(_, data) =>
+                    data.optionValue &&
+                    onNotificationChange(
+                      "bannerPosition",
+                      data.optionValue as OverlayPosition,
+                    )
+                  }
+                >
+                  {POSITIONS.map((pos) => (
+                    <Option key={pos} value={pos}>
+                      {t(`muteIndicator.positions.${pos}`)}
+                    </Option>
+                  ))}
+                </Dropdown>
+              </Field>
+              <Button appearance="secondary" onClick={onPreviewNotification}>
+                {t("notifications.test")}
+              </Button>
             </section>
           </DialogContent>
           <DialogActions>

@@ -16,9 +16,21 @@ export function listAudioDevices(): Promise<AudioDevice[]> {
   return invoke<AudioDevice[]>("list_audio_devices");
 }
 
-/** Switches the system default device (all roles) to the given endpoint id. */
-export function setDefaultAudioDevice(deviceId: string): Promise<void> {
-  return invoke<void>("set_default_audio_device", { deviceId });
+/**
+ * Switches the system default device (all roles) to the given endpoint id.
+ * `notify` fires a device-change notification (used by hotkey/flyout switches,
+ * not manual clicks in the main window).
+ */
+export function setDefaultAudioDevice(
+  deviceId: string,
+  notify = false,
+): Promise<void> {
+  return invoke<void>("set_default_audio_device", { deviceId, notify });
+}
+
+/** Triggers a sample notification so the user can preview their settings. */
+export function previewNotification(): Promise<void> {
+  return invoke<void>("preview_notification");
 }
 
 /** Toggles the default mic mute; resolves to the new muted state. */
