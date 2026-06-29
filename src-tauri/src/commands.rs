@@ -35,6 +35,26 @@ pub fn preview_notification(app: tauri::AppHandle) {
     crate::notify::device_changed(&app, "Headset", "output");
 }
 
+/// Whether the app is registered to start with Windows.
+#[tauri::command]
+pub fn get_autostart(app: tauri::AppHandle) -> Result<bool, String> {
+    use tauri_plugin_autostart::ManagerExt;
+    app.autolaunch().is_enabled().map_err(|e| e.to_string())
+}
+
+/// Enables/disables starting the app with Windows.
+#[tauri::command]
+pub fn set_autostart(app: tauri::AppHandle, enabled: bool) -> Result<(), String> {
+    use tauri_plugin_autostart::ManagerExt;
+    let manager = app.autolaunch();
+    if enabled {
+        manager.enable()
+    } else {
+        manager.disable()
+    }
+    .map_err(|e| e.to_string())
+}
+
 /// Toggles the default microphone mute, returning the new muted state. Updates
 /// the tray icon and overlay too.
 #[tauri::command]

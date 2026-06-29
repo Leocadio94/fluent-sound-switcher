@@ -73,6 +73,7 @@ const ONLY_FAVORITES_KEY = "showOnlyFavorites";
 const HOTKEYS_KEY = "hotkeys";
 const MUTE_INDICATOR_KEY = "muteIndicator";
 const NOTIFICATIONS_KEY = "notifications";
+const START_MINIMIZED_KEY = "startMinimized";
 
 let storePromise: Promise<Store> | null = null;
 
@@ -148,6 +149,16 @@ export async function loadNotifications(): Promise<NotificationConfig> {
 export async function saveNotifications(value: NotificationConfig): Promise<void> {
   const store = await getStore();
   await store.set(NOTIFICATIONS_KEY, value);
+}
+
+export async function loadStartMinimized(): Promise<boolean> {
+  const store = await getStore();
+  return (await store.get<boolean>(START_MINIMIZED_KEY)) ?? false;
+}
+
+export async function saveStartMinimized(value: boolean): Promise<void> {
+  const store = await getStore();
+  await store.set(START_MINIMIZED_KEY, value);
 }
 
 export type { DeviceDirection };

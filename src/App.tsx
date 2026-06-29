@@ -2,10 +2,8 @@ import { useTranslation } from "react-i18next";
 import {
   Body1,
   Button,
-  Dropdown,
   MessageBar,
   MessageBarBody,
-  Option,
   Spinner,
   Switch,
   Title2,
@@ -31,7 +29,6 @@ import { useMute } from "./hooks/useMute";
 import { useMuteIndicator } from "./hooks/useMuteIndicator";
 import { useNotifications } from "./hooks/useNotifications";
 import { previewNotification } from "./lib/tauri";
-import { SUPPORTED_LANGUAGES } from "./i18n";
 import type { ThemePreference } from "./theme/useSystemTheme";
 
 const useStyles = makeStyles({
@@ -71,9 +68,6 @@ const useStyles = makeStyles({
     justifyContent: "center",
     padding: tokens.spacingVerticalXXL,
   },
-  langDropdown: {
-    minWidth: "150px",
-  },
 });
 
 interface AppProps {
@@ -81,11 +75,9 @@ interface AppProps {
   onThemePrefChange: (pref: ThemePreference) => void;
 }
 
-const THEME_OPTIONS: ThemePreference[] = ["system", "light", "dark"];
-
 export default function App({ themePref, onThemePrefChange }: AppProps) {
   const styles = useStyles();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { devices, loading, error, refresh, switchTo, switching } =
     useDevices();
   const {
@@ -113,37 +105,6 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
       <header className={styles.header}>
         <Title2>{t("app.title")}</Title2>
         <div className={styles.headerControls}>
-          <Dropdown
-            className={styles.langDropdown}
-            value={
-              SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language)?.label ??
-              i18n.language
-            }
-            selectedOptions={[i18n.language]}
-            onOptionSelect={(_, data) => {
-              if (data.optionValue) void i18n.changeLanguage(data.optionValue);
-            }}
-          >
-            {SUPPORTED_LANGUAGES.map((lang) => (
-              <Option key={lang.code} value={lang.code}>
-                {lang.label}
-              </Option>
-            ))}
-          </Dropdown>
-          <Dropdown
-            value={t(`settings.theme.${themePref}`)}
-            selectedOptions={[themePref]}
-            onOptionSelect={(_, data) => {
-              if (data.optionValue)
-                onThemePrefChange(data.optionValue as ThemePreference);
-            }}
-          >
-            {THEME_OPTIONS.map((opt) => (
-              <Option key={opt} value={opt}>
-                {t(`settings.theme.${opt}`)}
-              </Option>
-            ))}
-          </Dropdown>
           <Tooltip
             content={muted ? t("muteIndicator.muted") : t("muteIndicator.live")}
             relationship="label"
@@ -175,6 +136,8 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
       <SettingsDialog
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
+        themePref={themePref}
+        onThemePrefChange={onThemePrefChange}
         hotkeys={hotkeys}
         onHotkeyChange={setBinding}
         indicator={indicator}

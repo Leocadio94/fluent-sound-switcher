@@ -68,6 +68,11 @@
   },
   "settings": {
     "title": "Configurações",
+    "tabs": {
+      "general": "Geral"
+    },
+    "autostart": "Iniciar com o Windows",
+    "startMinimized": "Iniciar minimizado (na bandeja)",
     "language": "Idioma",
     "theme": "Tema",
     "theme.system": "Seguir o sistema",

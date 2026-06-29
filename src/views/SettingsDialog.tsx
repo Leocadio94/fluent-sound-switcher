@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Button,
@@ -8,17 +9,20 @@ import {
   DialogSurface,
   DialogTitle,
   DialogTrigger,
-  Divider,
   Dropdown,
   Field,
   Option,
-  Subtitle2,
   Switch,
+  Tab,
+  TabList,
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
 
 import HotkeyInput from "../components/HotkeyInput";
+import { useGeneral } from "../hooks/useGeneral";
+import { SUPPORTED_LANGUAGES } from "../i18n";
+import type { ThemePreference } from "../theme/useSystemTheme";
 import type {
   Hotkeys,
   MuteIndicator,
@@ -29,19 +33,14 @@ import type {
 } from "../lib/config";
 
 const useStyles = makeStyles({
+  surface: { width: "560px", maxWidth: "92vw" },
+  body: { display: "flex", flexDirection: "column" },
   content: {
     display: "flex",
     flexDirection: "column",
-    gap: tokens.spacingVerticalL,
-    paddingTop: tokens.spacingVerticalM,
-  },
-  section: {
-    display: "flex",
-    flexDirection: "column",
     gap: tokens.spacingVerticalM,
-  },
-  sectionTitle: {
-    color: tokens.colorNeutralForeground2,
+    paddingTop: tokens.spacingVerticalL,
+    minHeight: "260px",
   },
   row: {
     display: "flex",
@@ -49,21 +48,16 @@ const useStyles = makeStyles({
     justifyContent: "space-between",
     gap: tokens.spacingHorizontalL,
   },
+  testRow: { marginTop: tokens.spacingVerticalS },
 });
 
-const HOTKEY_ACTIONS: { key: keyof Hotkeys; labelKey: string }[] = [
-  { key: "cycleOutput", labelKey: "hotkeys.cycleOutput" },
-  { key: "cycleInput", labelKey: "hotkeys.cycleInput" },
-  { key: "toggleMute", labelKey: "hotkeys.toggleMute" },
-];
-
+const THEME_OPTIONS: ThemePreference[] = ["system", "light", "dark"];
 const MODES: MuteIndicatorMode[] = [
   "always",
   "mutedOnly",
   "unmutedOnly",
   "hidden",
 ];
-
 const POSITIONS: OverlayPosition[] = [
   "topCenter",
   "bottomCenter",
@@ -72,12 +66,20 @@ const POSITIONS: OverlayPosition[] = [
   "bottomLeft",
   "bottomRight",
 ];
-
 const STYLES: OverlayStyle[] = ["full", "icon"];
+const HOTKEY_ACTIONS: { key: keyof Hotkeys; labelKey: string }[] = [
+  { key: "cycleOutput", labelKey: "hotkeys.cycleOutput" },
+  { key: "cycleInput", labelKey: "hotkeys.cycleInput" },
+  { key: "toggleMute", labelKey: "hotkeys.toggleMute" },
+];
+
+type TabValue = "general" | "hotkeys" | "mute" | "notifications";
 
 interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  themePref: ThemePreference;
+  onThemePrefChange: (pref: ThemePreference) => void;
   hotkeys: Hotkeys;
   onHotkeyChange: (action: keyof Hotkeys, accelerator: string) => void;
   indicator: MuteIndicator;
@@ -93,31 +95,112 @@ interface SettingsDialogProps {
   onPreviewNotification: () => void;
 }
 
-export default function SettingsDialog({
-  open,
-  onOpenChange,
-  hotkeys,
-  onHotkeyChange,
-  indicator,
-  onIndicatorChange,
-  notifications,
-  onNotificationChange,
-  onPreviewNotification,
-}: SettingsDialogProps) {
+export default function SettingsDialog(props: SettingsDialogProps) {
+  const {
+    open,
+    onOpenChange,
+    themePref,
+    onThemePrefChange,
+    hotkeys,
+    onHotkeyChange,
+    indicator,
+    onIndicatorChange,
+    notifications,
+    onNotificationChange,
+    onPreviewNotification,
+  } = props;
   const styles = useStyles();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const general = useGeneral();
+  const [tab, setTab] = useState<TabValue>("general");
 
   return (
     <Dialog open={open} onOpenChange={(_, data) => onOpenChange(data.open)}>
-      <DialogSurface>
-        <DialogBody>
+      <DialogSurface className={styles.surface}>
+        <DialogBody className={styles.body}>
           <DialogTitle>{t("settings.title")}</DialogTitle>
+
+          <TabList
+            selectedValue={tab}
+            onTabSelect={(_, d) => setTab(d.value as TabValue)}
+          >
+            <Tab value="general">{t("settings.tabs.general")}</Tab>
+            <Tab value="hotkeys">{t("hotkeys.title")}</Tab>
+            <Tab value="mute">{t("muteIndicator.title")}</Tab>
+            <Tab value="notifications">{t("notifications.title")}</Tab>
+          </TabList>
+
           <DialogContent className={styles.content}>
-            <section className={styles.section}>
-              <Subtitle2 className={styles.sectionTitle}>
-                {t("hotkeys.title")}
-              </Subtitle2>
-              {HOTKEY_ACTIONS.map(({ key, labelKey }) => (
+            {tab === "general" && (
+              <>
+                <Field
+                  className={styles.row}
+                  label={t("settings.language")}
+                  orientation="horizontal"
+                >
+                  <Dropdown
+                    value={
+                      SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language)
+                        ?.label ?? i18n.language
+                    }
+                    selectedOptions={[i18n.language]}
+                    onOptionSelect={(_, d) =>
+                      d.optionValue && i18n.changeLanguage(d.optionValue)
+                    }
+                  >
+                    {SUPPORTED_LANGUAGES.map((lang) => (
+                      <Option key={lang.code} value={lang.code}>
+                        {lang.label}
+                      </Option>
+                    ))}
+                  </Dropdown>
+                </Field>
+                <Field
+                  className={styles.row}
+                  label={t("settings.theme")}
+                  orientation="horizontal"
+                >
+                  <Dropdown
+                    value={t(`settings.theme.${themePref}`)}
+                    selectedOptions={[themePref]}
+                    onOptionSelect={(_, d) =>
+                      d.optionValue &&
+                      onThemePrefChange(d.optionValue as ThemePreference)
+                    }
+                  >
+                    {THEME_OPTIONS.map((opt) => (
+                      <Option key={opt} value={opt}>
+                        {t(`settings.theme.${opt}`)}
+                      </Option>
+                    ))}
+                  </Dropdown>
+                </Field>
+                <Field
+                  className={styles.row}
+                  label={t("settings.autostart")}
+                  orientation="horizontal"
+                >
+                  <Switch
+                    checked={general.autostart}
+                    onChange={(_, d) => general.setAutostart(d.checked)}
+                  />
+                </Field>
+                <Field
+                  className={styles.row}
+                  label={t("settings.startMinimized")}
+                  orientation="horizontal"
+                >
+                  <Switch
+                    checked={general.startMinimized}
+                    disabled={!general.autostart}
+                    onChange={(_, d) => general.setStartMinimized(d.checked)}
+                  />
+                </Field>
+              </>
+            )}
+
+            {tab === "hotkeys" &&
+              HOTKEY_ACTIONS.map(({ key, labelKey }) => (
                 <Field
                   key={key}
                   className={styles.row}
@@ -130,148 +213,141 @@ export default function SettingsDialog({
                   />
                 </Field>
               ))}
-            </section>
 
-            <Divider />
+            {tab === "mute" && (
+              <>
+                <Field
+                  className={styles.row}
+                  label={t("muteIndicator.mode")}
+                  orientation="horizontal"
+                >
+                  <Dropdown
+                    value={t(`muteIndicator.modes.${indicator.mode}`)}
+                    selectedOptions={[indicator.mode]}
+                    onOptionSelect={(_, d) =>
+                      d.optionValue &&
+                      onIndicatorChange("mode", d.optionValue as MuteIndicatorMode)
+                    }
+                  >
+                    {MODES.map((mode) => (
+                      <Option key={mode} value={mode}>
+                        {t(`muteIndicator.modes.${mode}`)}
+                      </Option>
+                    ))}
+                  </Dropdown>
+                </Field>
+                <Field
+                  className={styles.row}
+                  label={t("muteIndicator.position")}
+                  orientation="horizontal"
+                >
+                  <Dropdown
+                    value={t(`muteIndicator.positions.${indicator.position}`)}
+                    selectedOptions={[indicator.position]}
+                    onOptionSelect={(_, d) =>
+                      d.optionValue &&
+                      onIndicatorChange(
+                        "position",
+                        d.optionValue as OverlayPosition,
+                      )
+                    }
+                  >
+                    {POSITIONS.map((pos) => (
+                      <Option key={pos} value={pos}>
+                        {t(`muteIndicator.positions.${pos}`)}
+                      </Option>
+                    ))}
+                  </Dropdown>
+                </Field>
+                <Field
+                  className={styles.row}
+                  label={t("muteIndicator.style")}
+                  orientation="horizontal"
+                >
+                  <Dropdown
+                    value={t(`muteIndicator.styles.${indicator.style}`)}
+                    selectedOptions={[indicator.style]}
+                    onOptionSelect={(_, d) =>
+                      d.optionValue &&
+                      onIndicatorChange("style", d.optionValue as OverlayStyle)
+                    }
+                  >
+                    {STYLES.map((s) => (
+                      <Option key={s} value={s}>
+                        {t(`muteIndicator.styles.${s}`)}
+                      </Option>
+                    ))}
+                  </Dropdown>
+                </Field>
+              </>
+            )}
 
-            <section className={styles.section}>
-              <Subtitle2 className={styles.sectionTitle}>
-                {t("muteIndicator.title")}
-              </Subtitle2>
-              <Field
-                className={styles.row}
-                label={t("muteIndicator.mode")}
-                orientation="horizontal"
-              >
-                <Dropdown
-                  value={t(`muteIndicator.modes.${indicator.mode}`)}
-                  selectedOptions={[indicator.mode]}
-                  onOptionSelect={(_, data) =>
-                    data.optionValue &&
-                    onIndicatorChange(
-                      "mode",
-                      data.optionValue as MuteIndicatorMode,
-                    )
-                  }
+            {tab === "notifications" && (
+              <>
+                <Field
+                  className={styles.row}
+                  label={t("notifications.banner")}
+                  orientation="horizontal"
                 >
-                  {MODES.map((mode) => (
-                    <Option key={mode} value={mode}>
-                      {t(`muteIndicator.modes.${mode}`)}
-                    </Option>
-                  ))}
-                </Dropdown>
-              </Field>
-              <Field
-                className={styles.row}
-                label={t("muteIndicator.position")}
-                orientation="horizontal"
-              >
-                <Dropdown
-                  value={t(`muteIndicator.positions.${indicator.position}`)}
-                  selectedOptions={[indicator.position]}
-                  onOptionSelect={(_, data) =>
-                    data.optionValue &&
-                    onIndicatorChange(
-                      "position",
-                      data.optionValue as OverlayPosition,
-                    )
-                  }
+                  <Switch
+                    checked={notifications.banner}
+                    onChange={(_, d) => onNotificationChange("banner", d.checked)}
+                  />
+                </Field>
+                <Field
+                  className={styles.row}
+                  label={t("notifications.native")}
+                  orientation="horizontal"
                 >
-                  {POSITIONS.map((pos) => (
-                    <Option key={pos} value={pos}>
-                      {t(`muteIndicator.positions.${pos}`)}
-                    </Option>
-                  ))}
-                </Dropdown>
-              </Field>
-              <Field
-                className={styles.row}
-                label={t("muteIndicator.style")}
-                orientation="horizontal"
-              >
-                <Dropdown
-                  value={t(`muteIndicator.styles.${indicator.style}`)}
-                  selectedOptions={[indicator.style]}
-                  onOptionSelect={(_, data) =>
-                    data.optionValue &&
-                    onIndicatorChange("style", data.optionValue as OverlayStyle)
-                  }
+                  <Switch
+                    checked={notifications.native}
+                    onChange={(_, d) => onNotificationChange("native", d.checked)}
+                  />
+                </Field>
+                <Field
+                  className={styles.row}
+                  label={t("notifications.sound")}
+                  orientation="horizontal"
                 >
-                  {STYLES.map((s) => (
-                    <Option key={s} value={s}>
-                      {t(`muteIndicator.styles.${s}`)}
-                    </Option>
-                  ))}
-                </Dropdown>
-              </Field>
-            </section>
-
-            <Divider />
-
-            <section className={styles.section}>
-              <Subtitle2 className={styles.sectionTitle}>
-                {t("notifications.title")}
-              </Subtitle2>
-              <Field
-                className={styles.row}
-                label={t("notifications.banner")}
-                orientation="horizontal"
-              >
-                <Switch
-                  checked={notifications.banner}
-                  onChange={(_, d) => onNotificationChange("banner", d.checked)}
-                />
-              </Field>
-              <Field
-                className={styles.row}
-                label={t("notifications.native")}
-                orientation="horizontal"
-              >
-                <Switch
-                  checked={notifications.native}
-                  onChange={(_, d) => onNotificationChange("native", d.checked)}
-                />
-              </Field>
-              <Field
-                className={styles.row}
-                label={t("notifications.sound")}
-                orientation="horizontal"
-              >
-                <Switch
-                  checked={notifications.sound}
-                  onChange={(_, d) => onNotificationChange("sound", d.checked)}
-                />
-              </Field>
-              <Field
-                className={styles.row}
-                label={t("notifications.bannerPosition")}
-                orientation="horizontal"
-              >
-                <Dropdown
-                  value={t(
-                    `muteIndicator.positions.${notifications.bannerPosition}`,
-                  )}
-                  selectedOptions={[notifications.bannerPosition]}
-                  onOptionSelect={(_, data) =>
-                    data.optionValue &&
-                    onNotificationChange(
-                      "bannerPosition",
-                      data.optionValue as OverlayPosition,
-                    )
-                  }
+                  <Switch
+                    checked={notifications.sound}
+                    onChange={(_, d) => onNotificationChange("sound", d.checked)}
+                  />
+                </Field>
+                <Field
+                  className={styles.row}
+                  label={t("notifications.bannerPosition")}
+                  orientation="horizontal"
                 >
-                  {POSITIONS.map((pos) => (
-                    <Option key={pos} value={pos}>
-                      {t(`muteIndicator.positions.${pos}`)}
-                    </Option>
-                  ))}
-                </Dropdown>
-              </Field>
-              <Button appearance="secondary" onClick={onPreviewNotification}>
-                {t("notifications.test")}
-              </Button>
-            </section>
+                  <Dropdown
+                    value={t(
+                      `muteIndicator.positions.${notifications.bannerPosition}`,
+                    )}
+                    selectedOptions={[notifications.bannerPosition]}
+                    onOptionSelect={(_, d) =>
+                      d.optionValue &&
+                      onNotificationChange(
+                        "bannerPosition",
+                        d.optionValue as OverlayPosition,
+                      )
+                    }
+                  >
+                    {POSITIONS.map((pos) => (
+                      <Option key={pos} value={pos}>
+                        {t(`muteIndicator.positions.${pos}`)}
+                      </Option>
+                    ))}
+                  </Dropdown>
+                </Field>
+                <div className={styles.testRow}>
+                  <Button appearance="secondary" onClick={onPreviewNotification}>
+                    {t("notifications.test")}
+                  </Button>
+                </div>
+              </>
+            )}
           </DialogContent>
+
           <DialogActions>
             <DialogTrigger disableButtonEnhancement>
               <Button appearance="primary">{t("hotkeys.close")}</Button>

@@ -68,6 +68,11 @@
   },
   "settings": {
     "title": "Settings",
+    "tabs": {
+      "general": "General"
+    },
+    "autostart": "Start with Windows",
+    "startMinimized": "Start minimized (to tray)",
     "language": "Language",
     "theme": "Theme",
     "theme.system": "Follow system",

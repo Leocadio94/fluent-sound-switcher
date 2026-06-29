@@ -144,3 +144,11 @@ pub fn notifications(app: &AppHandle) -> NotificationConfig {
         .and_then(|v| serde_json::from_value(v.clone()).ok())
         .unwrap_or_default()
 }
+
+/// Whether the app should start hidden to the tray when auto-launched.
+pub fn start_minimized(app: &AppHandle) -> bool {
+    read(app)
+        .get("startMinimized")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
+}

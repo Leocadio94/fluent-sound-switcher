@@ -33,6 +33,16 @@ export function previewNotification(): Promise<void> {
   return invoke<void>("preview_notification");
 }
 
+/** Whether the app is registered to start with Windows. */
+export function getAutostart(): Promise<boolean> {
+  return invoke<boolean>("get_autostart");
+}
+
+/** Enables/disables starting the app with Windows. */
+export function setAutostart(enabled: boolean): Promise<void> {
+  return invoke<void>("set_autostart", { enabled });
+}
+
 /** Toggles the default mic mute; resolves to the new muted state. */
 export function toggleMicMute(): Promise<boolean> {
   return invoke<boolean>("toggle_mic_mute");

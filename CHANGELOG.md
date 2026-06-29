@@ -6,6 +6,14 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 7 — Full settings & autostart
+- Reorganized settings into a tabbed dialog: General, Hotkeys, Mute indicator,
+  Notifications. Moved language and theme out of the header into General,
+  decluttering the toolbar.
+- "Start with Windows" (autostart plugin) and "Start minimized to tray": when
+  auto-launched with `--autostart` and start-minimized is on, the main window
+  stays hidden in the tray.
+
 ### Phase 6 — Device-change notifications
 - When the default device changes (hotkey cycle or flyout pick), notify via any
   combination of: an on-screen banner (transient, topmost, fullscreen-safe), a
