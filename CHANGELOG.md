@@ -15,6 +15,16 @@ the project follows phased iterations (see `README.md`).
 - Expanded the right-click tray menu: Open, Settings (opens the main window and
   the settings dialog), Playback devices (Windows sound panel), toggle mute,
   Quit.
+- Flyout gained a mute/unmute button; it re-syncs device and mute state each
+  time it opens (the webview is suspended while hidden).
+- Closing the main window now hides it to the tray instead of quitting, so the
+  tray "Open" reliably brings it back.
+
+### Phase 4 follow-ups
+- Mute overlay no longer clips its glow at the bottom (centered in a taller
+  window) and refreshes immediately when its settings change (config passed
+  directly to avoid racing the store write).
+- Overlay style option: full (icon + text) or icon-only.
 
 ### Phase 4 — Mic mute & status overlay
 - Tray icon now reflects the mic mute state (mic-on / mic-off icons) with a

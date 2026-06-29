@@ -3,7 +3,7 @@
 //! stays usable in fullscreen apps. It lists the favorite devices for fast
 //! switching and dismisses on blur.
 
-use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, WebviewWindow};
+use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewWindow};
 
 pub const FLYOUT_LABEL: &str = "flyout";
 
@@ -42,6 +42,10 @@ pub fn toggle(app: &AppHandle) {
         reposition(&window, height);
         let _ = window.show();
         let _ = window.set_focus();
+        // The webview is suspended while hidden and may have missed live
+        // events, so re-push the current device + mute state on open.
+        let _ = window.emit("device-changed", ());
+        let _ = window.emit("mic-mute-changed", crate::mute::current(app));
     }
 }
 

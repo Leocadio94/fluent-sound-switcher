@@ -33,7 +33,7 @@ export function useMuteIndicator(): UseMuteIndicator {
     <K extends keyof MuteIndicator>(key: K, value: MuteIndicator[K]) => {
       setIndicator((prev) => {
         const next = { ...prev, [key]: value };
-        void saveMuteIndicator(next).then(() => refreshMuteIndicator());
+        void saveMuteIndicator(next).then(() => refreshMuteIndicator(next));
         return next;
       });
     },

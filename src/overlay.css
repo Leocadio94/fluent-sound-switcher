@@ -5,15 +5,23 @@ body,
   background: transparent !important;
 }
 
+#root {
+  /* Center the pill in the window so the box-shadow/glow has room and never
+     gets clipped by the window edges. */
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .overlay-pill {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  height: 100vh;
   box-sizing: border-box;
-  padding: 0 18px;
-  margin: 8px;
+  height: 48px;
+  padding: 0 20px;
   border-radius: 999px;
   font-family: "Segoe UI", system-ui, sans-serif;
   font-size: 15px;
@@ -23,6 +31,13 @@ body,
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   user-select: none;
+  white-space: nowrap;
+}
+
+.overlay-pill.is-icon {
+  padding: 0;
+  width: 48px;
+  gap: 0;
 }
 
 .overlay-pill svg {

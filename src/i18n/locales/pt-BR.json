@@ -19,7 +19,9 @@
     "removeFromCycle": "Remover da lista de ciclo"
   },
   "flyout": {
-    "empty": "Marque dispositivos favoritos (★) na janela principal para trocar rápido por aqui."
+    "empty": "Marque dispositivos favoritos (★) na janela principal para trocar rápido por aqui.",
+    "mute": "Mutar microfone",
+    "unmute": "Desmutar microfone"
   },
   "hotkeys": {
     "title": "Atalhos de teclado",
@@ -34,6 +36,11 @@
     "title": "Indicador de mute",
     "mode": "Quando mostrar",
     "position": "Posição",
+    "style": "Estilo",
+    "styles": {
+      "full": "Ícone + texto",
+      "icon": "Apenas ícone"
+    },
     "modes": {
       "always": "Sempre",
       "mutedOnly": "Só quando mudo",

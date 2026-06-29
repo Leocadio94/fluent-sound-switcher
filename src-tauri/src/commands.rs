@@ -1,7 +1,7 @@
 //! Tauri commands — the bridge invoked from the frontend.
 
 use crate::audio::{self, AudioDevice};
-use crate::config::HotkeyConfig;
+use crate::config::{HotkeyConfig, MuteIndicator};
 use crate::hotkeys;
 
 /// Returns all active input/output devices with the current defaults marked.
@@ -25,11 +25,11 @@ pub fn toggle_mic_mute(app: tauri::AppHandle) -> Result<bool, String> {
     Ok(muted)
 }
 
-/// Re-applies the overlay visibility/position after the user changes the mute
-/// indicator settings.
+/// Re-applies the overlay with the given settings (passed directly to avoid
+/// racing the store's async write).
 #[tauri::command]
-pub fn refresh_mute_indicator(app: tauri::AppHandle) -> Result<(), String> {
-    crate::overlay::update(&app, crate::mute::current(&app));
+pub fn refresh_mute_indicator(app: tauri::AppHandle, indicator: MuteIndicator) -> Result<(), String> {
+    crate::overlay::update_with(&app, crate::mute::current(&app), &indicator);
     Ok(())
 }
 

@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 
-import type { Hotkeys } from "./config";
+import type { Hotkeys, MuteIndicator } from "./config";
 
 export type DeviceDirection = "output" | "input";
 
@@ -36,9 +36,9 @@ export function updateHotkeys(bindings: Hotkeys): Promise<void> {
   return invoke<void>("update_hotkeys", { bindings });
 }
 
-/** Re-applies overlay visibility/position after a settings change. */
-export function refreshMuteIndicator(): Promise<void> {
-  return invoke<void>("refresh_mute_indicator");
+/** Re-applies the overlay with the given settings after a change. */
+export function refreshMuteIndicator(indicator: MuteIndicator): Promise<void> {
+  return invoke<void>("refresh_mute_indicator", { indicator });
 }
 
 /** Resizes the quick-switch flyout to fit its content (logical px height). */

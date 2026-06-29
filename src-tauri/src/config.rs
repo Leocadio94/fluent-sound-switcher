@@ -43,6 +43,13 @@ pub struct MuteIndicator {
     pub mode: String,
     /// "topCenter" | "bottomCenter" | "topLeft" | "topRight" | "bottomLeft" | "bottomRight".
     pub position: String,
+    /// "full" (icon + text) | "icon" (icon only).
+    #[serde(default = "default_style")]
+    pub style: String,
+}
+
+fn default_style() -> String {
+    "full".to_string()
 }
 
 impl Default for MuteIndicator {
@@ -50,6 +57,7 @@ impl Default for MuteIndicator {
         Self {
             mode: "mutedOnly".to_string(),
             position: "bottomCenter".to_string(),
+            style: default_style(),
         }
     }
 }

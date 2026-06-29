@@ -19,7 +19,9 @@
     "removeFromCycle": "Remove from cycle list"
   },
   "flyout": {
-    "empty": "Mark favorite devices (★) in the main window to quick-switch from here."
+    "empty": "Mark favorite devices (★) in the main window to quick-switch from here.",
+    "mute": "Mute microphone",
+    "unmute": "Unmute microphone"
   },
   "hotkeys": {
     "title": "Keyboard shortcuts",
@@ -34,6 +36,11 @@
     "title": "Mute indicator",
     "mode": "When to show",
     "position": "Position",
+    "style": "Style",
+    "styles": {
+      "full": "Icon + text",
+      "icon": "Icon only"
+    },
     "modes": {
       "always": "Always",
       "mutedOnly": "Only when muted",

@@ -37,15 +37,19 @@ export type OverlayPosition =
   | "bottomLeft"
   | "bottomRight";
 
+export type OverlayStyle = "full" | "icon";
+
 /** On-screen mute overlay preferences. */
 export interface MuteIndicator {
   mode: MuteIndicatorMode;
   position: OverlayPosition;
+  style: OverlayStyle;
 }
 
 export const DEFAULT_MUTE_INDICATOR: MuteIndicator = {
   mode: "mutedOnly",
   position: "bottomCenter",
+  style: "full",
 };
 
 const STORE_FILE = "config.json";

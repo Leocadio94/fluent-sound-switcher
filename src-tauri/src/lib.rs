@@ -9,6 +9,8 @@ mod mute;
 mod overlay;
 mod tray;
 
+use tauri::Manager;
+
 /// Simple connectivity check used by the frontend to confirm the backend is up.
 #[tauri::command]
 fn ping() -> String {
@@ -36,6 +38,17 @@ pub fn run() {
             }
             overlay::configure(handle);
             flyout::configure(handle);
+            // Closing the main window hides it to the tray instead of quitting,
+            // so the tray "Abrir" can bring it back.
+            if let Some(main) = handle.get_webview_window("main") {
+                let hide_target = main.clone();
+                main.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        api.prevent_close();
+                        let _ = hide_target.hide();
+                    }
+                });
+            }
             // Read the real mic state and sync the tray icon + overlay.
             mute::refresh(handle);
             Ok(())

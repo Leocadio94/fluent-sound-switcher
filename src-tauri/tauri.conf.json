@@ -26,7 +26,7 @@
         "label": "overlay",
         "url": "index.html",
         "width": 240,
-        "height": 64,
+        "height": 72,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,

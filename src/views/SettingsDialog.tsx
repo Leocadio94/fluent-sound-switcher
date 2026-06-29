@@ -23,6 +23,7 @@ import type {
   MuteIndicator,
   MuteIndicatorMode,
   OverlayPosition,
+  OverlayStyle,
 } from "../lib/config";
 
 const useStyles = makeStyles({
@@ -69,6 +70,8 @@ const POSITIONS: OverlayPosition[] = [
   "bottomLeft",
   "bottomRight",
 ];
+
+const STYLES: OverlayStyle[] = ["full", "icon"];
 
 interface SettingsDialogProps {
   open: boolean;
@@ -166,6 +169,26 @@ export default function SettingsDialog({
                   {POSITIONS.map((pos) => (
                     <Option key={pos} value={pos}>
                       {t(`muteIndicator.positions.${pos}`)}
+                    </Option>
+                  ))}
+                </Dropdown>
+              </Field>
+              <Field
+                className={styles.row}
+                label={t("muteIndicator.style")}
+                orientation="horizontal"
+              >
+                <Dropdown
+                  value={t(`muteIndicator.styles.${indicator.style}`)}
+                  selectedOptions={[indicator.style]}
+                  onOptionSelect={(_, data) =>
+                    data.optionValue &&
+                    onIndicatorChange("style", data.optionValue as OverlayStyle)
+                  }
+                >
+                  {STYLES.map((s) => (
+                    <Option key={s} value={s}>
+                      {t(`muteIndicator.styles.${s}`)}
                     </Option>
                   ))}
                 </Dropdown>

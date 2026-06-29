@@ -9,12 +9,14 @@ import {
 } from "@fluentui/react-components";
 import {
   CheckmarkCircleFilled,
+  MicProhibitedFilled,
   MicRegular,
   Speaker2Regular,
 } from "@fluentui/react-icons";
 
 import { useDevices } from "../hooks/useDevices";
 import { useFavorites } from "../hooks/useFavorites";
+import { useMute } from "../hooks/useMute";
 import { closeFlyout, setFlyoutSize, type AudioDevice } from "../lib/tauri";
 
 const useStyles = makeStyles({
@@ -64,6 +66,17 @@ const useStyles = makeStyles({
   },
   check: { color: tokens.colorBrandForeground1, flexShrink: 0 },
   empty: { padding: tokens.spacingVerticalM, textAlign: "center", color: tokens.colorNeutralForeground3 },
+  divider: {
+    height: tokens.strokeWidthThin,
+    backgroundColor: tokens.colorNeutralStroke2,
+    margin: `${tokens.spacingVerticalXS} ${tokens.spacingHorizontalS}`,
+  },
+  muteRow: {
+    color: tokens.colorNeutralForeground1,
+  },
+  muteActive: {
+    color: tokens.colorPaletteRedForeground1,
+  },
 });
 
 /**
@@ -75,6 +88,7 @@ export default function Flyout() {
   const { t } = useTranslation();
   const { devices, loading, switchTo } = useDevices();
   const { favorites } = useFavorites();
+  const { muted, toggle: toggleMute } = useMute();
   const cardRef = useRef<HTMLDivElement>(null);
 
   const outputs = devices.filter(
@@ -136,12 +150,31 @@ export default function Flyout() {
         <div className={styles.empty}>
           <Spinner size="tiny" />
         </div>
-      ) : isEmpty ? (
-        <Caption1 className={styles.empty}>{t("flyout.empty")}</Caption1>
       ) : (
         <>
-          {renderGroup(t("common.output"), Speaker2Regular, outputs)}
-          {renderGroup(t("common.input"), MicRegular, inputs)}
+          {isEmpty ? (
+            <Caption1 className={styles.empty}>{t("flyout.empty")}</Caption1>
+          ) : (
+            <>
+              {renderGroup(t("common.output"), Speaker2Regular, outputs)}
+              {renderGroup(t("common.input"), MicRegular, inputs)}
+            </>
+          )}
+          <div className={styles.divider} />
+          <button
+            type="button"
+            className={mergeClasses(styles.row, muted && styles.muteActive)}
+            onClick={() => toggleMute()}
+          >
+            {muted ? (
+              <MicProhibitedFilled className={styles.icon} />
+            ) : (
+              <MicRegular className={styles.icon} />
+            )}
+            <span className={styles.name}>
+              {muted ? t("flyout.unmute") : t("flyout.mute")}
+            </span>
+          </button>
         </>
       )}
     </div>
