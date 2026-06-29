@@ -34,7 +34,6 @@ pub fn is_mic_muted() -> windows::core::Result<bool> {
 }
 
 /// Sets the default microphone mute state explicitly.
-#[allow(dead_code)] // used by the settings UI / CLI in later phases
 pub fn set_mic_mute(muted: bool) -> windows::core::Result<()> {
     super::ensure_com();
     unsafe {

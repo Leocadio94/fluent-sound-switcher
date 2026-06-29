@@ -2,6 +2,7 @@
 
 mod audio;
 mod banner;
+pub mod cli;
 mod commands;
 mod config;
 mod flyout;

@@ -10,9 +10,7 @@ mod volume;
 
 pub use enumerator::{list_devices, AudioDevice};
 pub use policy::set_default_device;
-pub use volume::{is_mic_muted, toggle_mic_mute};
-#[allow(unused_imports)]
-pub use volume::set_mic_mute;
+pub use volume::{is_mic_muted, set_mic_mute, toggle_mic_mute};
 
 /// Switches the default device for `direction` ("output"/"input") to the next
 /// device in the cycle list, wrapping around.

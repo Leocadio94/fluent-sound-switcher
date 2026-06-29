@@ -6,6 +6,14 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 8 — CLI parity
+- The same binary doubles as a CLI: launched with a subcommand it runs that and
+  exits without starting the GUI (audio ops are global COM calls, so it works
+  standalone). Attaches to the parent console for output.
+- Commands: `list [output|input]`, `switch <id|name>`, `cycle <output|input>`,
+  `mute [toggle|on|off]`, `--version`, `--help`. `cycle` reads the same favorites
+  the GUI stores.
+
 ### Phase 7 — Full settings & autostart
 - Reorganized settings into a tabbed dialog: General, Hotkeys, Mute indicator,
   Notifications. Moved language and theme out of the header into General,
