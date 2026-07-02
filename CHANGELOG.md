@@ -6,6 +6,15 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Fixes
+- Overlays (mic-mute indicator and device-change banner) appeared inconsistently.
+  Each aux window is created hidden, so its WebView2 renderer is frozen and
+  resumes asynchronously on `show()`; a state event fired at the frozen renderer
+  could be dropped, leaving the window shown but blank (transparent). The overlay
+  also emitted its state *before* `show()` with no retry. Both now emit *after*
+  show and re-push the payload a few times (~0.7s) so the resuming renderer
+  reliably paints.
+
 ### Auto-update (Phase 11 follow-up)
 - Wired `tauri-plugin-updater`: the release workflow produces signed update
   artifacts + a `latest.json`, the public key lives in `tauri.conf.json`, and the

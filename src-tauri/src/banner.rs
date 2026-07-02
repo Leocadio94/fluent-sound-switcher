@@ -19,6 +19,11 @@ const HEIGHT: f64 = 80.0;
 const MARGIN: f64 = 24.0;
 const SHOW_MS: u64 = 2600;
 
+/// A just-shown aux window's WebView2 renderer resumes asynchronously and can
+/// drop events fired while frozen; re-push the payload a few times (inter-emit
+/// gaps) so the resuming renderer reliably paints the banner.
+const EMIT_RETRIES_MS: [u64; 3] = [80, 200, 400];
+
 #[derive(Serialize, Clone)]
 struct BannerPayload {
     name: String,
@@ -63,8 +68,10 @@ pub fn show(app: &AppHandle, name: &str, direction: &str) {
 
     let retry = window.clone();
     thread::spawn(move || {
-        thread::sleep(Duration::from_millis(180));
-        let _ = retry.emit("banner-show", payload);
+        for delay in EMIT_RETRIES_MS {
+            thread::sleep(Duration::from_millis(delay));
+            let _ = retry.emit("banner-show", payload.clone());
+        }
     });
 
     let generation_id = generation().fetch_add(1, Ordering::SeqCst) + 1;

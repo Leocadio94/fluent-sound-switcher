@@ -2,12 +2,22 @@
 //! that stays visible over fullscreen apps (fixing SoundSwitch's "behind the
 //! taskbar" problem). Visibility/style follow the user's `muteIndicator` config.
 
+use std::thread;
+use std::time::Duration;
+
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, LogicalPosition, LogicalSize, Manager, WebviewWindow};
 
 use crate::config::{self, MuteIndicator};
 
 pub const OVERLAY_LABEL: &str = "overlay";
+
+/// A freshly-shown aux window's WebView2 renderer resumes from a frozen state
+/// asynchronously, and Tauri events fired at a frozen renderer can be dropped.
+/// Re-emit the payload a few times (inter-emit gaps, ~0.7s total) so the
+/// resuming webview reliably receives it. Emitting is idempotent (it only
+/// drives React state), so extra deliveries are harmless.
+const EMIT_RETRIES_MS: [u64; 3] = [80, 200, 400];
 
 const FULL_WIDTH: f64 = 240.0;
 const ICON_WIDTH: f64 = 78.0;
@@ -49,13 +59,10 @@ pub fn update_with(app: &AppHandle, muted: bool, cfg: &MuteIndicator) {
         _ => false,
     };
 
-    let _ = window.emit(
-        "overlay-state",
-        OverlayState {
-            muted,
-            style: cfg.style.clone(),
-        },
-    );
+    let payload = OverlayState {
+        muted,
+        style: cfg.style.clone(),
+    };
 
     if visible {
         let width = if cfg.style == "icon" {
@@ -65,13 +72,32 @@ pub fn update_with(app: &AppHandle, muted: bool, cfg: &MuteIndicator) {
         };
         let _ = window.set_size(LogicalSize::new(width, HEIGHT));
         position(app, &window, &cfg.position, width);
+        // Show first so the frozen webview starts resuming, then push the state
+        // (and re-push it) so the resumed renderer paints the correct pill.
         let _ = window.show();
         // Re-assert in case the OS reset it while the window was hidden.
         let _ = window.set_ignore_cursor_events(true);
         let _ = window.set_always_on_top(true);
+        emit_state(app, payload);
     } else {
         let _ = window.hide();
+        // Still push the state so the (hidden) webview stays in sync for the
+        // next time it is shown; no retries needed while hidden.
+        let _ = app.emit("overlay-state", payload);
     }
+}
+
+/// Emits the overlay state immediately and re-emits it a few times, covering a
+/// just-shown webview whose renderer is still resuming (see `EMIT_RETRIES_MS`).
+fn emit_state(app: &AppHandle, payload: OverlayState) {
+    let _ = app.emit("overlay-state", payload.clone());
+    let app = app.clone();
+    thread::spawn(move || {
+        for delay in EMIT_RETRIES_MS {
+            thread::sleep(Duration::from_millis(delay));
+            let _ = app.emit("overlay-state", payload.clone());
+        }
+    });
 }
 
 fn position(app: &AppHandle, window: &WebviewWindow, pos: &str, width: f64) {
