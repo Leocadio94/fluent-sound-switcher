@@ -6,6 +6,8 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+## [0.1.2]
+
 ### Fixes
 - Overlays (mic-mute indicator and device-change banner) appeared inconsistently.
   Each aux window is created hidden, so its WebView2 renderer is frozen and
