@@ -18,6 +18,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Full history so the release notes can find the previous tag for the
+          # compare link.
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -30,6 +34,8 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
 
       - name: Cache Rust
         uses: swatinem/rust-cache@v2
@@ -38,6 +44,30 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      # The version lives in three manifests and the updater compares versions:
+      # publishing a tag that disagrees with the binary breaks update checks.
+      - name: Verify version matches the tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: node scripts/check-version.mjs ${{ github.ref_name }}
+
+      # A tag must not publish what CI would have rejected.
+      - name: Typecheck frontend
+        run: pnpm lint
+
+      - name: Clippy
+        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+
+      - name: Build release notes
+        id: notes
+        shell: bash
+        run: |
+          node scripts/release-notes.mjs "${{ github.ref_name }}" > release-notes.md
+          {
+            echo 'body<<RELEASE_NOTES_EOF'
+            cat release-notes.md
+            echo 'RELEASE_NOTES_EOF'
+          } >> "$GITHUB_OUTPUT"
 
       - name: Build and publish release
         uses: tauri-apps/tauri-action@v0
@@ -49,7 +79,7 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Fluent Sound Switcher ${{ github.ref_name }}"
-          releaseBody: "Download the `.msi` or NSIS `.exe` installer below."
+          releaseBody: ${{ steps.notes.outputs.body }}
           # Must be published, not a draft: the updater reads
           # `releases/latest/download/latest.json`, and GitHub excludes drafts
           # (and prereleases) from `releases/latest`. A draft release would make
@@ -57,3 +87,28 @@ jobs:
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true
+
+      # `tauri-action` reuses an existing release for the tag and does not
+      # promote one that is already a draft. That is how v0.1.1 and v0.1.2 ended
+      # up stuck as drafts: GitHub excludes drafts from `releases/latest`, so
+      # every client's update check 404'd even though the workflow said success.
+      - name: Ensure the release is published
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release edit "${{ github.ref_name }}" --draft=false --prerelease=false --latest
+
+      # Lets users verify a download that SmartScreen warns about, since the
+      # installers are not Authenticode-signed yet.
+      - name: Publish checksums
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          bundle=src-tauri/target/release/bundle
+          find "$bundle/msi" "$bundle/nsis" -type f \( -name '*.msi' -o -name '*.exe' \) \
+            -exec sha256sum {} + | sed 's#.*/##' > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          gh release upload "${{ github.ref_name }}" SHA256SUMS.txt --clobber

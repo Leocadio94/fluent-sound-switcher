@@ -58,8 +58,8 @@ pub fn icon_rgba_for(_device_id: &str) -> Option<(Vec<u8>, u32, u32)> {
 
 #[cfg(windows)]
 unsafe fn propvariant_string(prop: &windows::core::PROPVARIANT) -> Option<String> {
-    use windows::Win32::System::Com::StructuredStorage::PropVariantToStringAlloc;
     use windows::Win32::System::Com::CoTaskMemFree;
+    use windows::Win32::System::Com::StructuredStorage::PropVariantToStringAlloc;
 
     let p = PropVariantToStringAlloc(prop).ok()?;
     if p.is_null() {

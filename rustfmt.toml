@@ -1,0 +1,4 @@
+# Defaults, pinned explicitly so `cargo fmt --check` in CI matches local runs
+# regardless of the toolchain's own default drift.
+edition = "2021"
+max_width = 100

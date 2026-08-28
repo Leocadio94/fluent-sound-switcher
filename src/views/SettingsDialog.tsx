@@ -11,6 +11,8 @@ import {
   DialogTrigger,
   Dropdown,
   Field,
+  MessageBar,
+  MessageBarBody,
   Option,
   Switch,
   Tab,
@@ -21,6 +23,7 @@ import {
 
 import HotkeyInput from "../components/HotkeyInput";
 import { useGeneral } from "../hooks/useGeneral";
+import { openLogFolder, type HotkeyFailure } from "../lib/tauri";
 import { SUPPORTED_LANGUAGES } from "../i18n";
 import type { ThemePreference } from "../theme/useSystemTheme";
 import type {
@@ -85,6 +88,7 @@ interface SettingsDialogProps {
   onThemePrefChange: (pref: ThemePreference) => void;
   hotkeys: Hotkeys;
   onHotkeyChange: (action: keyof Hotkeys, accelerator: string) => void;
+  hotkeyFailures: HotkeyFailure[];
   indicator: MuteIndicator;
   onIndicatorChange: <K extends keyof MuteIndicator>(
     key: K,
@@ -111,6 +115,7 @@ export default function SettingsDialog(props: SettingsDialogProps) {
     onThemePrefChange,
     hotkeys,
     onHotkeyChange,
+    hotkeyFailures,
     indicator,
     onIndicatorChange,
     notifications,
@@ -251,23 +256,50 @@ export default function SettingsDialog(props: SettingsDialogProps) {
                     ))}
                   </Dropdown>
                 </Field>
+                <Field
+                  className={styles.row}
+                  label={t("general.logs")}
+                  hint={t("general.logsHint")}
+                  orientation="horizontal"
+                >
+                  <Button onClick={() => void openLogFolder()}>
+                    {t("general.openLogs")}
+                  </Button>
+                </Field>
               </>
             )}
 
-            {tab === "hotkeys" &&
-              HOTKEY_ACTIONS.map(({ key, labelKey }) => (
-                <Field
-                  key={key}
-                  className={styles.row}
-                  label={t(labelKey)}
-                  orientation="horizontal"
-                >
-                  <HotkeyInput
-                    value={hotkeys[key]}
-                    onChange={(accel) => onHotkeyChange(key, accel)}
-                  />
-                </Field>
-              ))}
+            {tab === "hotkeys" && (
+              <>
+                {hotkeyFailures.length > 0 && (
+                  <MessageBar intent="warning">
+                    <MessageBarBody>
+                      {t("hotkeys.conflict", {
+                        list: hotkeyFailures
+                          .map(
+                            (f) =>
+                              `${t(`hotkeys.${f.action}`)} (${f.accelerator})`,
+                          )
+                          .join(", "),
+                      })}
+                    </MessageBarBody>
+                  </MessageBar>
+                )}
+                {HOTKEY_ACTIONS.map(({ key, labelKey }) => (
+                  <Field
+                    key={key}
+                    className={styles.row}
+                    label={t(labelKey)}
+                    orientation="horizontal"
+                  >
+                    <HotkeyInput
+                      value={hotkeys[key]}
+                      onChange={(accel) => onHotkeyChange(key, accel)}
+                    />
+                  </Field>
+                ))}
+              </>
+            )}
 
             {tab === "mute" && (
               <>

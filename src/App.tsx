@@ -92,7 +92,7 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
     showOnlyFavorites,
     setShowOnlyFavorites,
   } = useFavorites();
-  const { hotkeys, setBinding } = useHotkeys();
+  const { hotkeys, setBinding, failures: hotkeyFailures } = useHotkeys();
   const { indicator, setField: setIndicatorField } = useMuteIndicator();
   const { notifications, setField: setNotificationField } = useNotifications();
   const { autoSwitch, setField: setAutoSwitchField } = useAutoSwitch();
@@ -172,6 +172,7 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
         onThemePrefChange={onThemePrefChange}
         hotkeys={hotkeys}
         onHotkeyChange={setBinding}
+        hotkeyFailures={hotkeyFailures}
         indicator={indicator}
         onIndicatorChange={setIndicatorField}
         notifications={notifications}

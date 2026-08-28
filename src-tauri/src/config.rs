@@ -92,10 +92,32 @@ fn store_path(app: &AppHandle) -> Option<PathBuf> {
 }
 
 fn read(app: &AppHandle) -> Value {
-    store_path(app)
-        .and_then(|p| std::fs::read_to_string(p).ok())
-        .and_then(|s| serde_json::from_str(&s).ok())
-        .unwrap_or(Value::Null)
+    let Some(path) = store_path(app) else {
+        log::warn!("app data dir unavailable; falling back to default config");
+        return Value::Null;
+    };
+    let raw = match std::fs::read_to_string(&path) {
+        Ok(raw) => raw,
+        Err(e) => {
+            // Absent on first run, before the frontend writes it: expected.
+            if e.kind() != std::io::ErrorKind::NotFound {
+                log::warn!("could not read {}: {e}", path.display());
+            }
+            return Value::Null;
+        }
+    };
+    match serde_json::from_str(&raw) {
+        Ok(value) => value,
+        Err(e) => {
+            // Silently reverting every setting to its default is the worst
+            // possible failure mode to debug, so say so loudly.
+            log::error!(
+                "{} is not valid JSON ({e}); every setting falls back to its default",
+                path.display()
+            );
+            Value::Null
+        }
+    }
 }
 
 /// Favorite device ids for a direction ("output"/"input"), empty when unset.

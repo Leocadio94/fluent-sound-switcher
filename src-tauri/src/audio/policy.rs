@@ -20,8 +20,12 @@ const CLSID_POLICY_CONFIG: GUID = GUID::from_u128(0x870af99c_171d_4f9e_af0d_e63d
 #[interface("f8679f50-850a-41cf-9c72-430f290290c8")]
 unsafe trait IPolicyConfig: IUnknown {
     unsafe fn get_mix_format(&self, _id: PCWSTR, _fmt: *mut *mut c_void) -> HRESULT;
-    unsafe fn get_device_format(&self, _id: PCWSTR, _default: i32, _fmt: *mut *mut c_void)
-        -> HRESULT;
+    unsafe fn get_device_format(
+        &self,
+        _id: PCWSTR,
+        _default: i32,
+        _fmt: *mut *mut c_void,
+    ) -> HRESULT;
     unsafe fn reset_device_format(&self, _id: PCWSTR) -> HRESULT;
     unsafe fn set_device_format(
         &self,
@@ -62,8 +66,7 @@ unsafe trait IPolicyConfig: IUnknown {
 pub fn set_default_device(device_id: &str) -> windows::core::Result<()> {
     super::ensure_com();
     unsafe {
-        let config: IPolicyConfig =
-            CoCreateInstance(&CLSID_POLICY_CONFIG, None, CLSCTX_ALL)?;
+        let config: IPolicyConfig = CoCreateInstance(&CLSID_POLICY_CONFIG, None, CLSCTX_ALL)?;
         let id = HSTRING::from(device_id);
         for role in [eConsole, eMultimedia, eCommunications] {
             config

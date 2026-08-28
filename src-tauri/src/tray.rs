@@ -16,9 +16,20 @@ const MIC_ON: &[u8] = include_bytes!("../icons/mic-on.png");
 const MIC_OFF: &[u8] = include_bytes!("../icons/mic-off.png");
 
 pub fn build(app: &AppHandle) -> tauri::Result<()> {
+    // Bundled by `tauri.conf.json`; if it is somehow missing there is no icon
+    // to put in the tray at all, so fail loudly instead of aborting the process
+    // from an `expect` under `panic = "abort"`.
+    let base_icon = app.default_window_icon().cloned().ok_or_else(|| {
+        log::error!("no default window icon bundled; the tray cannot be built");
+        tauri::Error::Io(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "default window icon missing",
+        ))
+    })?;
+
     // The mic (primary) tray.
     TrayIconBuilder::with_id(TRAY_ID)
-        .icon(app.default_window_icon().expect("window icon").clone())
+        .icon(base_icon.clone())
         .tooltip("Fluent Sound Switcher")
         .menu(&build_menu(app)?)
         .show_menu_on_left_click(false)
@@ -29,7 +40,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
     // The output-device (secondary) tray. Same interactions; its icon/tooltip
     // are filled in by `refresh_device_icon`. Hidden until enabled.
     TrayIconBuilder::with_id(DEVICE_TRAY_ID)
-        .icon(app.default_window_icon().expect("window icon").clone())
+        .icon(base_icon)
         .tooltip("Dispositivo de saída")
         .menu(&build_menu(app)?)
         .show_menu_on_left_click(false)
@@ -50,8 +61,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         true,
         None::<&str>,
     )?;
-    let settings =
-        MenuItem::with_id(app, "settings", "Configurações", true, None::<&str>)?;
+    let settings = MenuItem::with_id(app, "settings", "Configurações", true, None::<&str>)?;
     let toggle_mute = MenuItem::with_id(
         app,
         "toggle_mute",
@@ -130,27 +140,38 @@ fn open_sound_panel() {
 /// Swaps the primary tray icon and tooltip to reflect the mic mute state.
 pub fn set_mute_icon(app: &AppHandle, muted: bool) {
     let Some(tray) = app.tray_by_id(TRAY_ID) else {
+        log::warn!("mic tray icon missing; cannot reflect mute state");
         return;
     };
     let bytes = if muted { MIC_OFF } else { MIC_ON };
-    if let Ok(image) = Image::from_bytes(bytes) {
-        let _ = tray.set_icon(Some(image));
+    match Image::from_bytes(bytes) {
+        Ok(image) => {
+            if let Err(e) = tray.set_icon(Some(image)) {
+                log::warn!("could not set the mic tray icon: {e}");
+            }
+        }
+        Err(e) => log::error!("bundled mic icon failed to decode: {e}"),
     }
-    let _ = tray.set_tooltip(Some(if muted {
+    if let Err(e) = tray.set_tooltip(Some(if muted {
         "Microfone mudo"
     } else {
         "Microfone ativo"
-    }));
+    })) {
+        log::warn!("could not set the mic tray tooltip: {e}");
+    }
 }
 
 /// Refreshes the device tray's visibility (from config), icon and tooltip to the
 /// current default output. Called at startup and on every default-device change.
 pub fn refresh_device_icon(app: &AppHandle) {
     let Some(tray) = app.tray_by_id(DEVICE_TRAY_ID) else {
+        log::warn!("device tray icon missing; cannot refresh it");
         return;
     };
     let visible = crate::config::show_device_icon(app);
-    let _ = tray.set_visible(visible);
+    if let Err(e) = tray.set_visible(visible) {
+        log::warn!("could not set device tray visibility: {e}");
+    }
     if visible {
         update_device_image(app, &tray);
     }
@@ -161,31 +182,47 @@ pub fn refresh_device_icon(app: &AppHandle) {
 /// store's async write.
 pub fn set_device_visible(app: &AppHandle, visible: bool) {
     let Some(tray) = app.tray_by_id(DEVICE_TRAY_ID) else {
+        log::warn!("device tray icon missing; cannot change its visibility");
         return;
     };
-    let _ = tray.set_visible(visible);
+    if let Err(e) = tray.set_visible(visible) {
+        log::warn!("could not set device tray visibility: {e}");
+    }
     if visible {
         update_device_image(app, &tray);
     }
 }
 
 fn update_device_image(app: &AppHandle, tray: &TrayIcon) {
-    let device = crate::audio::default_output().ok().flatten();
+    let device = match crate::audio::default_output() {
+        Ok(device) => device,
+        Err(e) => {
+            log::warn!("could not read the default output for the tray: {e}");
+            None
+        }
+    };
     let tooltip = device
         .as_ref()
         .map(|d| d.name.clone())
         .unwrap_or_else(|| "Dispositivo de saída".to_string());
-    let _ = tray.set_tooltip(Some(&tooltip));
+    if let Err(e) = tray.set_tooltip(Some(&tooltip)) {
+        log::warn!("could not set the device tray tooltip: {e}");
+    }
 
     let image = device
         .as_ref()
         .and_then(|d| crate::device_icon::icon_rgba_for(&d.id))
         .map(|(rgba, w, h)| Image::new_owned(rgba, w, h));
 
-    if let Some(image) = image {
-        let _ = tray.set_icon(Some(image));
-    } else if let Some(fallback) = app.default_window_icon() {
+    let result = match image {
+        Some(image) => tray.set_icon(Some(image)),
         // No Windows icon available — fall back to the app icon.
-        let _ = tray.set_icon(Some(fallback.clone()));
+        None => match app.default_window_icon() {
+            Some(fallback) => tray.set_icon(Some(fallback.clone())),
+            None => Ok(()),
+        },
+    };
+    if let Err(e) = result {
+        log::warn!("could not set the device tray icon: {e}");
     }
 }

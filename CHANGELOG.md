@@ -6,6 +6,51 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 12 — Observability & CI
+
+Foundation work for V2: the app could not be debugged from a user report, and
+nothing verified the code outside a release tag.
+
+#### Logging
+- Added `tauri-plugin-log` (`logging.rs`): a rotating file in the app log dir
+  (2 MiB, `KeepOne`), plus stdout in dev builds. The GUI binary is
+  `windows_subsystem = "windows"`, so the three `eprintln!` it had went nowhere.
+- Replaced the failures that used to vanish into `let _ =` with real log lines:
+  a `CoInitializeEx` error (as opposed to the benign `S_FALSE`/
+  `RPC_E_CHANGED_MODE`), a corrupt `config.json` silently reverting every
+  setting to its default, `SPI_GETWORKAREA` failing and parking the flyout at
+  0,0, failed tray icon/tooltip updates, a failed auto-switch, native toasts and
+  the switch sound, and every updater step.
+- New "Abrir pasta de logs" button in Settings → General (`open_log_folder`
+  command, `ShellExecuteW` — no extra plugin).
+
+#### Hotkeys that silently did not register
+- `hotkeys::register_with` used to return `Ok(())` no matter what, so a binding
+  already owned by another app was shown in the UI as if it worked. It now
+  returns the bindings that failed, with a reason; `update_hotkeys` passes them
+  to the frontend, which warns in the Hotkeys tab.
+- The action map is no longer locked while calling the OS `register`/
+  `unregister` (which blocks and needs the same lock to dispatch), and a
+  poisoned mutex is recovered instead of aborting the process under
+  `panic = "abort"`.
+
+#### CI
+- New `ci.yml` on push/PR: typecheck, frontend build, `cargo fmt --check`,
+  `clippy -D warnings` and `cargo test`. Nothing ran outside a tag before.
+- `release.yml` now verifies the tag matches all three version manifests
+  (`scripts/check-version.mjs` — the updater compares versions, so a mismatch
+  breaks update checks), builds the release body from the `CHANGELOG.md` section
+  for the version plus a download table, the SmartScreen note and a compare link
+  (`scripts/release-notes.mjs`), runs the CI checks before building, and
+  publishes a `SHA256SUMS.txt`.
+- `release.yml` also forces the release out of draft after building. This is
+  what was actually broken: `tauri-action` reuses an existing release for a tag
+  and never promotes a pre-existing draft, so v0.1.1 and v0.1.2 stayed drafts —
+  GitHub excludes those from `releases/latest`, so `latest.json` 404'd and
+  *every* update check failed while the workflow reported success. Found by the
+  new logging on its first run; v0.1.2 has been published.
+- Added `rustfmt.toml` and normalized the existing formatting.
+
 ### Fixes
 - **No more window flash when starting with Windows.** The `main` window was
   created with `visible: true` and only hidden later from `setup()`, so an

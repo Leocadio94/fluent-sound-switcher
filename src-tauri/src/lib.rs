@@ -8,6 +8,7 @@ mod config;
 mod device_icon;
 mod flyout;
 mod hotkeys;
+mod logging;
 mod mute;
 mod notify;
 mod overlay;
@@ -25,6 +26,8 @@ fn ping() -> String {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // Registered first so every later plugin/setup step can log.
+        .plugin(logging::plugin())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_notification::init())
@@ -44,8 +47,18 @@ pub fn run() {
         .setup(|app| {
             let handle = app.handle();
             tray::build(handle)?;
-            if let Err(e) = hotkeys::register_all(handle) {
-                eprintln!("[hotkeys] initial registration failed: {e}");
+            match hotkeys::register_all(handle) {
+                Ok(failures) => {
+                    for failure in failures {
+                        log::warn!(
+                            "hotkey not registered: {} -> {} ({})",
+                            failure.action,
+                            failure.accelerator,
+                            failure.reason
+                        );
+                    }
+                }
+                Err(e) => log::error!("initial hotkey registration failed: {e}"),
             }
             overlay::configure(handle);
             flyout::configure(handle);
@@ -94,6 +107,7 @@ pub fn run() {
             commands::set_device_icon,
             commands::main_window_ready,
             commands::install_update,
+            commands::open_log_folder,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Fluent Sound Switcher");

@@ -98,12 +98,16 @@ fn work_area() -> (f64, f64, f64, f64) {
     };
     let mut rect = RECT::default();
     unsafe {
-        let _ = SystemParametersInfoW(
+        if let Err(e) = SystemParametersInfoW(
             SPI_GETWORKAREA,
             0,
             Some(&mut rect as *mut _ as *mut core::ffi::c_void),
             SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
-        );
+        ) {
+            // `rect` stays zeroed, which parks the flyout in the top-left
+            // corner — a symptom that is otherwise impossible to explain.
+            log::error!("SPI_GETWORKAREA failed ({e}); flyout position will be wrong");
+        }
     }
     (
         rect.left as f64,

@@ -4,7 +4,7 @@ use tauri::Manager;
 
 use crate::audio::{self, AudioDevice};
 use crate::config::{HotkeyConfig, MuteIndicator};
-use crate::hotkeys;
+use crate::hotkeys::{self, HotkeyFailure};
 
 /// Whether this run should keep the main window hidden in the tray (set at
 /// startup: auto-launched at login with "start minimized" enabled).
@@ -47,10 +47,12 @@ pub fn set_default_audio_device(
 ) -> Result<(), String> {
     audio::set_default_device(&device_id).map_err(|e| e.to_string())?;
     if notify {
-        if let Ok(devices) = audio::list_devices() {
-            if let Some(device) = devices.iter().find(|d| d.id == device_id) {
-                crate::notify::device_changed(&app, &device.name, device.direction);
-            }
+        match audio::list_devices() {
+            Ok(devices) => match devices.iter().find(|d| d.id == device_id) {
+                Some(device) => crate::notify::device_changed(&app, &device.name, device.direction),
+                None => log::warn!("switched to {device_id} but it is not enumerable"),
+            },
+            Err(e) => log::warn!("could not enumerate devices to notify: {e}"),
         }
     }
     Ok(())
@@ -94,7 +96,10 @@ pub fn toggle_mic_mute(app: tauri::AppHandle) -> Result<bool, String> {
 /// Re-applies the overlay with the given settings (passed directly to avoid
 /// racing the store's async write).
 #[tauri::command]
-pub fn refresh_mute_indicator(app: tauri::AppHandle, indicator: MuteIndicator) -> Result<(), String> {
+pub fn refresh_mute_indicator(
+    app: tauri::AppHandle,
+    indicator: MuteIndicator,
+) -> Result<(), String> {
     crate::overlay::update_with(&app, crate::mute::current(&app), &indicator);
     Ok(())
 }
@@ -127,7 +132,31 @@ pub fn get_mic_muted() -> Result<bool, String> {
 /// Re-registers the global shortcuts from the provided bindings. Called by the
 /// frontend after the user edits a hotkey so we don't race the store's
 /// async file write.
+///
+/// Returns the bindings that could *not* be registered (usually because another
+/// app already owns the combination) so the settings UI can warn about them
+/// instead of showing a dead shortcut as if it worked.
 #[tauri::command]
-pub fn update_hotkeys(app: tauri::AppHandle, bindings: HotkeyConfig) -> Result<(), String> {
-    hotkeys::register_with(&app, &bindings).map_err(|e| e.to_string())
+pub fn update_hotkeys(
+    app: tauri::AppHandle,
+    bindings: HotkeyConfig,
+) -> Result<Vec<HotkeyFailure>, String> {
+    let failures = hotkeys::register_with(&app, &bindings).map_err(|e| e.to_string())?;
+    for failure in &failures {
+        log::warn!(
+            "hotkey not registered: {} -> {} ({})",
+            failure.action,
+            failure.accelerator,
+            failure.reason
+        );
+    }
+    Ok(failures)
+}
+
+/// Opens the folder holding the rotating log file, so a user can attach it to a
+/// bug report. Nothing in the GUI build reaches stdout, so this is the only way
+/// to see what the backend did.
+#[tauri::command]
+pub fn open_log_folder(app: tauri::AppHandle) -> Result<(), String> {
+    crate::logging::open_log_dir(&app)
 }

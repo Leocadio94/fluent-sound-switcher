@@ -36,7 +36,8 @@
     "toggleMute": "Toggle mic mute",
     "press": "Press keys...",
     "none": "None",
-    "close": "Close"
+    "close": "Close",
+    "conflict": "Could not register: {{list}}. Another app probably owns that shortcut."
   },
   "muteIndicator": {
     "title": "Mute indicator",
@@ -98,5 +99,10 @@
     "theme.system": "Follow system",
     "theme.light": "Light",
     "theme.dark": "Dark"
+  },
+  "general": {
+    "logs": "Diagnostics",
+    "logsHint": "Opens the folder holding the log file, handy to attach to a bug report.",
+    "openLogs": "Open log folder"
   }
 }

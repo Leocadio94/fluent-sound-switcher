@@ -31,6 +31,7 @@ pub fn check(app: &AppHandle, silent: bool) {
         let updater = match app.updater() {
             Ok(u) => u,
             Err(e) => {
+                log::error!("updater unavailable: {e}");
                 if !silent {
                     notify(&app, &format!("Updater indisponível: {e}"));
                 }
@@ -52,6 +53,11 @@ pub fn check(app: &AppHandle, silent: bool) {
 
         match result {
             Ok(Some(update)) => {
+                log::info!(
+                    "update {} available (running {})",
+                    update.version,
+                    update.current_version
+                );
                 let payload = UpdateAvailable {
                     version: update.version.clone(),
                     current_version: update.current_version.clone(),
@@ -60,7 +66,9 @@ pub fn check(app: &AppHandle, silent: bool) {
                     &app,
                     &format!("Atualização {} disponível.", payload.version),
                 );
-                let _ = app.emit("update-available", payload);
+                if let Err(e) = app.emit("update-available", payload) {
+                    log::warn!("could not emit update-available: {e}");
+                }
                 if !silent {
                     // The user asked explicitly — put the window with the
                     // update bar in front of them.
@@ -72,11 +80,13 @@ pub fn check(app: &AppHandle, silent: bool) {
                 }
             }
             Ok(None) => {
+                log::info!("update check: already on the latest version");
                 if !silent {
                     notify(&app, "Você já está na versão mais recente.");
                 }
             }
             Err(e) => {
+                log::warn!("update check failed: {e}");
                 if !silent {
                     notify(&app, &format!("Erro ao verificar atualizações: {e}"));
                 }
@@ -112,22 +122,28 @@ pub fn install(app: &AppHandle) {
         };
 
         let version = update.version.clone();
+        log::info!("downloading update {version}");
         notify(&app, &format!("Baixando atualização {version}…"));
         if let Err(e) = update.download_and_install(|_, _| {}, || {}).await {
+            log::error!("update {version} failed to install: {e}");
             notify(&app, &format!("Falha ao atualizar: {e}"));
             let _ = app.emit("update-finished", ());
             return;
         }
+        log::info!("updated to {version}; restarting");
         notify(&app, &format!("Atualizado para {version}. Reiniciando…"));
         app.restart();
     });
 }
 
 fn notify(app: &AppHandle, body: &str) {
-    let _ = app
+    if let Err(e) = app
         .notification()
         .builder()
         .title("Fluent Sound Switcher")
         .body(body)
-        .show();
+        .show()
+    {
+        log::warn!("updater toast failed: {e}");
+    }
 }

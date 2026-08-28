@@ -121,7 +121,11 @@ fn cmd_mute(sub: Option<&str>) -> i32 {
         "toggle" => audio::toggle_mic_mute(),
         "on" => audio::set_mic_mute(true).map(|()| true),
         "off" => audio::set_mic_mute(false).map(|()| false),
-        other => return fail(&format!("unknown mute option '{other}' (use toggle|on|off)")),
+        other => {
+            return fail(&format!(
+                "unknown mute option '{other}' (use toggle|on|off)"
+            ))
+        }
     };
     match result {
         Ok(muted) => {
@@ -153,9 +157,8 @@ fn read_favorites(direction: &str) -> Vec<String> {
 }
 
 fn store_path() -> Option<PathBuf> {
-    std::env::var_os("APPDATA").map(|appdata| {
-        PathBuf::from(appdata).join(IDENTIFIER).join(STORE_FILE)
-    })
+    std::env::var_os("APPDATA")
+        .map(|appdata| PathBuf::from(appdata).join(IDENTIFIER).join(STORE_FILE))
 }
 
 fn fail(message: &str) -> i32 {

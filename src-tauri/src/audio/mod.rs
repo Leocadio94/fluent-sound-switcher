@@ -52,14 +52,21 @@ pub fn cycle_default(
     Ok(Some(next))
 }
 
+use windows::Win32::Foundation::RPC_E_CHANGED_MODE;
 use windows::Win32::System::Com::{CoInitializeEx, COINIT_MULTITHREADED};
 
 /// Initializes COM on the current thread. Safe to call repeatedly: if COM is
 /// already initialized (possibly in a different apartment, as Tauri's main
 /// thread is STA), the returned `S_FALSE`/`RPC_E_CHANGED_MODE` is ignored and
 /// the existing apartment is reused — the audio interfaces work in either.
+///
+/// Anything else *is* a real failure, and it makes every later COM call fail
+/// for reasons that are impossible to guess from the symptom — so it is logged.
 pub fn ensure_com() {
     unsafe {
-        let _ = CoInitializeEx(None, COINIT_MULTITHREADED);
+        let hr = CoInitializeEx(None, COINIT_MULTITHREADED);
+        if hr.is_err() && hr != RPC_E_CHANGED_MODE {
+            log::error!("CoInitializeEx failed: {hr:?}");
+        }
     }
 }

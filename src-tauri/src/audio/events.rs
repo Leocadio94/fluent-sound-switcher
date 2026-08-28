@@ -23,12 +23,7 @@ struct Notifier {
 }
 
 impl IMMNotificationClient_Impl for Notifier_Impl {
-    fn OnDefaultDeviceChanged(
-        &self,
-        flow: EDataFlow,
-        role: ERole,
-        _id: &PCWSTR,
-    ) -> Result<()> {
+    fn OnDefaultDeviceChanged(&self, flow: EDataFlow, role: ERole, _id: &PCWSTR) -> Result<()> {
         // The default changed under us (sound panel, CLI, our own switch...).
         // Mirror it to the GUI. Console role only, to avoid firing three times.
         if role == eConsole {
@@ -113,9 +108,13 @@ fn on_arrival(app: &AppHandle, id: &PCWSTR) {
         return;
     }
 
-    if crate::audio::set_default_device(&device_id).is_ok() {
-        refresh();
-        crate::notify::device_changed(app, &device.name, "output");
+    match crate::audio::set_default_device(&device_id) {
+        Ok(()) => {
+            log::info!("auto-switched output to {} ({device_id})", device.name);
+            refresh();
+            crate::notify::device_changed(app, &device.name, "output");
+        }
+        Err(e) => log::error!("auto-switch to {} failed: {e}", device.name),
     }
 }
 
@@ -130,13 +129,15 @@ pub fn start(app: &AppHandle) {
             match CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL) {
                 Ok(e) => e,
                 Err(e) => {
-                    eprintln!("[events] enumerator creation failed: {e}");
+                    log::error!("device-notification enumerator creation failed: {e}");
                     return;
                 }
             };
         let client: IMMNotificationClient = Notifier { app: app.clone() }.into();
         if let Err(e) = enumerator.RegisterEndpointNotificationCallback(&client) {
-            eprintln!("[events] callback registration failed: {e}");
+            log::error!(
+                "endpoint-notification registration failed: {e};                  external device changes will not be mirrored"
+            );
             return;
         }
         std::mem::forget(client);

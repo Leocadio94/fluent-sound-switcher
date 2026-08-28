@@ -20,12 +20,9 @@ pub fn device_changed(app: &AppHandle, name: &str, direction: &str) {
         } else {
             "Dispositivo de entrada"
         };
-        let _ = app
-            .notification()
-            .builder()
-            .title(label)
-            .body(name)
-            .show();
+        if let Err(e) = app.notification().builder().title(label).body(name).show() {
+            log::warn!("native toast failed: {e}");
+        }
     }
 
     if cfg.sound {
@@ -41,11 +38,15 @@ fn play_sound() {
 
     const WAV: &[u8] = include_bytes!("../sounds/switch.wav");
     unsafe {
-        let _ = PlaySoundW(
+        if !PlaySoundW(
             PCWSTR(WAV.as_ptr() as *const u16),
             HMODULE::default(),
             SND_MEMORY | SND_ASYNC,
-        );
+        )
+        .as_bool()
+        {
+            log::warn!("PlaySoundW failed for the switch sound");
+        }
     }
 }
 

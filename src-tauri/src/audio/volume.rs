@@ -3,15 +3,12 @@
 
 use windows::Win32::Foundation::BOOL;
 use windows::Win32::Media::Audio::Endpoints::IAudioEndpointVolume;
-use windows::Win32::Media::Audio::{
-    eCapture, eConsole, IMMDeviceEnumerator, MMDeviceEnumerator,
-};
+use windows::Win32::Media::Audio::{eCapture, eConsole, IMMDeviceEnumerator, MMDeviceEnumerator};
 use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
 
 /// Returns the endpoint volume interface for the default capture device.
 unsafe fn default_mic_volume() -> windows::core::Result<IAudioEndpointVolume> {
-    let enumerator: IMMDeviceEnumerator =
-        CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL)?;
+    let enumerator: IMMDeviceEnumerator = CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL)?;
     let device = enumerator.GetDefaultAudioEndpoint(eCapture, eConsole)?;
     device.Activate::<IAudioEndpointVolume>(CLSCTX_ALL, None)
 }

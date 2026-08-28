@@ -21,7 +21,7 @@ Picture).
   (Core Audio COM) + `windows-core` 0.58.
 - **Tauri plugins**: `store` (config), `global-shortcut`, `notification`,
   `autostart`, `updater` (signed auto-update via GitHub Releases; pubkey in
-  `tauri.conf.json`, private key kept outside the repo at `~/.tauri/`).
+  `tauri.conf.json`, private key kept outside the repo at `~/.tauri/`), `log`.
 - **Package manager**: pnpm. **Identifier**: `com.fluentsoundswitcher.app`
   (config at `%APPDATA%/com.fluentsoundswitcher.app/config.json`).
 
@@ -39,8 +39,10 @@ pnpm install        # install JS deps
 pnpm tauri:dev      # run the app (Tauri dev, launches vite + rust)
 pnpm tauri:build    # production bundle (msi + nsis)
 pnpm lint           # tsc --noEmit (frontend typecheck)
-# backend check:
-cargo check --manifest-path src-tauri/Cargo.toml
+# backend checks (what CI runs):
+cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
 ## Layout
@@ -67,7 +69,10 @@ cargo check --manifest-path src-tauri/Cargo.toml
     the Windows endpoint icon → RGBA), `mute.rs` (central mute state),
     `notify.rs` (toast/banner/sound), `hotkeys.rs` (global shortcuts),
     `cli.rs` (subcommands), `config.rs` (reads the store file), `commands.rs`,
-    `lib.rs` (builder/setup), `main.rs` (CLI dispatch then `run`).
+    `logging.rs` (log plugin + "open log folder"), `lib.rs` (builder/setup),
+    `main.rs` (CLI dispatch then `run`).
+- `scripts/` — release helpers used by CI: `check-version.mjs` (tag vs. the
+  three version manifests), `release-notes.mjs` (release body from CHANGELOG).
 
 ## Key technical notes
 
@@ -112,6 +117,14 @@ cargo check --manifest-path src-tauri/Cargo.toml
   exit code when a subcommand ran. `#![windows_subsystem = "windows"]` in release.
 - WebView2 auto-darkens controls in dark mode; `index.html` + the theme pin
   `color-scheme` to the resolved theme to stop it.
+- **Logging**: the GUI build is `windows_subsystem = "windows"`, so nothing
+  printed reaches a console — always use `log::` (never `println!`/`eprintln!`)
+  and read the rotating file via Settings → General → "Abrir pasta de logs".
+  Keep `let _ =` only where a failure is genuinely benign.
+- Hotkey registration can fail (another app owns the combo). `register_with`
+  returns the failures instead of swallowing them; `update_hotkeys` forwards
+  them so the settings UI can warn. Never report a binding as applied without
+  checking.
 
 ## For other agents
 

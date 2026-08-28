@@ -53,9 +53,24 @@ export function getMicMuted(): Promise<boolean> {
   return invoke<boolean>("get_mic_muted");
 }
 
-/** Re-registers the global shortcuts from the given bindings. */
-export function updateHotkeys(bindings: Hotkeys): Promise<void> {
-  return invoke<void>("update_hotkeys", { bindings });
+/**
+ * A binding the OS refused to register — nearly always because another app
+ * already owns the combination. Without this the UI would show a dead shortcut
+ * as if it worked.
+ */
+export interface HotkeyFailure {
+  /** The `hotkeys` config key, e.g. `cycleOutput`. */
+  action: keyof Hotkeys;
+  accelerator: string;
+  reason: string;
+}
+
+/**
+ * Re-registers the global shortcuts from the given bindings, resolving to the
+ * bindings that could *not* be registered (empty when all took).
+ */
+export function updateHotkeys(bindings: Hotkeys): Promise<HotkeyFailure[]> {
+  return invoke<HotkeyFailure[]>("update_hotkeys", { bindings });
 }
 
 /** Re-applies the overlay with the given settings after a change. */
@@ -89,4 +104,13 @@ export function mainWindowReady(): Promise<void> {
 /** Downloads and installs the pending update, then restarts the app. */
 export function installUpdate(): Promise<void> {
   return invoke<void>("install_update");
+}
+
+/**
+ * Opens the folder with the rotating log file in Explorer. Nothing the backend
+ * prints reaches a console in the packaged app, so this is how a user gets the
+ * log for a bug report.
+ */
+export function openLogFolder(): Promise<void> {
+  return invoke<void>("open_log_folder");
 }

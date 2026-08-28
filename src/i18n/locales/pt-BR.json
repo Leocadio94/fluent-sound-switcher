@@ -36,7 +36,8 @@
     "toggleMute": "Mutar/desmutar microfone",
     "press": "Pressione as teclas...",
     "none": "Nenhum",
-    "close": "Fechar"
+    "close": "Fechar",
+    "conflict": "Não foi possível registrar: {{list}}. Outro aplicativo provavelmente já usa esse atalho."
   },
   "muteIndicator": {
     "title": "Indicador de mute",
@@ -98,5 +99,10 @@
     "theme.system": "Seguir o sistema",
     "theme.light": "Claro",
     "theme.dark": "Escuro"
+  },
+  "general": {
+    "logs": "Diagnóstico",
+    "logsHint": "Abre a pasta com o arquivo de log, útil para anexar a um relato de erro.",
+    "openLogs": "Abrir pasta de logs"
   }
 }
