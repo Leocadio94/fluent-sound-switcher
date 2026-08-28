@@ -37,7 +37,8 @@
     "conflict": "Could not register: {{list}}. Another app probably owns that shortcut.",
     "toggleOutputMute": "Toggle output mute",
     "volumeUp": "Volume up",
-    "volumeDown": "Volume down"
+    "volumeDown": "Volume down",
+    "mediaKeysHint": "Media keys (volume, play) can be bound on their own, with no modifier — but while the app runs Windows stops receiving them."
   },
   "muteIndicator": {
     "mode": "When to show",
@@ -77,6 +78,7 @@
     "tabs": {
       "general": "General",
       "hotkeys": "Shortcuts",
+      "volume": "Volume",
       "mute": "Indicator",
       "notifications": "Notifications"
     },
@@ -116,5 +118,17 @@
     "topRight": "Top (right)",
     "bottomLeft": "Bottom (left)",
     "bottomRight": "Bottom (right)"
+  },
+  "volume": {
+    "label": "Volume of {{name}}",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "osd": "Show volume on screen",
+    "osdHint": "Appears when you use the volume hotkeys, including over fullscreen games.",
+    "osdPosition": "Position on screen",
+    "sliders": "Volume slider in the list",
+    "slidersHint": "Adds a slider to every device row.",
+    "slidersInFlyout": "Volume slider in the quick menu",
+    "slidersInFlyoutHint": "The tray menu is compact; leave this off to keep it tight."
   }
 }

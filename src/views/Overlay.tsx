@@ -1,13 +1,23 @@
 import { useState } from "react";
-import { MicProhibitedFilled, MicFilled } from "@fluentui/react-icons";
+import {
+  MicProhibitedFilled,
+  MicFilled,
+  Speaker0Filled,
+  Speaker2Filled,
+  SpeakerMuteFilled,
+} from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 
 import { useTauriEvent } from "../hooks/useTauriEvent";
 
 interface OverlayState {
+  /** Which face the overlay is showing. */
+  kind: "mute" | "volume";
   muted: boolean;
   style: "full" | "icon";
+  /** 0-1, only meaningful when `kind` is "volume". */
+  level: number;
 }
 
 // Colours come from Fluent tokens rather than the hardcoded hex values this
@@ -50,26 +60,82 @@ const useStyles = makeStyles({
   live: {
     color: tokens.colorPaletteGreenForeground1,
   },
+  // The volume face is a neutral pill: a level readout is not a state that
+  // wants a red or green tint.
+  volume: {
+    color: tokens.colorNeutralForeground1,
+    gap: "14px",
+  },
+  track: {
+    position: "relative",
+    flexGrow: 1,
+    height: "6px",
+    borderRadius: "999px",
+    backgroundColor: tokens.colorNeutralBackground5,
+    overflow: "hidden",
+  },
+  fill: {
+    position: "absolute",
+    insetBlock: 0,
+    left: 0,
+    borderRadius: "999px",
+    backgroundColor: tokens.colorBrandBackground,
+  },
+  fillMuted: {
+    backgroundColor: tokens.colorNeutralForeground4,
+  },
+  percent: {
+    minWidth: "3ch",
+    textAlign: "right",
+    fontVariantNumeric: "tabular-nums",
+    fontSize: tokens.fontSizeBase300,
+    color: tokens.colorNeutralForeground2,
+  },
 });
 
 /**
- * Content of the always-on-top, click-through overlay window. Reflects the mic
- * mute state pushed by the backend via the `overlay-state` event, in either
- * full (icon + text) or icon-only style.
+ * Content of the always-on-top, click-through overlay window.
+ *
+ * Shows either the mic-mute indicator or a transient volume OSD, whichever the
+ * backend last pushed through `overlay-state`. They share this one window so
+ * the app does not need a fifth WebView2 instance.
  */
 export default function Overlay() {
   const { t } = useTranslation();
   const styles = useStyles();
   const [state, setState] = useState<OverlayState>({
+    kind: "mute",
     muted: false,
     style: "full",
+    level: 0,
   });
 
   useTauriEvent<OverlayState>("overlay-state", (event) =>
     setState(event.payload),
   );
 
-  const { muted, style } = state;
+  const { kind, muted, style, level } = state;
+
+  if (kind === "volume") {
+    const percent = Math.round(level * 100);
+    const VolumeIcon = muted
+      ? SpeakerMuteFilled
+      : percent === 0
+        ? Speaker0Filled
+        : Speaker2Filled;
+    return (
+      <div aria-hidden="true" className={mergeClasses(styles.pill, styles.volume)}>
+        <VolumeIcon />
+        <div className={styles.track}>
+          <div
+            className={mergeClasses(styles.fill, muted && styles.fillMuted)}
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+        <span className={styles.percent}>{percent}</span>
+      </div>
+    );
+  }
 
   return (
     <div

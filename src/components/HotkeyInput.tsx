@@ -15,8 +15,13 @@ const useStyles = makeStyles({
 
 /**
  * Translates a keydown into a Tauri accelerator string (e.g. "Ctrl+Alt+F11").
- * Requires at least one modifier plus a letter, digit or function key so the
- * binding can't collide with plain typing.
+ * Requires at least one modifier plus a letter, digit, function or navigation
+ * key, so the binding can't collide with plain typing.
+ *
+ * Media keys are the one exception: they are accepted bare, since that is how
+ * people expect to bind them, and they cannot be typed by accident. Binding one
+ * takes it away from Windows for as long as the app runs, which is why the
+ * volume actions ship unbound and the UI warns about it.
  *
  * Exported for testing.
  */
@@ -27,10 +32,38 @@ export function toAccelerator(e: KeyboardEvent): string | null {
   if (e.shiftKey) mods.push("Shift");
   if (e.metaKey) mods.push("Super");
 
+  // Tauri's accelerator names for the media keys.
+  const media: Record<string, string> = {
+    AudioVolumeUp: "VolumeUp",
+    AudioVolumeDown: "VolumeDown",
+    AudioVolumeMute: "VolumeMute",
+    MediaPlayPause: "MediaPlayPause",
+    MediaStop: "MediaStop",
+    MediaTrackNext: "MediaTrackNext",
+    MediaTrackPrevious: "MediaTrackPrevious",
+  };
+  if (media[e.code]) {
+    return [...mods, media[e.code]].join("+");
+  }
+
+  const navigation: Record<string, string> = {
+    ArrowUp: "Up",
+    ArrowDown: "Down",
+    ArrowLeft: "Left",
+    ArrowRight: "Right",
+    Home: "Home",
+    End: "End",
+    PageUp: "PageUp",
+    PageDown: "PageDown",
+    Insert: "Insert",
+    Delete: "Delete",
+  };
+
   let key: string | null = null;
   if (/^Key[A-Z]$/.test(e.code)) key = e.code.slice(3);
   else if (/^Digit[0-9]$/.test(e.code)) key = e.code.slice(5);
   else if (/^F([1-9]|1[0-9]|2[0-4])$/.test(e.code)) key = e.code;
+  else if (navigation[e.code]) key = navigation[e.code];
 
   if (!key || mods.length === 0) return null;
   return [...mods, key].join("+");

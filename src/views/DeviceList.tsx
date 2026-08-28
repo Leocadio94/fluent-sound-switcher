@@ -8,6 +8,7 @@ import {
 import { MicRegular, Speaker2Regular } from "@fluentui/react-icons";
 
 import DeviceRow from "../components/DeviceRow";
+import type { DeviceVolume } from "../hooks/useVolume";
 import type { AudioDevice, DeviceDirection } from "../lib/tauri";
 
 const useStyles = makeStyles({
@@ -33,7 +34,15 @@ const useStyles = makeStyles({
   },
 });
 
-interface DeviceSectionProps {
+interface VolumeProps {
+  volumes: Record<string, DeviceVolume>;
+  onVolumeChange: (device: AudioDevice, level: number) => void;
+  onToggleMute: (device: AudioDevice) => void;
+  /** When off, the rows render without their volume slider. */
+  showSliders: boolean;
+}
+
+interface DeviceSectionProps extends VolumeProps {
   direction: DeviceDirection;
   devices: AudioDevice[];
   switching: string | null;
@@ -49,6 +58,10 @@ function DeviceSection({
   onSwitch,
   isFavorite,
   onToggleFavorite,
+  volumes,
+  onVolumeChange,
+  onToggleMute,
+  showSliders,
 }: DeviceSectionProps) {
   const styles = useStyles();
   const { t } = useTranslation();
@@ -76,6 +89,9 @@ function DeviceSection({
               busy={switching === device.id}
               favorite={isFavorite(direction, device.id)}
               onToggleFavorite={(d) => onToggleFavorite(direction, d.id)}
+              volume={showSliders ? volumes[device.id] : undefined}
+              onVolumeChange={showSliders ? onVolumeChange : undefined}
+              onToggleMute={showSliders ? onToggleMute : undefined}
             />
           </div>
         ))}
@@ -84,7 +100,7 @@ function DeviceSection({
   );
 }
 
-interface DeviceListProps {
+interface DeviceListProps extends VolumeProps {
   devices: AudioDevice[];
   switching: string | null;
   onSwitch: (device: AudioDevice) => void;
@@ -100,6 +116,10 @@ export default function DeviceList({
   isFavorite,
   onToggleFavorite,
   showOnlyFavorites,
+  volumes,
+  onVolumeChange,
+  onToggleMute,
+  showSliders,
 }: DeviceListProps) {
   const visible = showOnlyFavorites
     ? devices.filter((d) => isFavorite(d.direction, d.id))
@@ -107,7 +127,16 @@ export default function DeviceList({
   const outputs = visible.filter((d) => d.direction === "output");
   const inputs = visible.filter((d) => d.direction === "input");
 
-  const sectionProps = { switching, onSwitch, isFavorite, onToggleFavorite };
+  const sectionProps = {
+    switching,
+    onSwitch,
+    isFavorite,
+    onToggleFavorite,
+    volumes,
+    onVolumeChange,
+    onToggleMute,
+    showSliders,
+  };
 
   return (
     <>

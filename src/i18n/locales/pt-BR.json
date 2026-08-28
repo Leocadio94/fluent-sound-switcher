@@ -37,7 +37,8 @@
     "conflict": "Não foi possível registrar: {{list}}. Outro aplicativo provavelmente já usa esse atalho.",
     "toggleOutputMute": "Mutar/desmutar saída",
     "volumeUp": "Aumentar volume",
-    "volumeDown": "Diminuir volume"
+    "volumeDown": "Diminuir volume",
+    "mediaKeysHint": "As teclas de mídia (volume, play) podem ser usadas direto, sem modificador — mas enquanto o app estiver aberto elas deixam de funcionar no Windows."
   },
   "muteIndicator": {
     "mode": "Quando mostrar",
@@ -77,6 +78,7 @@
     "tabs": {
       "general": "Geral",
       "hotkeys": "Atalhos",
+      "volume": "Volume",
       "mute": "Indicador",
       "notifications": "Notificações"
     },
@@ -116,5 +118,17 @@
     "topRight": "Topo (direita)",
     "bottomLeft": "Base (esquerda)",
     "bottomRight": "Base (direita)"
+  },
+  "volume": {
+    "label": "Volume de {{name}}",
+    "mute": "Mutar",
+    "unmute": "Desmutar",
+    "osd": "Mostrar volume na tela",
+    "osdHint": "Aparece ao usar os atalhos de volume, inclusive sobre jogos em tela cheia.",
+    "osdPosition": "Posição na tela",
+    "sliders": "Controle de volume na lista",
+    "slidersHint": "Adiciona um controle deslizante em cada dispositivo.",
+    "slidersInFlyout": "Controle de volume no menu rápido",
+    "slidersInFlyoutHint": "O menu da bandeja é compacto; deixe desligado se preferir a lista enxuta."
   }
 }

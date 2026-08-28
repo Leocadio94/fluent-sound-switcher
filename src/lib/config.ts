@@ -74,13 +74,20 @@ export const DEFAULT_MUTE_INDICATOR: MuteIndicator = {
 
 /** Volume on-screen-display preferences; shares the overlay window. */
 export interface VolumeOsd {
+  /** Show the on-screen level when a volume hotkey fires. */
   enabled: boolean;
   position: OverlayPosition;
+  /** Show a volume slider on each row of the main device list. */
+  sliders: boolean;
+  /** Show it in the tray flyout too, where space is tighter. */
+  slidersInFlyout: boolean;
 }
 
 export const DEFAULT_VOLUME_OSD: VolumeOsd = {
   enabled: true,
   position: "bottomCenter",
+  sliders: true,
+  slidersInFlyout: false,
 };
 
 /** Device-change notification preferences. */
@@ -311,6 +318,11 @@ export async function loadVolumeOsd(): Promise<VolumeOsd> {
       stored?.position,
       OVERLAY_POSITIONS,
       DEFAULT_VOLUME_OSD.position,
+    ),
+    sliders: boolOr(stored?.sliders, DEFAULT_VOLUME_OSD.sliders),
+    slidersInFlyout: boolOr(
+      stored?.slidersInFlyout,
+      DEFAULT_VOLUME_OSD.slidersInFlyout,
     ),
   };
 }

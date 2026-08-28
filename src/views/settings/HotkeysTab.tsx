@@ -44,6 +44,11 @@ export default function HotkeysTab({
           </MessageBarBody>
         </MessageBar>
       )}
+      {/* Binding a media key takes it away from Windows for as long as the app
+          runs, so say so rather than let it surprise people. */}
+      <MessageBar intent="info">
+        <MessageBarBody>{t("hotkeys.mediaKeysHint")}</MessageBarBody>
+      </MessageBar>
       {ACTIONS.map(({ key, labelKey }) => (
         <Field
           key={key}

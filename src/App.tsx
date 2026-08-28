@@ -30,6 +30,8 @@ import { useMute } from "./hooks/useMute";
 import { useMuteIndicator } from "./hooks/useMuteIndicator";
 import { useNotifications } from "./hooks/useNotifications";
 import { useAutoSwitch } from "./hooks/useAutoSwitch";
+import { useVolume } from "./hooks/useVolume";
+import { useVolumeOsd } from "./hooks/useVolumeOsd";
 import { useTauriEvent } from "./hooks/useTauriEvent";
 import {
   installUpdate,
@@ -104,6 +106,8 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
   const { notifications, setField: setNotificationField } = useNotifications();
   const { autoSwitch, setField: setAutoSwitchField } = useAutoSwitch();
   const { muted, toggle: toggleMute } = useMute();
+  const { volumes, setLevel, toggleMute: toggleDeviceMute } = useVolume(devices);
+  const { osd, setField: setOsdField } = useVolumeOsd();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [update, setUpdate] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
@@ -184,6 +188,8 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
         onPreviewNotification={() => void previewNotification()}
         autoSwitch={autoSwitch}
         onAutoSwitchChange={setAutoSwitchField}
+        volumeOsd={osd}
+        onVolumeOsdChange={setOsdField}
       />
 
       <main className={styles.content}>
@@ -251,6 +257,10 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
               isFavorite={isFavorite}
               onToggleFavorite={toggleFavorite}
               showOnlyFavorites={showOnlyFavorites}
+              volumes={volumes}
+              onVolumeChange={setLevel}
+              onToggleMute={toggleDeviceMute}
+              showSliders={osd.sliders}
             />
           </>
         )}

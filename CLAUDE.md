@@ -54,7 +54,8 @@ cargo test --manifest-path src-tauri/Cargo.toml
     `Banner`, `SettingsDialog` — a shell over `views/settings/*Tab.tsx`),
     `components/` (`HotkeyInput`, `DeviceRow` shared by the list and flyout).
   - `hooks/` — `useDevices`, `useFavorites`, `useHotkeys`, `useMute`,
-    `useMuteIndicator`, `useNotifications`, `useAutoSwitch`, `useGeneral`, plus
+    `useMuteIndicator`, `useNotifications`, `useAutoSwitch`, `useGeneral`,
+    `useVolume` (per-device level/mute), `useVolumeOsd`, plus
     `usePersistedConfig` (load/save/apply a settings record) and
     `useTauriEvent` (subscribe for a component's lifetime).
   - `lib/tauri.ts` (invoke wrappers), `lib/config.ts` (store wrapper + types),
@@ -156,6 +157,10 @@ cargo test --manifest-path src-tauri/Cargo.toml
 - Config values are validated on read (`lib/configSchema.ts`) against option
   lists exported from `lib/config.ts`; add a new option to that list, not to a
   second copy in the dropdown.
+- Device volume is fetched per device on demand (`useVolume`), never folded into
+  `list_audio_devices`: that would activate an `IAudioEndpointVolume` interface
+  per endpoint on every refresh, and the list refetches on each
+  `device-changed`. Slider writes are debounced (~40 ms).
 - **Logging**: the GUI build is `windows_subsystem = "windows"`, so nothing
   printed reaches a console — always use `log::` (never `println!`/`eprintln!`)
   and read the rotating file via Settings → General → "Abrir pasta de logs".

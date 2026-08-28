@@ -19,6 +19,7 @@ import GeneralTab from "./settings/GeneralTab";
 import HotkeysTab from "./settings/HotkeysTab";
 import MuteTab from "./settings/MuteTab";
 import NotificationsTab from "./settings/NotificationsTab";
+import VolumeTab from "./settings/VolumeTab";
 import type { ThemePreference } from "../theme/useSystemTheme";
 import type { HotkeyFailure } from "../lib/tauri";
 import type {
@@ -26,6 +27,7 @@ import type {
   Hotkeys,
   MuteIndicator,
   NotificationConfig,
+  VolumeOsd,
 } from "../lib/config";
 
 const useStyles = makeStyles({
@@ -45,9 +47,15 @@ const useStyles = makeStyles({
   },
 });
 
-type TabValue = "general" | "hotkeys" | "mute" | "notifications";
+type TabValue = "general" | "hotkeys" | "volume" | "mute" | "notifications";
 
-const TABS: TabValue[] = ["general", "hotkeys", "mute", "notifications"];
+const TABS: TabValue[] = [
+  "general",
+  "hotkeys",
+  "volume",
+  "mute",
+  "notifications",
+];
 
 interface SettingsDialogProps {
   open: boolean;
@@ -72,6 +80,11 @@ interface SettingsDialogProps {
   onAutoSwitchChange: <K extends keyof AutoSwitchConfig>(
     key: K,
     value: AutoSwitchConfig[K],
+  ) => void;
+  volumeOsd: VolumeOsd;
+  onVolumeOsdChange: <K extends keyof VolumeOsd>(
+    key: K,
+    value: VolumeOsd[K],
   ) => void;
 }
 
@@ -118,6 +131,12 @@ export default function SettingsDialog(props: SettingsDialogProps) {
                 hotkeys={props.hotkeys}
                 onChange={props.onHotkeyChange}
                 failures={props.hotkeyFailures}
+              />
+            )}
+            {tab === "volume" && (
+              <VolumeTab
+                osd={props.volumeOsd}
+                onChange={props.onVolumeOsdChange}
               />
             )}
             {tab === "mute" && (

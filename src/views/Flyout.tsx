@@ -19,6 +19,8 @@ import DeviceRow from "../components/DeviceRow";
 import { useDevices } from "../hooks/useDevices";
 import { useFavorites } from "../hooks/useFavorites";
 import { useMute } from "../hooks/useMute";
+import { useVolume } from "../hooks/useVolume";
+import { useVolumeOsd } from "../hooks/useVolumeOsd";
 import { closeFlyout, setFlyoutSize, type AudioDevice } from "../lib/tauri";
 
 const useStyles = makeStyles({
@@ -83,6 +85,8 @@ export default function Flyout() {
   const { devices, loading, error, switchTo, switching } = useDevices();
   const { favorites } = useFavorites();
   const { muted, toggle: toggleMute } = useMute();
+  const { volumes, setLevel, toggleMute: toggleDeviceMute } = useVolume(devices);
+  const { osd } = useVolumeOsd();
   const cardRef = useRef<HTMLDivElement>(null);
 
   const outputs = devices.filter(
@@ -129,6 +133,9 @@ export default function Flyout() {
             variant="compact"
             busy={switching === device.id}
             onSwitch={(d) => void pick(d)}
+            volume={osd.slidersInFlyout ? volumes[device.id] : undefined}
+            onVolumeChange={osd.slidersInFlyout ? setLevel : undefined}
+            onToggleMute={osd.slidersInFlyout ? toggleDeviceMute : undefined}
           />
         ))}
       </>

@@ -6,6 +6,30 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 16 — Volume: the UI
+
+Phase 15 gave the backend everything it needed; this is where it becomes
+something you can see and use.
+
+- **A volume slider on every device row**, with a mute button and a level
+  readout. It lives in the shared `DeviceRow`, so the main list and the tray
+  flyout get it from one implementation. Levels are read on demand rather than
+  folded into `list_audio_devices`: that would mean activating an
+  `IAudioEndpointVolume` interface for every endpoint on every refresh, and the
+  list is refetched on each `device-changed`.
+- Dragging writes on a 40 ms debounce — the slider moves immediately, the device
+  is not asked to change once per pixel.
+- **The volume OSD renders**: a level bar in the overlay window, appearing over
+  fullscreen games like the mute indicator does. The overlay now switches on the
+  `kind` field of its payload.
+- **Media keys can be bound.** `toAccelerator` accepted only letters, digits and
+  function keys, all requiring a modifier, so the new volume actions had no key
+  anyone would want to use. Media keys are now accepted bare (they cannot be
+  typed by accident) along with the navigation keys, and the Hotkeys tab warns
+  that binding one takes it away from Windows while the app runs.
+- **A Volume tab** in settings: OSD on/off and position, sliders in the list,
+  sliders in the flyout (off by default — the tray menu is deliberately tight).
+
 ### Phase 15 — Volume: the backend
 
 The app could switch devices and mute the microphone, and that was the whole

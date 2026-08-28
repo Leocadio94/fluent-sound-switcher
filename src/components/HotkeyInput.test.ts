@@ -43,8 +43,29 @@ describe("toAccelerator", () => {
     expect(toAccelerator(keydown("F11"))).toBeNull();
   });
 
+  it("accepts navigation keys with a modifier", () => {
+    expect(toAccelerator(keydown("ArrowUp", { ctrlKey: true }))).toBe("Ctrl+Up");
+    expect(toAccelerator(keydown("PageDown", { altKey: true }))).toBe(
+      "Alt+PageDown",
+    );
+  });
+
+  it("accepts media keys bare", () => {
+    // They cannot be typed by accident, and binding them with a modifier is
+    // not how people expect media keys to work.
+    expect(toAccelerator(keydown("AudioVolumeUp"))).toBe("VolumeUp");
+    expect(toAccelerator(keydown("AudioVolumeDown"))).toBe("VolumeDown");
+    expect(toAccelerator(keydown("AudioVolumeMute"))).toBe("VolumeMute");
+  });
+
+  it("still allows a media key to carry modifiers", () => {
+    expect(toAccelerator(keydown("AudioVolumeUp", { ctrlKey: true }))).toBe(
+      "Ctrl+VolumeUp",
+    );
+  });
+
   it("rejects keys outside the supported set", () => {
-    for (const code of ["Space", "Enter", "ArrowUp", "Escape", "F25"]) {
+    for (const code of ["Space", "Enter", "Escape", "F25"]) {
       expect(toAccelerator(keydown(code, { ctrlKey: true }))).toBeNull();
     }
   });

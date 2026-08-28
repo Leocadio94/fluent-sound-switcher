@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import {
   Badge,
   Body1,
+  Slider,
   Spinner,
   Tooltip,
   makeStyles,
@@ -11,11 +12,14 @@ import {
 import {
   CheckmarkCircleFilled,
   MicRegular,
+  Speaker0Regular,
   Speaker2Regular,
+  SpeakerMuteRegular,
   StarFilled,
   StarRegular,
 } from "@fluentui/react-icons";
 
+import type { DeviceVolume } from "../hooks/useVolume";
 import type { AudioDevice } from "../lib/tauri";
 
 /**
@@ -27,23 +31,31 @@ import type { AudioDevice } from "../lib/tauri";
 export type DeviceRowVariant = "full" | "compact";
 
 const useStyles = makeStyles({
-  row: {
+  // The frame lives on the outer container so the optional volume row sits
+  // inside the same card as the device name.
+  frame: {
     display: "flex",
-    alignItems: "center",
-    gap: tokens.spacingHorizontalS,
+    flexDirection: "column",
     borderRadius: tokens.borderRadiusLarge,
   },
-  rowFull: {
-    paddingRight: tokens.spacingHorizontalS,
+  frameFull: {
     border: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
     backgroundColor: tokens.colorNeutralBackground1,
   },
-  rowFullActive: {
+  frameFullActive: {
     border: `${tokens.strokeWidthThin} solid ${tokens.colorBrandStroke1}`,
     backgroundColor: tokens.colorBrandBackground2,
   },
-  rowCompactActive: {
+  frameCompactActive: {
     backgroundColor: tokens.colorBrandBackground2,
+  },
+  header: {
+    display: "flex",
+    alignItems: "center",
+    gap: tokens.spacingHorizontalS,
+  },
+  headerFull: {
+    paddingRight: tokens.spacingHorizontalS,
   },
   button: {
     display: "flex",
@@ -114,6 +126,48 @@ const useStyles = makeStyles({
     },
   },
   starActive: { color: tokens.colorPaletteMarigoldForeground1 },
+
+  // The volume row sits under the device name, indented to line up with it.
+  volumeRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: tokens.spacingHorizontalXS,
+    padding: `0 ${tokens.spacingHorizontalM} ${tokens.spacingVerticalXS}`,
+  },
+  volumeRowCompact: {
+    padding: `0 ${tokens.spacingHorizontalS} ${tokens.spacingVerticalXXS}`,
+  },
+  muteButton: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    width: "28px",
+    height: "28px",
+    padding: 0,
+    border: "none",
+    background: "none",
+    borderRadius: tokens.borderRadiusMedium,
+    cursor: "pointer",
+    fontSize: "16px",
+    color: tokens.colorNeutralForeground3,
+    ":hover": {
+      backgroundColor: tokens.colorSubtleBackgroundHover,
+      color: tokens.colorNeutralForeground1,
+    },
+    ":focus-visible": {
+      outline: `${tokens.strokeWidthThick} solid ${tokens.colorStrokeFocus2}`,
+    },
+  },
+  muteButtonActive: { color: tokens.colorPaletteRedForeground1 },
+  slider: { flexGrow: 1, minWidth: 0 },
+  level: {
+    minWidth: "3ch",
+    textAlign: "right",
+    fontVariantNumeric: "tabular-nums",
+    fontSize: tokens.fontSizeBase200,
+    color: tokens.colorNeutralForeground3,
+  },
 });
 
 interface DeviceRowProps {
@@ -125,6 +179,10 @@ interface DeviceRowProps {
   /** Omit to hide the star (the flyout has no favorite editing). */
   favorite?: boolean;
   onToggleFavorite?: (device: AudioDevice) => void;
+  /** Omit both to hide the volume row entirely. */
+  volume?: DeviceVolume;
+  onVolumeChange?: (device: AudioDevice, level: number) => void;
+  onToggleMute?: (device: AudioDevice) => void;
 }
 
 export default function DeviceRow({
@@ -134,75 +192,131 @@ export default function DeviceRow({
   busy = false,
   favorite,
   onToggleFavorite,
+  volume,
+  onVolumeChange,
+  onToggleMute,
 }: DeviceRowProps) {
   const styles = useStyles();
   const { t } = useTranslation();
   const full = variant === "full";
   const Icon = device.direction === "output" ? Speaker2Regular : MicRegular;
 
+  const showVolume = volume !== undefined && onVolumeChange !== undefined;
+  const percent = Math.round((volume?.level ?? 0) * 100);
+  const MuteIcon = volume?.muted
+    ? SpeakerMuteRegular
+    : percent === 0
+      ? Speaker0Regular
+      : Speaker2Regular;
+
   return (
     <div
       className={mergeClasses(
-        styles.row,
-        full && styles.rowFull,
-        device.isDefault && (full ? styles.rowFullActive : styles.rowCompactActive),
+        styles.frame,
+        full && styles.frameFull,
+        device.isDefault &&
+          (full ? styles.frameFullActive : styles.frameCompactActive),
       )}
     >
-      <button
-        type="button"
-        disabled={busy}
-        // Communicates "this is the current default" to assistive tech, which
-        // previously only had the colour and the badge to go on.
-        aria-current={device.isDefault ? "true" : undefined}
-        className={mergeClasses(
-          styles.button,
-          full ? styles.buttonFull : styles.buttonCompact,
-        )}
-        onClick={() => onSwitch(device)}
-      >
-        <Icon
+      <div className={mergeClasses(styles.header, full && styles.headerFull)}>
+        <button
+          type="button"
+          disabled={busy}
+          // Communicates "this is the current default" to assistive tech, which
+          // previously only had the colour and the badge to go on.
+          aria-current={device.isDefault ? "true" : undefined}
           className={mergeClasses(
-            styles.icon,
-            full ? styles.iconFull : styles.iconCompact,
+            styles.button,
+            full ? styles.buttonFull : styles.buttonCompact,
           )}
-        />
-        {full ? (
-          <Body1 className={styles.name}>{device.name}</Body1>
-        ) : (
-          <span className={mergeClasses(styles.name, styles.nameCompact)}>
-            {device.name}
-          </span>
-        )}
-        {!full && device.isDefault && (
-          <CheckmarkCircleFilled className={styles.check} />
-        )}
-      </button>
-
-      {full &&
-        (busy ? (
-          <Spinner size="tiny" />
-        ) : device.isDefault ? (
-          <Badge appearance="tint" color="brand" icon={<CheckmarkCircleFilled />}>
-            {t("common.active")}
-          </Badge>
-        ) : null)}
-
-      {full && favorite !== undefined && onToggleFavorite && (
-        <Tooltip
-          content={
-            favorite ? t("devices.removeFromCycle") : t("devices.addToCycle")
-          }
-          relationship="label"
+          onClick={() => onSwitch(device)}
         >
-          <button
-            type="button"
-            aria-pressed={favorite}
-            className={mergeClasses(styles.star, favorite && styles.starActive)}
-            onClick={() => onToggleFavorite(device)}
+          <Icon
+            className={mergeClasses(
+              styles.icon,
+              full ? styles.iconFull : styles.iconCompact,
+            )}
+          />
+          {full ? (
+            <Body1 className={styles.name}>{device.name}</Body1>
+          ) : (
+            <span className={mergeClasses(styles.name, styles.nameCompact)}>
+              {device.name}
+            </span>
+          )}
+          {!full && device.isDefault && (
+            <CheckmarkCircleFilled className={styles.check} />
+          )}
+        </button>
+
+        {full &&
+          (busy ? (
+            <Spinner size="tiny" />
+          ) : device.isDefault ? (
+            <Badge
+              appearance="tint"
+              color="brand"
+              icon={<CheckmarkCircleFilled />}
+            >
+              {t("common.active")}
+            </Badge>
+          ) : null)}
+
+        {full && favorite !== undefined && onToggleFavorite && (
+          <Tooltip
+            content={
+              favorite ? t("devices.removeFromCycle") : t("devices.addToCycle")
+            }
+            relationship="label"
           >
-            {favorite ? <StarFilled /> : <StarRegular />}
-          </button>
-        </Tooltip>
+            <button
+              type="button"
+              aria-pressed={favorite}
+              className={mergeClasses(styles.star, favorite && styles.starActive)}
+              onClick={() => onToggleFavorite(device)}
+            >
+              {favorite ? <StarFilled /> : <StarRegular />}
+            </button>
+          </Tooltip>
+        )}
+      </div>
+
+      {showVolume && (
+        <div
+          className={mergeClasses(
+            styles.volumeRow,
+            !full && styles.volumeRowCompact,
+          )}
+        >
+          {onToggleMute && (
+            <Tooltip
+              content={volume.muted ? t("volume.unmute") : t("volume.mute")}
+              relationship="label"
+            >
+              <button
+                type="button"
+                aria-pressed={volume.muted}
+                className={mergeClasses(
+                  styles.muteButton,
+                  volume.muted && styles.muteButtonActive,
+                )}
+                onClick={() => onToggleMute(device)}
+              >
+                <MuteIcon />
+              </button>
+            </Tooltip>
+          )}
+          <Slider
+            className={styles.slider}
+            size="small"
+            min={0}
+            max={100}
+            value={percent}
+            aria-label={t("volume.label", { name: device.name })}
+            onChange={(_, data) => onVolumeChange(device, data.value / 100)}
+          />
+          <span className={styles.level}>{percent}</span>
+        </div>
       )}
     </div>
   );
