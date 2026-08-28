@@ -8,7 +8,6 @@ import {
   MessageBarBody,
   Spinner,
   Switch,
-  Title2,
   Tooltip,
   makeStyles,
   tokens,
@@ -51,9 +50,13 @@ const useStyles = makeStyles({
   header: {
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-between",
+    // No app name and no icon: the native title bar already carries both, so
+    // this is a toolbar and everything sits at the trailing edge.
+    justifyContent: "flex-end",
     gap: tokens.spacingHorizontalM,
-    padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalXL}`,
+    // Tighter than before: the window title carries the app name, so the
+    // header no longer repeats it.
+    padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalXL}`,
     borderBottom: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
   },
   headerControls: {
@@ -68,9 +71,12 @@ const useStyles = makeStyles({
     padding: tokens.spacingHorizontalXL,
     overflowY: "auto",
   },
-  toolbar: {
-    display: "flex",
-    justifyContent: "flex-end",
+  // Separates the favorites toggle from the icon buttons that follow it.
+  headerDivider: {
+    width: tokens.strokeWidthThin,
+    alignSelf: "stretch",
+    marginBlock: tokens.spacingVerticalXS,
+    backgroundColor: tokens.colorNeutralStroke2,
   },
   centered: {
     display: "flex",
@@ -137,8 +143,16 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
   return (
     <div className={styles.root}>
       <header className={styles.header}>
-        <Title2>{t("app.title")}</Title2>
         <div className={styles.headerControls}>
+          {/* Moved up from a row of its own: the header had space to spare and
+              the filter is part of how you view the list. */}
+          <Switch
+            checked={showOnlyFavorites}
+            onChange={(_, data) => setShowOnlyFavorites(data.checked)}
+            label={t("devices.onlyFavorites")}
+            labelPosition="before"
+          />
+          <div className={styles.headerDivider} />
           <Tooltip
             content={muted ? t("muteIndicator.muted") : t("muteIndicator.live")}
             relationship="label"
@@ -242,14 +256,6 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
           </div>
         ) : (
           <>
-            <div className={styles.toolbar}>
-              <Switch
-                checked={showOnlyFavorites}
-                onChange={(_, data) => setShowOnlyFavorites(data.checked)}
-                label={t("devices.onlyFavorites")}
-                labelPosition="before"
-              />
-            </div>
             <DeviceList
               devices={devices}
               switching={switching}

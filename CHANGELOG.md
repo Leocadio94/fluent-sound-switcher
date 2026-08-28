@@ -6,6 +6,25 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 17 — Device list polish
+
+Feedback on the Phase 16 UI, verified by screenshotting the running app rather
+than reasoning about the markup.
+
+- **The "Active" badge is gone.** The brand border and background already say
+  which device is in use, so the labelled badge was saying it twice. It is now
+  the same discreet check the flyout uses — colour alone does not carry for
+  everyone, so something non-colour had to stay.
+- **The volume slider no longer stretches every row.** The volume worth
+  reaching for is almost always the one on the device actually in use, so that
+  row keeps its slider open and the others expand from a chevron. It sits
+  beside the favourite star and does not interfere with picking a device: the
+  name is still the button that switches.
+- **The app name is out of the window body.** The native title bar already
+  carries it, along with the same icon, so the header is now a plain toolbar.
+  The "favorites only" switch moved up into it, removing a row of its own.
+- Capped the slider width — spanning the full row it read as a progress bar.
+
 ### Phase 16 — Volume: the UI
 
 Phase 15 gave the backend everything it needed; this is where it becomes

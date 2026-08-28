@@ -1,6 +1,6 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Badge,
   Body1,
   Slider,
   Spinner,
@@ -11,6 +11,8 @@ import {
 } from "@fluentui/react-components";
 import {
   CheckmarkCircleFilled,
+  ChevronDownRegular,
+  ChevronUpRegular,
   MicRegular,
   Speaker0Regular,
   Speaker2Regular,
@@ -103,6 +105,7 @@ const useStyles = makeStyles({
   },
   nameCompact: { fontSize: tokens.fontSizeBase300 },
   check: { color: tokens.colorBrandForeground1, flexShrink: 0 },
+  checkFull: { fontSize: "18px" },
   star: {
     display: "flex",
     alignItems: "center",
@@ -126,6 +129,28 @@ const useStyles = makeStyles({
     },
   },
   starActive: { color: tokens.colorPaletteMarigoldForeground1 },
+  chevron: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    width: "28px",
+    height: "28px",
+    padding: 0,
+    border: "none",
+    background: "none",
+    borderRadius: tokens.borderRadiusMedium,
+    cursor: "pointer",
+    fontSize: "16px",
+    color: tokens.colorNeutralForeground3,
+    ":hover": {
+      backgroundColor: tokens.colorSubtleBackgroundHover,
+      color: tokens.colorNeutralForeground1,
+    },
+    ":focus-visible": {
+      outline: `${tokens.strokeWidthThick} solid ${tokens.colorStrokeFocus2}`,
+    },
+  },
 
   // The volume row sits under the device name, indented to line up with it.
   volumeRow: {
@@ -160,7 +185,9 @@ const useStyles = makeStyles({
     },
   },
   muteButtonActive: { color: tokens.colorPaletteRedForeground1 },
-  slider: { flexGrow: 1, minWidth: 0 },
+  // Capped: a volume slider spanning the whole row reads as a progress bar,
+  // and the pointer has to travel further than the control deserves.
+  slider: { flexGrow: 1, minWidth: 0, maxWidth: "280px" },
   level: {
     minWidth: "3ch",
     textAlign: "right",
@@ -201,7 +228,12 @@ export default function DeviceRow({
   const full = variant === "full";
   const Icon = device.direction === "output" ? Speaker2Regular : MicRegular;
 
-  const showVolume = volume !== undefined && onVolumeChange !== undefined;
+  // The volume worth reaching for is almost always the one on the device
+  // actually in use, so that row keeps its slider open; the rest expand on
+  // demand, which keeps the list compact.
+  const [expanded, setExpanded] = useState(false);
+  const volumeAvailable = volume !== undefined && onVolumeChange !== undefined;
+  const showVolume = volumeAvailable && (device.isDefault || expanded);
   const percent = Math.round((volume?.level ?? 0) * 100);
   const MuteIcon = volume?.muted
     ? SpeakerMuteRegular
@@ -253,14 +285,30 @@ export default function DeviceRow({
           (busy ? (
             <Spinner size="tiny" />
           ) : device.isDefault ? (
-            <Badge
-              appearance="tint"
-              color="brand"
-              icon={<CheckmarkCircleFilled />}
-            >
-              {t("common.active")}
-            </Badge>
+            // A discreet check rather than a labelled badge: the brand border
+            // and background already say "active", but colour alone does not
+            // carry for everyone.
+            <CheckmarkCircleFilled
+              className={mergeClasses(styles.check, styles.checkFull)}
+              aria-label={t("common.active")}
+            />
           ) : null)}
+
+        {volumeAvailable && !device.isDefault && (
+          <Tooltip
+            content={expanded ? t("volume.hide") : t("volume.show")}
+            relationship="label"
+          >
+            <button
+              type="button"
+              aria-expanded={expanded}
+              className={styles.chevron}
+              onClick={() => setExpanded((open) => !open)}
+            >
+              {expanded ? <ChevronUpRegular /> : <ChevronDownRegular />}
+            </button>
+          </Tooltip>
+        )}
 
         {full && favorite !== undefined && onToggleFavorite && (
           <Tooltip
@@ -281,7 +329,7 @@ export default function DeviceRow({
         )}
       </div>
 
-      {showVolume && (
+      {showVolume && volume && onVolumeChange && (
         <div
           className={mergeClasses(
             styles.volumeRow,

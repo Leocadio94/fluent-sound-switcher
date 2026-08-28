@@ -1,7 +1,4 @@
 {
-  "app": {
-    "title": "Fluent Sound Switcher"
-  },
   "common": {
     "output": "Saída",
     "input": "Entrada",
@@ -9,7 +6,6 @@
     "refresh": "Atualizar",
     "loading": "Carregando dispositivos...",
     "noDevices": "Nenhum dispositivo encontrado",
-    "error": "Erro",
     "close": "Fechar"
   },
   "update": {
@@ -129,6 +125,8 @@
     "sliders": "Controle de volume na lista",
     "slidersHint": "Adiciona um controle deslizante em cada dispositivo.",
     "slidersInFlyout": "Controle de volume no menu rápido",
-    "slidersInFlyoutHint": "O menu da bandeja é compacto; deixe desligado se preferir a lista enxuta."
+    "slidersInFlyoutHint": "O menu da bandeja é compacto; deixe desligado se preferir a lista enxuta.",
+    "show": "Mostrar volume",
+    "hide": "Ocultar volume"
   }
 }
