@@ -4,6 +4,25 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Release tooling
+- **A download button that points at a stable URL.** Asset names carry the
+  version, so `releases/latest/download/...` was never a link that kept
+  working. Each release now also publishes the installer as
+  `FluentSoundSwitcher-Setup.exe`, which the README badge and the release page
+  link straight at — one click, no version to pick, no page to read.
+- **`pnpm release <version>`** does the bump, changelog close, commit, tag and
+  push. It refuses to run off master, with a dirty tree, on an existing tag, on
+  a version that is not newer, or with an empty `[Unreleased]` section, and it
+  runs the full check suite before writing anything — pushing a tag publishes to
+  every installed copy, so it should not be five manual steps that can each be
+  got wrong. `--dry-run` and `--no-push` for a look first.
+- Fixed the release notes' compare link resolving a version against itself.
+  `execSync` goes through cmd.exe on Windows, where the bare `^` in `${tag}^`
+  is an escape character and vanished, leaving `git describe` to find the tag
+  it was asked to look behind.
+
 ## [0.2.0] - 2026-08-28
 
 <!-- release-notes -->

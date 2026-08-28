@@ -13,6 +13,12 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![Release](https://img.shields.io/github/v/release/Leocadio94/fluent-sound-switcher?include_prereleases&sort=semver)](https://github.com/Leocadio94/fluent-sound-switcher/releases)
 
+<br />
+
+[<img src="https://img.shields.io/badge/Download%20for%20Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows" height="44" />](https://github.com/Leocadio94/fluent-sound-switcher/releases/latest/download/FluentSoundSwitcher-Setup.exe)
+
+<sub>Windows 10/11 · ~2 MB · no account needed</sub>
+
 </div>
 
 A modern, lightweight alternative to [SoundSwitch](https://github.com/belphemur/soundswitch)
@@ -61,13 +67,30 @@ top, every time.
 
 ## 📦 Install
 
-Grab the latest installer from the [**Releases**](https://github.com/Leocadio94/fluent-sound-switcher/releases) page:
-
-- **`.msi`** (Windows Installer) or **`.exe`** (NSIS setup) — either works.
+**[⬇️ Download for Windows](https://github.com/Leocadio94/fluent-sound-switcher/releases/latest/download/FluentSoundSwitcher-Setup.exe)** — run the
+installer and you are done. It updates itself from then on.
 
 > 🛡️ **SmartScreen note:** the binaries are not code-signed yet, so Windows
 > SmartScreen may warn on first run. Click **More info → Run anyway**. (Code
 > signing is on the roadmap.)
+
+<details>
+<summary>Other download options</summary>
+
+Every build is on the [**Releases**](https://github.com/Leocadio94/fluent-sound-switcher/releases)
+page:
+
+- **`FluentSoundSwitcher-Setup.exe`** — the link above; always the latest build.
+- **`.msi`** — standard Windows Installer package, for deploying with tooling.
+- **`Fluent.Sound.Switcher_<version>_x64-setup.exe`** — a specific version.
+
+`SHA256SUMS.txt` on each release lets you verify what you downloaded:
+
+```powershell
+(Get-FileHash .\FluentSoundSwitcher-Setup.exe -Algorithm SHA256).Hash
+```
+
+</details>
 
 ## 🎮 Usage
 

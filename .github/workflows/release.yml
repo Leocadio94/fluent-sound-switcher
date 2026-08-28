@@ -99,6 +99,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release edit "${{ github.ref_name }}" --draft=false --prerelease=false --latest
 
+      # A copy of the installer under a name that never changes, so the README
+      # and the release page can link straight at it:
+      # releases/latest/download/FluentSoundSwitcher-Setup.exe
+      # The versioned assets stay, for anyone who wants a specific build.
+      - name: Publish a stable download link
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          setup=$(find src-tauri/target/release/bundle/nsis -name '*-setup.exe' | head -1)
+          if [ -z "$setup" ]; then echo "no NSIS installer found"; exit 1; fi
+          cp "$setup" FluentSoundSwitcher-Setup.exe
+          gh release upload "${{ github.ref_name }}" FluentSoundSwitcher-Setup.exe --clobber
+
       # Lets users verify a download that SmartScreen warns about, since the
       # installers are not Authenticode-signed yet.
       - name: Publish checksums
@@ -125,6 +140,11 @@ jobs:
             while IFS= read -r file; do
               cp "$file" "checksums/$(basename "$file" | tr ' ' '.')"
             done
+          # Same binary as the NSIS asset, but it is the one the download button
+          # points at, so it needs a line people can check it against.
+          if [ -f FluentSoundSwitcher-Setup.exe ]; then
+            cp FluentSoundSwitcher-Setup.exe checksums/
+          fi
           ( cd checksums && sha256sum -- * ) > SHA256SUMS.txt
           cat SHA256SUMS.txt
           gh release upload "${{ github.ref_name }}" SHA256SUMS.txt --clobber

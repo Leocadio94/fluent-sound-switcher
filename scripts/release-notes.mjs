@@ -41,7 +41,11 @@ function changelogSection(version) {
 /** The previous `v*` tag, for the compare link. Absent on the first release. */
 function previousTag(tag) {
   try {
-    return execSync(`git describe --tags --abbrev=0 --match "v*" ${tag}^`, {
+    // The ref is quoted because execSync goes through cmd.exe on Windows,
+    // where a bare `^` is the escape character and silently disappears -
+    // leaving `git describe` to resolve the tag itself and produce a
+    // compare link from a version to itself.
+    return execSync(`git describe --tags --abbrev=0 --match "v*" "${tag}^"`, {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
     }).trim();
@@ -62,6 +66,11 @@ const parts = [
   section ?? `Release ${version}.`,
   "",
   "## Download",
+  "",
+  `### ➡️ [**Download for Windows**](https://github.com/${repo}/releases/latest/download/FluentSoundSwitcher-Setup.exe)`,
+  "",
+  "That is the installer — run it and you are done. The rest is for people who",
+  "want a specific format:",
   "",
   "| Installer | When to use |",
   "| --- | --- |",
