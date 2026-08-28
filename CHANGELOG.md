@@ -4,7 +4,42 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
-## [Unreleased]
+## [0.2.0] - 2026-08-28
+
+<!-- release-notes -->
+The first release since the auto-updater started working — if you are on 0.1.x,
+this is the one that reaches you.
+
+**Volume, finally.** Every device gets a volume slider: the one you are using
+keeps it open, the rest a click away. You can mute outputs, not just the
+microphone, and bind hotkeys for volume up/down and output mute — media keys
+included. A volume OSD shows the level over fullscreen games, like the mute
+indicator already did.
+
+**Fixes that matter if you have more than one screen or more than one mic**
+
+- The floating windows (mute indicator, switch banner, volume OSD, tray flyout)
+  went to the primary monitor no matter what. They now follow your cursor, and
+  Settings lets you pin them elsewhere.
+- Switching your default microphone left the tray icon and the overlay showing
+  the *old* mic's mute state.
+- A hotkey another app had already claimed failed silently and looked like it
+  worked. The Hotkeys tab now tells you which ones did not register.
+- Renaming a device in the Windows sound panel left the old name in the list.
+- Your theme and language reset to the defaults on every launch.
+- The tray menu and the notifications were Portuguese regardless of the language
+  you picked.
+
+**Also**
+
+- The device list is tighter: no more "Active" badge repeating what the
+  highlight already says.
+- A log file you can open from Settings → General, for when something needs
+  reporting.
+- Under the hood: logging throughout, CI on every push, and the first tests in
+  the project.
+
+<!-- /release-notes -->
 
 ### Phase 17 — Device list polish
 

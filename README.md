@@ -23,8 +23,8 @@ SoundSwitch's long-standing annoyance where the on-screen popup hides **behind
 the taskbar in fullscreen apps** like Steam Big Picture — our overlay renders on
 top, every time.
 
-> ⚠️ **Early development (`0.1.x`).** Functional and usable, polishing toward a
-> first release. Built in phased iterations.
+> ⚠️ **Early development (`0.2.x`).** Functional and in daily use, polishing
+> toward a 1.0. Built in phased iterations.
 
 ## 📸 Screenshots
 
@@ -44,16 +44,19 @@ top, every time.
 ## ✨ Features
 
 - 🔁 **Switch** output/input devices from a curated favorites list (you choose which show up).
-- ⌨️ **Global hotkeys** to cycle output, cycle input, and toggle mic mute — fully rebindable.
+- 🔊 **Per-device volume** — a slider on the device you are using, and on any other at a click. Mute outputs as well as the mic.
+- ⌨️ **Global hotkeys** — cycle output, cycle input, toggle mic mute, volume up/down, toggle output mute. Fully rebindable, media keys included.
+- 🎚️ **Volume OSD** — an on-screen level that shows over fullscreen games, like the mute indicator.
 - 🎙️ **Mic mute** with a configurable on-screen indicator (always / only-muted / only-live / never) and a tray icon that reflects the state.
-- 🖥️ **Fullscreen-safe overlay & banner** — topmost and click-through, visible *over* fullscreen games.
+- 🖥️ **Fullscreen-safe overlay & banner** — topmost and click-through, visible *over* fullscreen games, on the monitor you are actually looking at.
 - 🟦 **Tray quick-switch flyout** (left-click) and a context menu (right-click); works over fullscreen apps.
 - 🔔 **Switch notifications** — any mix of a native Windows toast, an on-screen banner, and a sound.
 - 🔌 **Auto-switch on connect** *(optional)* — plug in a TV/monitor with audio and it can grab the default output.
 - 🖼️ **Output-device tray icon** *(optional)* — a second tray icon mirroring the current output, using the icon Windows shows for it.
 - 🧰 **CLI** with the same actions as the GUI (`list`, `switch`, `cycle`, `mute`).
 - 🚀 **Start with Windows** (optionally minimized to tray).
-- 🌍 **Multi-language** — **pt-BR** (default) and **en**.
+- 🌍 **Multi-language** — **pt-BR** (default) and **en**, tray and notifications included.
+- 🩺 **Log file** you can open from Settings, for when something needs reporting.
 - 💾 Local config in `%APPDATA%`, no account, no telemetry.
 
 ## 📦 Install
@@ -70,19 +73,44 @@ Grab the latest installer from the [**Releases**](https://github.com/Leocadio94/
 
 ### Hotkeys (defaults — change them in Settings)
 
-| Action            | Shortcut        |
-| ----------------- | --------------- |
-| Cycle output      | `Ctrl+Alt+F11`  |
-| Cycle input       | `Ctrl+Alt+F12`  |
-| Toggle mic mute   | `Ctrl+Alt+M`    |
+| Action             | Shortcut       |
+| ------------------ | -------------- |
+| Cycle output       | `Ctrl+Alt+F11` |
+| Cycle input        | `Ctrl+Alt+F12` |
+| Toggle mic mute    | `Ctrl+Alt+M`   |
+| Volume up          | *(unbound)*    |
+| Volume down        | *(unbound)*    |
+| Toggle output mute | *(unbound)*    |
 
 Cycling walks your favorites in order (wraps around); with no favorites set it
 falls back to all active devices.
+
+The volume actions ship unbound on purpose. You can bind a media key to them
+(`VolumeUp`, `VolumeDown`, `VolumeMute`) — but a global binding takes that key
+away from Windows for as long as the app is running, so it has to be your call.
+
+If a shortcut is already owned by another app, Windows refuses to register it.
+The Hotkeys tab tells you which ones did not take, instead of showing a dead
+binding as if it worked.
 
 ### Tray
 
 - **Left-click** — quick-switch flyout (favorites + mute toggle).
 - **Right-click** — Open, Settings, Playback devices, toggle mute, Quit.
+
+### Floating windows and monitors
+
+The mute indicator, the volume OSD, the switch banner and the tray flyout all
+render above fullscreen apps. By default they follow the monitor your cursor is
+on — the cheapest guess at the screen you are looking at. Settings → General
+lets you pin them to the primary monitor, or send them to whichever monitor
+holds the focused window.
+
+### Logs
+
+Settings → General → **Abrir pasta de logs** opens the folder with a rotating
+log file. Nothing the app prints reaches a console (it is a windowed binary), so
+that file is the way to see what happened — attach it to a bug report.
 
 ### CLI
 
@@ -118,18 +146,25 @@ monitoring uses `IMMNotificationClient`.
 pnpm install
 pnpm tauri:dev      # run the app (Vite + Rust)
 pnpm tauri:build    # build installers (msi + nsis)
+
+# what CI runs on every push and PR:
 pnpm lint           # frontend typecheck (tsc --noEmit)
-cargo check --manifest-path src-tauri/Cargo.toml   # backend check
+pnpm test           # frontend tests (vitest)
+pnpm build          # frontend bundle
+cargo fmt   --manifest-path src-tauri/Cargo.toml --all -- --check
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
+cargo test  --manifest-path src-tauri/Cargo.toml
 ```
 
 Requires Node, pnpm, and the Rust toolchain on a Windows 11 target.
 
 ## 🚢 Releases
 
-Tagging a commit `v*` (e.g. `v0.1.0`) triggers the
-[release workflow](.github/workflows/release.yml): it builds the Windows
-installers and **publishes** (not drafts) a GitHub Release with the signed
-update artifacts and a `latest.json`.
+Tagging a commit `v*` (e.g. `v0.2.0`) triggers the
+[release workflow](.github/workflows/release.yml): it checks the tag against all
+three version manifests, runs the CI checks, builds the Windows installers and
+**publishes** (not drafts) a GitHub Release with the signed update artifacts, a
+`latest.json`, release notes taken from `CHANGELOG.md`, and a `SHA256SUMS.txt`.
 
 Auto-update is configured (`tauri-plugin-updater`). Because this repository is
 public, the updater needs no token or proxy — it just fetches
@@ -143,7 +178,10 @@ matching private key.
 
 ⚠️ The release must be **published**, and not a prerelease: GitHub excludes
 drafts and prereleases from `releases/latest`, so either one makes every
-client's update check 404.
+client's update check 404. This is not hypothetical — `v0.1.1` and `v0.1.2` sat
+as drafts and silently broke every update check until they were published, which
+is why the workflow now forces the release out of draft as its own step
+(`tauri-action` reuses an existing release for a tag and will not promote one).
 
 The flow in the app:
 
@@ -188,6 +226,11 @@ then update `plugins.updater.pubkey` in `tauri.conf.json` and re-set the secret.
 | ✅ | Auto-switch on connect + live external-change sync |
 | ✅ | Branding, icons & distribution workflow |
 | ✅ | Auto-update (Tauri updater, signed, via GitHub Releases) |
+| ✅ | Logging, CI on every push/PR, and a release with checksums + notes |
+| ✅ | Multi-monitor placement for the floating windows |
+| ✅ | Per-device volume, output mute, volume hotkeys & OSD |
+| ⏳ | Custom title bar (Windows 11 snap layouts need care) |
+| ⏳ | Accent-colour theming (follow the Windows accent colour) |
 | ⏳ | Code signing (Authenticode cert — removes the SmartScreen warning) |
 | 🔮 | Per-app audio profiles *(experimental)* |
 

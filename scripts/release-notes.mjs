@@ -13,7 +13,14 @@ if (!tag) {
 const version = tag.replace(/^v/, "");
 const repo = process.env.GITHUB_REPOSITORY ?? "Leocadio94/fluent-sound-switcher";
 
-/** The section between `## [version]` and the next `## [` heading. */
+/**
+ * The notes for a version.
+ *
+ * The CHANGELOG is written for whoever works on the code: phase by phase, and
+ * long. A release page is read by whoever installs the thing. So when a section
+ * marks a highlights block, that is what ships; otherwise the whole section
+ * does, which keeps this working for a version nobody wrote a summary for.
+ */
 function changelogSection(version) {
   const changelog = readFileSync("CHANGELOG.md", "utf8");
   const lines = changelog.split(/\r?\n/);
@@ -21,7 +28,14 @@ function changelogSection(version) {
   if (start === -1) return null;
   const rest = lines.slice(start + 1);
   const end = rest.findIndex((l) => l.startsWith("## ["));
-  return (end === -1 ? rest : rest.slice(0, end)).join("\n").trim();
+  const section = end === -1 ? rest : rest.slice(0, end);
+
+  const from = section.findIndex((l) => l.trim() === "<!-- release-notes -->");
+  const to = section.findIndex((l) => l.trim() === "<!-- /release-notes -->");
+  if (from !== -1 && to > from) {
+    return section.slice(from + 1, to).join("\n").trim();
+  }
+  return section.join("\n").trim();
 }
 
 /** The previous `v*` tag, for the compare link. Absent on the first release. */

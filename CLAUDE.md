@@ -27,8 +27,10 @@ Picture).
 
 ## Status
 
-Phases 0–8, 10, 11 done; the app is feature-complete, builds installers, and has
-signed auto-update wired. Remaining: code signing (Authenticode cert, removes the
+Phases 0–8 and 10–18 done (9 deferred); `0.2.0` adds per-device volume, output
+mute, volume hotkeys + OSD, multi-monitor placement for the floating windows,
+backend translations, logging, CI and the first tests. Remaining: a custom title
+bar, accent-colour theming, code signing (Authenticode cert, removes the
 SmartScreen warning) and per-app profiles (Phase 9, experimental, deferred). The
 phase numbering in `CHANGELOG.md` is the source of truth.
 
