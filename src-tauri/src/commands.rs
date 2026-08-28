@@ -123,6 +123,62 @@ pub fn set_device_icon(app: tauri::AppHandle, enabled: bool) {
     crate::tray::set_device_visible(&app, enabled);
 }
 
+/// Reads a device's volume as a 0.0-1.0 scalar. `device_id` omitted means the
+/// current default endpoint of `direction`.
+#[tauri::command]
+pub fn get_device_volume(device_id: Option<String>, direction: String) -> Result<f32, String> {
+    audio::get_volume(device_id.as_deref(), &direction).map_err(|e| e.to_string())
+}
+
+/// Sets a device's volume from a 0.0-1.0 scalar.
+#[tauri::command]
+pub fn set_device_volume(
+    device_id: Option<String>,
+    direction: String,
+    level: f32,
+) -> Result<(), String> {
+    audio::set_volume(device_id.as_deref(), &direction, level).map_err(|e| e.to_string())
+}
+
+/// Toggles a device's mute, returning the new state.
+#[tauri::command]
+pub fn toggle_device_mute(
+    app: tauri::AppHandle,
+    device_id: Option<String>,
+    direction: String,
+) -> Result<bool, String> {
+    let muted = audio::toggle_mute(device_id.as_deref(), &direction).map_err(|e| e.to_string())?;
+    // Keep the central state in step when the target was a default endpoint.
+    if device_id.is_none() {
+        if direction == "input" {
+            crate::mute::apply(&app, muted);
+        } else {
+            crate::mute::apply_output(&app, muted);
+        }
+    }
+    Ok(muted)
+}
+
+/// Reads a device's mute state.
+#[tauri::command]
+pub fn get_device_muted(device_id: Option<String>, direction: String) -> Result<bool, String> {
+    audio::is_muted(device_id.as_deref(), &direction).map_err(|e| e.to_string())
+}
+
+/// Toggles the default output's mute, returning the new state.
+#[tauri::command]
+pub fn toggle_output_mute(app: tauri::AppHandle) -> Result<bool, String> {
+    let muted = audio::toggle_mute(None, "output").map_err(|e| e.to_string())?;
+    crate::mute::apply_output(&app, muted);
+    Ok(muted)
+}
+
+/// Reads whether the default output is currently muted.
+#[tauri::command]
+pub fn get_output_muted() -> Result<bool, String> {
+    audio::is_muted(None, "output").map_err(|e| e.to_string())
+}
+
 /// Reads whether the default microphone is currently muted.
 #[tauri::command]
 pub fn get_mic_muted() -> Result<bool, String> {

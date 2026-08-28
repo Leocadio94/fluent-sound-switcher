@@ -34,7 +34,10 @@
     "toggleMute": "Toggle mic mute",
     "press": "Press keys...",
     "none": "None",
-    "conflict": "Could not register: {{list}}. Another app probably owns that shortcut."
+    "conflict": "Could not register: {{list}}. Another app probably owns that shortcut.",
+    "toggleOutputMute": "Toggle output mute",
+    "volumeUp": "Volume up",
+    "volumeDown": "Volume down"
   },
   "muteIndicator": {
     "mode": "When to show",

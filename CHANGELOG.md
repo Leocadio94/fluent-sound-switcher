@@ -6,6 +6,46 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 15 — Volume: the backend
+
+The app could switch devices and mute the microphone, and that was the whole
+extent of its relationship with volume. `IAudioEndpointVolume` was already being
+activated, but only `GetMute`/`SetMute` were ever called, on the default capture
+endpoint alone.
+
+- **`audio/volume.rs` now works on any device, in either direction.**
+  `get_volume` / `set_volume` (clamped — the value comes from a slider) /
+  `step_volume` / `toggle_mute` / `is_muted` / `set_mute`, each taking an
+  optional device id and falling back to that direction's default endpoint.
+  `step_volume` uses `VolumeStepUp`/`VolumeStepDown` rather than adding a fixed
+  amount, so the increment is the one Windows itself uses for that endpoint.
+- **Output mute exists.** `MuteState` held a single flag, so there was nowhere
+  to put it; it now tracks the microphone and the default output separately,
+  with an `output-mute-changed` event.
+- **Volume changed elsewhere is mirrored** (`audio/volume_events.rs`): an
+  `IAudioEndpointVolumeCallback` on the default output emits `volume-changed`,
+  so the keyboard volume wheel and the Windows mixer no longer leave the app
+  showing a stale level. It is re-armed when the default output changes — the
+  callback is bound to one endpoint — and the previous registration is undone so
+  they do not accumulate. Like the device notifications, the handler only reads
+  a value and hands it off; it does no COM work on the audio thread.
+- **Three new hotkey actions**: volume up, volume down and toggle output mute.
+  They default to *unbound* on purpose: registering the media keys globally
+  takes them away from Windows, so it has to be the user's choice.
+- **Volume OSD**, reusing the existing overlay window rather than adding a fifth
+  WebView2 instance: the payload is now discriminated (`kind: "mute" |
+  "volume"`), the OSD auto-hides after 1.5 s and then restores the mute
+  indicator. A generation counter keeps a burst of volume presses from having
+  the first one hide what the last one is showing.
+- New commands: `get_device_volume`, `set_device_volume`, `toggle_device_mute`,
+  `get_device_muted`, `toggle_output_mute`, `get_output_muted`.
+
+Note on `unsafe`: the volume registration is kept in a static so it can be
+undone, and COM interfaces are not `Send`. It is wrapped in a newtype with an
+explicit `unsafe impl Send`, justified by `ensure_com` initialising COM as
+`COINIT_MULTITHREADED` (no thread affinity) and by every access going through
+the mutex that holds it.
+
 ### Phase 14 — Frontend correctness & structure
 
 #### Fixes

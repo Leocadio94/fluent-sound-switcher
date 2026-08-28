@@ -64,8 +64,12 @@ impl IMMNotificationClient_Impl for Notifier_Impl {
         dispatch(&self.app, move |app| {
             refresh_gui(&app);
             if is_render {
-                // The output default moved — refresh the device tray icon.
+                // The output default moved — refresh the device tray icon, move
+                // the volume callback to the new endpoint (it is bound to one
+                // device) and re-read that device's mute state.
                 crate::tray::refresh_device_icon(&app);
+                crate::audio::volume_events::rearm(&app);
+                crate::mute::refresh_output(&app);
             }
             if is_capture {
                 // The default mic moved. `MuteState` still held the *previous*

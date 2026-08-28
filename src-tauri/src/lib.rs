@@ -89,6 +89,9 @@ pub fn run() {
             // Watch for device arrivals/removals: mirror external default
             // changes into the GUI and optionally auto-switch on connect.
             audio::events::start(handle);
+            // Mirror volume/mute changes made outside the app (keyboard wheel,
+            // Windows mixer) on the current default output.
+            audio::volume_events::rearm(handle);
             // Silent check for a newer signed release on startup.
             updater::check(handle, true);
             Ok(())
@@ -111,6 +114,12 @@ pub fn run() {
             commands::install_update,
             commands::open_log_folder,
             commands::set_language,
+            commands::get_device_volume,
+            commands::set_device_volume,
+            commands::toggle_device_mute,
+            commands::get_device_muted,
+            commands::toggle_output_mute,
+            commands::get_output_muted,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Fluent Sound Switcher");

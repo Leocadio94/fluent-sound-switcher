@@ -43,6 +43,56 @@ export function setAutostart(enabled: boolean): Promise<void> {
   return invoke<void>("set_autostart", { enabled });
 }
 
+/** A device's volume as a 0-1 scalar. Omit `deviceId` for the current default. */
+export function getDeviceVolume(
+  direction: DeviceDirection,
+  deviceId?: string,
+): Promise<number> {
+  return invoke<number>("get_device_volume", { deviceId, direction });
+}
+
+/** Sets a device's volume from a 0-1 scalar. */
+export function setDeviceVolume(
+  direction: DeviceDirection,
+  level: number,
+  deviceId?: string,
+): Promise<void> {
+  return invoke<void>("set_device_volume", { deviceId, direction, level });
+}
+
+/** Toggles a device's mute; resolves to the new state. */
+export function toggleDeviceMute(
+  direction: DeviceDirection,
+  deviceId?: string,
+): Promise<boolean> {
+  return invoke<boolean>("toggle_device_mute", { deviceId, direction });
+}
+
+/** Reads a device's mute state. */
+export function getDeviceMuted(
+  direction: DeviceDirection,
+  deviceId?: string,
+): Promise<boolean> {
+  return invoke<boolean>("get_device_muted", { deviceId, direction });
+}
+
+/** Toggles the default output's mute; resolves to the new state. */
+export function toggleOutputMute(): Promise<boolean> {
+  return invoke<boolean>("toggle_output_mute");
+}
+
+/** Reads whether the default output is muted. */
+export function getOutputMuted(): Promise<boolean> {
+  return invoke<boolean>("get_output_muted");
+}
+
+/** Payload of the `volume-changed` event. */
+export interface VolumeChanged {
+  level: number;
+  muted: boolean;
+  direction: DeviceDirection;
+}
+
 /** Toggles the default mic mute; resolves to the new muted state. */
 export function toggleMicMute(): Promise<boolean> {
   return invoke<boolean>("toggle_mic_mute");

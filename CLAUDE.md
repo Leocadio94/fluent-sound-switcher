@@ -64,9 +64,11 @@ cargo test --manifest-path src-tauri/Cargo.toml
     `:root[data-window="…"]` so it doesn't leak into the main window.
 - `src-tauri/src/` — Rust.
   - `audio/` — isolated Core Audio module: `enumerator.rs` (list + default
-    output), `policy.rs` (`IPolicyConfig` switch), `volume.rs` (mic mute),
-    `events.rs` (`IMMNotificationClient`), `mod.rs` (`ensure_com`,
-    `cycle_default`). `sessions.rs` (per-app) not built yet.
+    output), `policy.rs` (`IPolicyConfig` switch), `volume.rs` (endpoint volume
+    and mute, any device / either direction), `events.rs`
+    (`IMMNotificationClient`), `volume_events.rs`
+    (`IAudioEndpointVolumeCallback` on the default output), `mod.rs`
+    (`ensure_com`, `cycle_default`). `sessions.rs` (per-app) not built yet.
   - Windows: `overlay.rs` (mute indicator), `banner.rs` (switch banner),
     `flyout.rs` (tray quick-switch) — all transparent/topmost/click-through;
     `auxwin.rs` holds what the three share (monitor resolution, anchoring, the
@@ -99,8 +101,16 @@ cargo test --manifest-path src-tauri/Cargo.toml
   auto-switch happens on device arrival.
 - **These callbacks run on the Windows audio service's thread**: never block or
   call COM in them. Every handler captures what it needs and hands the work to
-  `dispatch()` (a blocking task). The same applies to any callback added later
-  (e.g. `IAudioEndpointVolumeCallback`).
+  `dispatch()` (a blocking task). `IAudioEndpointVolumeCallback`
+  (`volume_events.rs`) follows the same rule.
+- `volume_events::rearm` must be called whenever the default *output* changes:
+  the callback is bound to one endpoint, so without it the app keeps listening
+  to the device the user just moved away from. It also unregisters the previous
+  one, so registrations do not pile up.
+- The `overlay` window shows two faces, discriminated by `kind` in the
+  `overlay-state` payload: the persistent mute indicator and the transient
+  volume OSD. They share one window deliberately — four WebView2 instances are
+  already alive, and this one is already transparent/topmost/click-through.
 - Output tray icon (`device_icon.rs`): reads the endpoint icon-path property
   (best-effort key, `SHDefExtractIconW` → `HICON` → RGBA via GetDIBits, BGRA→RGBA),
   falls back to the app icon.

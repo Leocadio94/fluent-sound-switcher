@@ -22,12 +22,20 @@ export interface Hotkeys {
   cycleOutput: string;
   cycleInput: string;
   toggleMute: string;
+  volumeUp: string;
+  volumeDown: string;
+  toggleOutputMute: string;
 }
 
 export const DEFAULT_HOTKEYS: Hotkeys = {
   cycleOutput: "Ctrl+Alt+F11",
   cycleInput: "Ctrl+Alt+F12",
   toggleMute: "Ctrl+Alt+M",
+  // The volume bindings default to empty on purpose: registering the media keys
+  // globally would take them away from Windows, so they are strictly opt-in.
+  volumeUp: "",
+  volumeDown: "",
+  toggleOutputMute: "",
 };
 
 export const MUTE_INDICATOR_MODES = [
@@ -62,6 +70,17 @@ export const DEFAULT_MUTE_INDICATOR: MuteIndicator = {
   mode: "mutedOnly",
   position: "bottomCenter",
   style: "full",
+};
+
+/** Volume on-screen-display preferences; shares the overlay window. */
+export interface VolumeOsd {
+  enabled: boolean;
+  position: OverlayPosition;
+}
+
+export const DEFAULT_VOLUME_OSD: VolumeOsd = {
+  enabled: true,
+  position: "bottomCenter",
 };
 
 /** Device-change notification preferences. */
@@ -115,6 +134,7 @@ const AUTO_SWITCH_KEY = "autoSwitch";
 const START_MINIMIZED_KEY = "startMinimized";
 const SHOW_DEVICE_ICON_KEY = "showDeviceIcon";
 const OVERLAY_MONITOR_KEY = "overlayMonitor";
+const VOLUME_OSD_KEY = "volumeOsd";
 const LANGUAGE_KEY = "language";
 const THEME_KEY = "theme";
 
@@ -149,6 +169,7 @@ function getStore(): Promise<Store> {
         [START_MINIMIZED_KEY]: false,
         [SHOW_DEVICE_ICON_KEY]: true,
         [OVERLAY_MONITOR_KEY]: DEFAULT_MONITOR_PREFERENCE,
+        [VOLUME_OSD_KEY]: DEFAULT_VOLUME_OSD,
       },
     }).then(async (store) => {
       const version = await store.get(SCHEMA_VERSION_KEY);
@@ -194,6 +215,12 @@ export async function loadHotkeys(): Promise<Hotkeys> {
     cycleOutput: stringOr(stored?.cycleOutput, DEFAULT_HOTKEYS.cycleOutput),
     cycleInput: stringOr(stored?.cycleInput, DEFAULT_HOTKEYS.cycleInput),
     toggleMute: stringOr(stored?.toggleMute, DEFAULT_HOTKEYS.toggleMute),
+    volumeUp: stringOr(stored?.volumeUp, DEFAULT_HOTKEYS.volumeUp),
+    volumeDown: stringOr(stored?.volumeDown, DEFAULT_HOTKEYS.volumeDown),
+    toggleOutputMute: stringOr(
+      stored?.toggleOutputMute,
+      DEFAULT_HOTKEYS.toggleOutputMute,
+    ),
   };
 }
 
@@ -273,6 +300,24 @@ export async function loadShowDeviceIcon(): Promise<boolean> {
 export async function saveShowDeviceIcon(value: boolean): Promise<void> {
   const store = await getStore();
   await store.set(SHOW_DEVICE_ICON_KEY, value);
+}
+
+export async function loadVolumeOsd(): Promise<VolumeOsd> {
+  const store = await getStore();
+  const stored = await store.get<Partial<VolumeOsd>>(VOLUME_OSD_KEY);
+  return {
+    enabled: boolOr(stored?.enabled, DEFAULT_VOLUME_OSD.enabled),
+    position: oneOf(
+      stored?.position,
+      OVERLAY_POSITIONS,
+      DEFAULT_VOLUME_OSD.position,
+    ),
+  };
+}
+
+export async function saveVolumeOsd(value: VolumeOsd): Promise<void> {
+  const store = await getStore();
+  await store.set(VOLUME_OSD_KEY, value);
 }
 
 export async function loadMonitorPreference(): Promise<MonitorPreference> {

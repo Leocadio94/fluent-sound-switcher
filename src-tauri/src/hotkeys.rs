@@ -19,6 +19,9 @@ pub enum Action {
     CycleOutput,
     CycleInput,
     ToggleMute,
+    VolumeUp,
+    VolumeDown,
+    ToggleOutputMute,
 }
 
 impl Action {
@@ -29,6 +32,9 @@ impl Action {
             Action::CycleOutput => "cycleOutput",
             Action::CycleInput => "cycleInput",
             Action::ToggleMute => "toggleMute",
+            Action::VolumeUp => "volumeUp",
+            Action::VolumeDown => "volumeDown",
+            Action::ToggleOutputMute => "toggleOutputMute",
         }
     }
 }
@@ -82,8 +88,19 @@ fn perform(app: AppHandle, action: Action) {
             Action::CycleOutput => cycle(&app, "output"),
             Action::CycleInput => cycle(&app, "input"),
             Action::ToggleMute => crate::mute::toggle(&app),
+            Action::VolumeUp => step_volume(&app, true),
+            Action::VolumeDown => step_volume(&app, false),
+            Action::ToggleOutputMute => crate::mute::toggle_output(&app),
         }
     });
+}
+
+/// Nudges the default output one step and shows the volume OSD.
+fn step_volume(app: &AppHandle, up: bool) {
+    match crate::audio::step_volume(None, "output", up) {
+        Ok(level) => crate::overlay::show_volume(app, level),
+        Err(e) => log::error!("could not step the output volume: {e}"),
+    }
 }
 
 fn cycle(app: &AppHandle, direction: &str) {
@@ -126,6 +143,9 @@ pub fn register_with(app: &AppHandle, cfg: &HotkeyConfig) -> tauri::Result<Vec<H
         (&cfg.cycle_output, Action::CycleOutput),
         (&cfg.cycle_input, Action::CycleInput),
         (&cfg.toggle_mute, Action::ToggleMute),
+        (&cfg.volume_up, Action::VolumeUp),
+        (&cfg.volume_down, Action::VolumeDown),
+        (&cfg.toggle_output_mute, Action::ToggleOutputMute),
     ];
 
     let mut registered = Vec::new();

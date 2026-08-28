@@ -34,7 +34,10 @@
     "toggleMute": "Mutar/desmutar microfone",
     "press": "Pressione as teclas...",
     "none": "Nenhum",
-    "conflict": "Não foi possível registrar: {{list}}. Outro aplicativo provavelmente já usa esse atalho."
+    "conflict": "Não foi possível registrar: {{list}}. Outro aplicativo provavelmente já usa esse atalho.",
+    "toggleOutputMute": "Mutar/desmutar saída",
+    "volumeUp": "Aumentar volume",
+    "volumeDown": "Diminuir volume"
   },
   "muteIndicator": {
     "mode": "Quando mostrar",

@@ -29,6 +29,14 @@ pub struct HotkeyConfig {
     pub cycle_output: String,
     pub cycle_input: String,
     pub toggle_mute: String,
+    /// Volume bindings default to empty: binding the media keys globally would
+    /// hijack them from Windows, so they are strictly opt-in.
+    #[serde(default)]
+    pub volume_up: String,
+    #[serde(default)]
+    pub volume_down: String,
+    #[serde(default)]
+    pub toggle_output_mute: String,
 }
 
 impl Default for HotkeyConfig {
@@ -37,6 +45,9 @@ impl Default for HotkeyConfig {
             cycle_output: DEFAULT_CYCLE_OUTPUT.to_string(),
             cycle_input: DEFAULT_CYCLE_INPUT.to_string(),
             toggle_mute: DEFAULT_TOGGLE_MUTE.to_string(),
+            volume_up: String::new(),
+            volume_down: String::new(),
+            toggle_output_mute: String::new(),
         }
     }
 }
@@ -199,6 +210,9 @@ pub fn hotkeys(app: &AppHandle) -> HotkeyConfig {
         cycle_output: pick("cycleOutput", DEFAULT_CYCLE_OUTPUT),
         cycle_input: pick("cycleInput", DEFAULT_CYCLE_INPUT),
         toggle_mute: pick("toggleMute", DEFAULT_TOGGLE_MUTE),
+        volume_up: pick("volumeUp", ""),
+        volume_down: pick("volumeDown", ""),
+        toggle_output_mute: pick("toggleOutputMute", ""),
     }
 }
 
@@ -260,6 +274,33 @@ pub fn show_device_icon(app: &AppHandle) -> bool {
         .get("showDeviceIcon")
         .and_then(|v| v.as_bool())
         .unwrap_or(true)
+}
+
+/// Volume on-screen-display preferences. Shares the overlay window with the
+/// mute indicator; see `overlay::show_volume`.
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct VolumeOsd {
+    pub enabled: bool,
+    /// Same vocabulary as the mute overlay and the banner.
+    pub position: String,
+}
+
+impl Default for VolumeOsd {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            position: "bottomCenter".to_string(),
+        }
+    }
+}
+
+/// Volume OSD preferences, falling back to defaults when unset.
+pub fn volume_osd(app: &AppHandle) -> VolumeOsd {
+    read(app)
+        .get("volumeOsd")
+        .and_then(|v| serde_json::from_value(v.clone()).ok())
+        .unwrap_or_default()
 }
 
 /// Which monitor the aux windows target: "cursor" (default), "primary" or

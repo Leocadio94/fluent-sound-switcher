@@ -1,7 +1,18 @@
-//! The on-screen mute overlay: a small, click-through, always-on-top window
-//! that stays visible over fullscreen apps (fixing SoundSwitch's "behind the
-//! taskbar" problem). Visibility/style follow the user's `muteIndicator` config.
+//! The on-screen overlay: a small, click-through, always-on-top window that
+//! stays visible over fullscreen apps (fixing SoundSwitch's "behind the
+//! taskbar" problem).
+//!
+//! It shows two things, one at a time:
+//!  - the persistent mic-mute indicator, per the `muteIndicator` config;
+//!  - a transient volume OSD, shown when a volume hotkey fires.
+//!
+//! Both share this one window on purpose: the app already keeps four WebView2
+//! instances alive, and this one is already transparent, topmost and
+//! click-through. When the volume OSD times out the window reverts to whatever
+//! the mute indicator wants to be showing.
 
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::OnceLock;
 use std::thread;
 use std::time::Duration;
 
@@ -22,13 +33,30 @@ const EMIT_RETRIES_MS: [u64; 3] = [80, 200, 400];
 
 const FULL_WIDTH: f64 = 240.0;
 const ICON_WIDTH: f64 = 78.0;
+const VOLUME_WIDTH: f64 = 260.0;
 const HEIGHT: f64 = 72.0;
 const MARGIN: f64 = 24.0;
 
+/// How long the volume OSD stays up after the last change.
+const VOLUME_SHOW_MS: u64 = 1500;
+
 #[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
 struct OverlayState {
+    /// "mute" or "volume" — which face the overlay is currently showing.
+    kind: &'static str,
     muted: bool,
     style: String,
+    /// 0.0–1.0, only meaningful when `kind` is "volume".
+    level: f32,
+}
+
+/// Monotonic counter so only the newest volume OSD's timer takes effect: a
+/// burst of volume-up presses must not have the first one hide the overlay
+/// while the last is still on screen.
+fn generation() -> &'static AtomicU64 {
+    static G: OnceLock<AtomicU64> = OnceLock::new();
+    G.get_or_init(|| AtomicU64::new(0))
 }
 
 /// One-time window configuration: never steal focus, ignore the mouse, and sit
@@ -52,6 +80,9 @@ pub fn update_with(app: &AppHandle, muted: bool, cfg: &MuteIndicator) {
     let Some(window) = app.get_webview_window(OVERLAY_LABEL) else {
         return;
     };
+    // A mute change supersedes any volume OSD still counting down.
+    generation().fetch_add(1, Ordering::SeqCst);
+
     let visible = match cfg.mode.as_str() {
         "always" => true,
         "mutedOnly" => muted,
@@ -60,8 +91,10 @@ pub fn update_with(app: &AppHandle, muted: bool, cfg: &MuteIndicator) {
     };
 
     let payload = OverlayState {
+        kind: "mute",
         muted,
         style: cfg.style.clone(),
+        level: 0.0,
     };
 
     if visible {
@@ -85,6 +118,42 @@ pub fn update_with(app: &AppHandle, muted: bool, cfg: &MuteIndicator) {
         // next time it is shown; no retries needed while hidden.
         let _ = app.emit("overlay-state", payload);
     }
+}
+
+/// Flashes the volume OSD at `level` (0.0–1.0), then restores the mute
+/// indicator. Does nothing when the user turned the OSD off.
+pub fn show_volume(app: &AppHandle, level: f32) {
+    let cfg = config::volume_osd(app);
+    if !cfg.enabled {
+        return;
+    }
+    let Some(window) = app.get_webview_window(OVERLAY_LABEL) else {
+        return;
+    };
+
+    let payload = OverlayState {
+        kind: "volume",
+        muted: crate::mute::current_output(app),
+        style: "full".to_string(),
+        level: level.clamp(0.0, 1.0),
+    };
+
+    let _ = window.set_size(LogicalSize::new(VOLUME_WIDTH, HEIGHT));
+    auxwin::anchor(app, &window, &cfg.position, VOLUME_WIDTH, HEIGHT, MARGIN);
+    let _ = window.show();
+    let _ = window.set_ignore_cursor_events(true);
+    let _ = window.set_always_on_top(true);
+    emit_state(app, payload);
+
+    let generation_id = generation().fetch_add(1, Ordering::SeqCst) + 1;
+    let app = app.clone();
+    thread::spawn(move || {
+        thread::sleep(Duration::from_millis(VOLUME_SHOW_MS));
+        // Only the newest OSD restores the mute indicator.
+        if generation().load(Ordering::SeqCst) == generation_id {
+            update(&app, crate::mute::current(&app));
+        }
+    });
 }
 
 /// Emits the overlay state immediately and re-emits it a few times, covering a

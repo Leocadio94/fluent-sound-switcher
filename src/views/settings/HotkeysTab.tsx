@@ -10,6 +10,9 @@ const ACTIONS: { key: keyof Hotkeys; labelKey: TranslationKey }[] = [
   { key: "cycleOutput", labelKey: "hotkeys.cycleOutput" },
   { key: "cycleInput", labelKey: "hotkeys.cycleInput" },
   { key: "toggleMute", labelKey: "hotkeys.toggleMute" },
+  { key: "toggleOutputMute", labelKey: "hotkeys.toggleOutputMute" },
+  { key: "volumeUp", labelKey: "hotkeys.volumeUp" },
+  { key: "volumeDown", labelKey: "hotkeys.volumeDown" },
 ];
 
 interface HotkeysTabProps {
