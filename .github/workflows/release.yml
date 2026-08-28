@@ -108,7 +108,23 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           bundle=src-tauri/target/release/bundle
-          find "$bundle/msi" "$bundle/nsis" -type f \( -name '*.msi' -o -name '*.exe' \) \
-            -exec sha256sum {} + | sed 's#.*/##' > SHA256SUMS.txt
+          # Two things make this fiddlier than it looks, and v0.2.0 shipped a
+          # checksum file listing bare filenames with no hashes because of the
+          # first:
+          #   - the installer names contain spaces ("Fluent Sound Switcher_..."),
+          #     so `sed 's#.*/##'` is greedy across the whole line and strips the
+          #     hash along with the directory, and awk's $2 stops at the space;
+          #   - GitHub replaces those spaces with dots in the published asset
+          #     names, so hashing the local filenames would list names nobody
+          #     can verify against what they downloaded.
+          # Staging the files under their published names sidesteps both, and
+          # hashing them from inside that directory keeps the paths relative
+          # (sha256sum escapes a leading backslash otherwise).
+          rm -rf checksums && mkdir checksums
+          find "$bundle/msi" "$bundle/nsis" -type f \( -name '*.msi' -o -name '*.exe' \) |
+            while IFS= read -r file; do
+              cp "$file" "checksums/$(basename "$file" | tr ' ' '.')"
+            done
+          ( cd checksums && sha256sum -- * ) > SHA256SUMS.txt
           cat SHA256SUMS.txt
           gh release upload "${{ github.ref_name }}" SHA256SUMS.txt --clobber
