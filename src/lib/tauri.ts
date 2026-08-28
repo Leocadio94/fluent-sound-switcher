@@ -85,3 +85,8 @@ export function setDeviceIcon(enabled: boolean): Promise<void> {
 export function mainWindowReady(): Promise<void> {
   return invoke<void>("main_window_ready");
 }
+
+/** Downloads and installs the pending update, then restarts the app. */
+export function installUpdate(): Promise<void> {
+  return invoke<void>("install_update");
+}

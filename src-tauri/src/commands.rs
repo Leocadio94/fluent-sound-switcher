@@ -24,6 +24,13 @@ pub fn main_window_ready(app: tauri::AppHandle, hidden: tauri::State<'_, StartHi
     }
 }
 
+/// Downloads and installs a pending update, then restarts the app. Triggered by
+/// the "update available" bar in the main window.
+#[tauri::command]
+pub fn install_update(app: tauri::AppHandle) {
+    crate::updater::install(&app);
+}
+
 /// Returns all active input/output devices with the current defaults marked.
 #[tauri::command]
 pub fn list_audio_devices() -> Result<Vec<AudioDevice>, String> {

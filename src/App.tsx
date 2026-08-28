@@ -3,6 +3,7 @@ import {
   Body1,
   Button,
   MessageBar,
+  MessageBarActions,
   MessageBarBody,
   Spinner,
   Switch,
@@ -29,7 +30,11 @@ import { useMute } from "./hooks/useMute";
 import { useMuteIndicator } from "./hooks/useMuteIndicator";
 import { useNotifications } from "./hooks/useNotifications";
 import { useAutoSwitch } from "./hooks/useAutoSwitch";
-import { mainWindowReady, previewNotification } from "./lib/tauri";
+import {
+  installUpdate,
+  mainWindowReady,
+  previewNotification,
+} from "./lib/tauri";
 import type { ThemePreference } from "./theme/useSystemTheme";
 
 const useStyles = makeStyles({
@@ -93,6 +98,9 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
   const { autoSwitch, setField: setAutoSwitchField } = useAutoSwitch();
   const { muted, toggle: toggleMute } = useMute();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [update, setUpdate] = useState<string | null>(null);
+  const [updating, setUpdating] = useState(false);
+
   // The window is created hidden so a login auto-start never flashes on
   // screen; reveal it now that the first frame is up.
   useEffect(() => {
@@ -104,6 +112,23 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
     const unlisten = listen("open-settings", () => setSettingsOpen(true));
     return () => {
       void unlisten.then((off) => off());
+    };
+  }, []);
+
+  // The updater only detects a new version; installing (which restarts the
+  // app) stays an explicit user action.
+  useEffect(() => {
+    const unlistenAvailable = listen<{ version: string }>(
+      "update-available",
+      (event) => setUpdate(event.payload.version),
+    );
+    const unlistenFinished = listen("update-finished", () => {
+      setUpdating(false);
+      setUpdate(null);
+    });
+    return () => {
+      void unlistenAvailable.then((off) => off());
+      void unlistenFinished.then((off) => off());
     };
   }, []);
 
@@ -157,6 +182,33 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
       />
 
       <main className={styles.content}>
+        {update && (
+          <MessageBar intent="info">
+            <MessageBarBody>{t("update.available", { version: update })}</MessageBarBody>
+            <MessageBarActions>
+              <Button
+                appearance="primary"
+                size="small"
+                disabled={updating}
+                onClick={() => {
+                  setUpdating(true);
+                  void installUpdate();
+                }}
+              >
+                {updating ? t("update.installing") : t("update.install")}
+              </Button>
+              <Button
+                appearance="subtle"
+                size="small"
+                disabled={updating}
+                onClick={() => setUpdate(null)}
+              >
+                {t("update.later")}
+              </Button>
+            </MessageBarActions>
+          </MessageBar>
+        )}
+
         {error && (
           <MessageBar intent="error">
             <MessageBarBody>

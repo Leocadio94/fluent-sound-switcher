@@ -13,6 +13,12 @@
     "noDevices": "No devices found",
     "error": "Error"
   },
+  "update": {
+    "available": "Version {{version}} is available.",
+    "install": "Update now",
+    "installing": "Updating...",
+    "later": "Later"
+  },
   "devices": {
     "onlyFavorites": "Favorites only",
     "addToCycle": "Add to cycle list",

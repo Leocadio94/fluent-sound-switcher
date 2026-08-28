@@ -93,6 +93,7 @@ pub fn run() {
             commands::set_autostart,
             commands::set_device_icon,
             commands::main_window_ready,
+            commands::install_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Fluent Sound Switcher");

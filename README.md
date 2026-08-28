@@ -128,12 +128,31 @@ Requires Node, pnpm, and the Rust toolchain on a Windows 11 target.
 
 Tagging a commit `v*` (e.g. `v0.1.0`) triggers the
 [release workflow](.github/workflows/release.yml): it builds the Windows
-installers and publishes them to a GitHub Release.
+installers and **publishes** (not drafts) a GitHub Release with the signed
+update artifacts and a `latest.json`.
 
-Auto-update is configured (`tauri-plugin-updater`): the updater public key is in
-`tauri.conf.json`, the endpoint points at the GitHub Releases `latest.json`, and
-the workflow signs the artifacts. The app checks on startup and via the tray's
-**Verificar atualizações** item.
+Auto-update is configured (`tauri-plugin-updater`). Because this repository is
+public, the updater needs no token or proxy — it just fetches
+
+```
+https://github.com/Leocadio94/fluent-sound-switcher/releases/latest/download/latest.json
+```
+
+The public key is in `tauri.conf.json` and CI signs the artifacts with the
+matching private key.
+
+⚠️ The release must be **published**, and not a prerelease: GitHub excludes
+drafts and prereleases from `releases/latest`, so either one makes every
+client's update check 404.
+
+The flow in the app:
+
+1. A check runs at startup (silent, retried a few times while the network comes
+   up at login) and on demand via the tray's **Verificar atualizações**.
+2. Finding a newer version only *notifies* — a toast plus an update bar in the
+   main window.
+3. **Atualizar agora** downloads, installs and restarts. Installing is always
+   explicit, because the Windows installer terminates the running app.
 
 <details>
 <summary>One-time maintainer setup</summary>
