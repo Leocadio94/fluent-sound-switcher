@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
-
 import {
   DEFAULT_AUTO_SWITCH,
   loadAutoSwitch,
   saveAutoSwitch,
   type AutoSwitchConfig,
 } from "../lib/config";
+import { usePersistedConfig } from "./usePersistedConfig";
 
 interface UseAutoSwitch {
   autoSwitch: AutoSwitchConfig;
@@ -21,26 +20,11 @@ interface UseAutoSwitch {
  * needed here.
  */
 export function useAutoSwitch(): UseAutoSwitch {
-  const [autoSwitch, setAutoSwitch] =
-    useState<AutoSwitchConfig>(DEFAULT_AUTO_SWITCH);
+  const { value, setField } = usePersistedConfig({
+    defaults: DEFAULT_AUTO_SWITCH,
+    load: loadAutoSwitch,
+    save: saveAutoSwitch,
+  });
 
-  useEffect(() => {
-    void loadAutoSwitch().then(setAutoSwitch);
-  }, []);
-
-  const setField = useCallback(
-    <K extends keyof AutoSwitchConfig>(
-      key: K,
-      value: AutoSwitchConfig[K],
-    ) => {
-      setAutoSwitch((prev) => {
-        const next = { ...prev, [key]: value };
-        void saveAutoSwitch(next);
-        return next;
-      });
-    },
-    [],
-  );
-
-  return { autoSwitch, setField };
+  return { autoSwitch: value, setField };
 }

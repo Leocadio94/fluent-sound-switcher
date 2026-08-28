@@ -1,17 +1,16 @@
 {
   "app": {
-    "title": "Fluent Sound Switcher",
-    "subtitle": "Switch Windows audio devices with a Fluent 2 look"
+    "title": "Fluent Sound Switcher"
   },
   "common": {
     "output": "Output",
     "input": "Input",
     "active": "Active",
     "refresh": "Refresh",
-    "settings": "Settings",
     "loading": "Loading devices...",
     "noDevices": "No devices found",
-    "error": "Error"
+    "error": "Error",
+    "close": "Close"
   },
   "update": {
     "available": "Version {{version}} is available.",
@@ -30,17 +29,14 @@
     "unmute": "Unmute microphone"
   },
   "hotkeys": {
-    "title": "Keyboard shortcuts",
     "cycleOutput": "Cycle output",
     "cycleInput": "Cycle input",
     "toggleMute": "Toggle mic mute",
     "press": "Press keys...",
     "none": "None",
-    "close": "Close",
     "conflict": "Could not register: {{list}}. Another app probably owns that shortcut."
   },
   "muteIndicator": {
-    "title": "Mute indicator",
     "mode": "When to show",
     "position": "Position",
     "style": "Style",
@@ -54,19 +50,10 @@
       "unmutedOnly": "Only when live",
       "hidden": "Never"
     },
-    "positions": {
-      "topCenter": "Top (center)",
-      "bottomCenter": "Bottom (center)",
-      "topLeft": "Top (left)",
-      "topRight": "Top (right)",
-      "bottomLeft": "Bottom (left)",
-      "bottomRight": "Bottom (right)"
-    },
     "muted": "Microphone muted",
     "live": "Microphone live"
   },
   "notifications": {
-    "title": "Device-change notification",
     "banner": "On-screen banner",
     "native": "Windows notification",
     "sound": "Play sound",
@@ -96,9 +83,11 @@
     "showDeviceIconHint": "Second icon showing the current output (the microphone stays primary).",
     "language": "Language",
     "theme": "Theme",
-    "theme.system": "Follow system",
-    "theme.light": "Light",
-    "theme.dark": "Dark"
+    "themes": {
+      "system": "Follow system",
+      "light": "Light",
+      "dark": "Dark"
+    }
   },
   "general": {
     "logs": "Diagnostics",
@@ -111,5 +100,18 @@
       "primary": "Primary monitor",
       "foreground": "Monitor of the focused window"
     }
+  },
+  "errors": {
+    "list": "Could not list the audio devices.",
+    "switch": "Could not switch the device.",
+    "retry": "Try again"
+  },
+  "positions": {
+    "topCenter": "Top (center)",
+    "bottomCenter": "Bottom (center)",
+    "topLeft": "Top (left)",
+    "topRight": "Top (right)",
+    "bottomLeft": "Bottom (left)",
+    "bottomRight": "Bottom (right)"
   }
 }

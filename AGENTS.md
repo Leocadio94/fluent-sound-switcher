@@ -22,6 +22,7 @@ pnpm install        # install JS deps
 pnpm tauri:dev      # run the app (vite + rust)
 pnpm tauri:build    # production bundle (msi + nsis)
 pnpm lint           # tsc --noEmit (frontend typecheck)
+pnpm test           # vitest
 cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
 cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
 cargo test --manifest-path src-tauri/Cargo.toml

@@ -1,17 +1,16 @@
 {
   "app": {
-    "title": "Fluent Sound Switcher",
-    "subtitle": "Troque dispositivos de áudio do Windows com estilo Fluent 2"
+    "title": "Fluent Sound Switcher"
   },
   "common": {
     "output": "Saída",
     "input": "Entrada",
     "active": "Ativo",
     "refresh": "Atualizar",
-    "settings": "Configurações",
     "loading": "Carregando dispositivos...",
     "noDevices": "Nenhum dispositivo encontrado",
-    "error": "Erro"
+    "error": "Erro",
+    "close": "Fechar"
   },
   "update": {
     "available": "Versão {{version}} disponível.",
@@ -30,17 +29,14 @@
     "unmute": "Desmutar microfone"
   },
   "hotkeys": {
-    "title": "Atalhos de teclado",
     "cycleOutput": "Ciclar saída",
     "cycleInput": "Ciclar entrada",
     "toggleMute": "Mutar/desmutar microfone",
     "press": "Pressione as teclas...",
     "none": "Nenhum",
-    "close": "Fechar",
     "conflict": "Não foi possível registrar: {{list}}. Outro aplicativo provavelmente já usa esse atalho."
   },
   "muteIndicator": {
-    "title": "Indicador de mute",
     "mode": "Quando mostrar",
     "position": "Posição",
     "style": "Estilo",
@@ -54,19 +50,10 @@
       "unmutedOnly": "Só quando ativo",
       "hidden": "Nunca"
     },
-    "positions": {
-      "topCenter": "Topo (centro)",
-      "bottomCenter": "Base (centro)",
-      "topLeft": "Topo (esquerda)",
-      "topRight": "Topo (direita)",
-      "bottomLeft": "Base (esquerda)",
-      "bottomRight": "Base (direita)"
-    },
     "muted": "Microfone mudo",
     "live": "Microfone ativo"
   },
   "notifications": {
-    "title": "Notificação ao trocar dispositivo",
     "banner": "Banner na tela",
     "native": "Notificação do Windows",
     "sound": "Tocar som",
@@ -96,9 +83,11 @@
     "showDeviceIconHint": "Segundo ícone mostrando a saída atual (o microfone continua sendo o principal).",
     "language": "Idioma",
     "theme": "Tema",
-    "theme.system": "Seguir o sistema",
-    "theme.light": "Claro",
-    "theme.dark": "Escuro"
+    "themes": {
+      "system": "Seguir o sistema",
+      "light": "Claro",
+      "dark": "Escuro"
+    }
   },
   "general": {
     "logs": "Diagnóstico",
@@ -111,5 +100,18 @@
       "primary": "Monitor principal",
       "foreground": "Monitor da janela em foco"
     }
+  },
+  "errors": {
+    "list": "Não foi possível listar os dispositivos de áudio.",
+    "switch": "Não foi possível trocar o dispositivo.",
+    "retry": "Tentar de novo"
+  },
+  "positions": {
+    "topCenter": "Topo (centro)",
+    "bottomCenter": "Base (centro)",
+    "topLeft": "Topo (esquerda)",
+    "topRight": "Topo (direita)",
+    "bottomLeft": "Base (esquerda)",
+    "bottomRight": "Base (direita)"
   }
 }

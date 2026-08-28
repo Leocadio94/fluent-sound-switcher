@@ -50,11 +50,15 @@ cargo test --manifest-path src-tauri/Cargo.toml
 - `src/` — React frontend.
   - `main.tsx` branches the render on `getCurrentWindow().label`
     (`overlay`/`flyout`/`banner`/`main`) and sets `data-window` on `<html>`.
-  - `App.tsx` (main window), `views/` (`DeviceList`, `SettingsDialog` tabbed,
-    `Overlay`, `Flyout`, `Banner`), `components/` (`HotkeyInput`).
+  - `App.tsx` (main window), `views/` (`DeviceList`, `Overlay`, `Flyout`,
+    `Banner`, `SettingsDialog` — a shell over `views/settings/*Tab.tsx`),
+    `components/` (`HotkeyInput`, `DeviceRow` shared by the list and flyout).
   - `hooks/` — `useDevices`, `useFavorites`, `useHotkeys`, `useMute`,
-    `useMuteIndicator`, `useNotifications`, `useAutoSwitch`, `useGeneral`.
+    `useMuteIndicator`, `useNotifications`, `useAutoSwitch`, `useGeneral`, plus
+    `usePersistedConfig` (load/save/apply a settings record) and
+    `useTauriEvent` (subscribe for a component's lifetime).
   - `lib/tauri.ts` (invoke wrappers), `lib/config.ts` (store wrapper + types),
+    `lib/configSchema.ts` (validation + schema migration),
     `theme/` (Fluent theme + OS sync), `i18n/locales/*.json`.
   - `styles.css` scopes the transparent/centered aux-window CSS via
     `:root[data-window="…"]` so it doesn't leak into the main window.
@@ -131,6 +135,17 @@ cargo test --manifest-path src-tauri/Cargo.toml
   exit code when a subcommand ran. `#![windows_subsystem = "windows"]` in release.
 - WebView2 auto-darkens controls in dark mode; `index.html` + the theme pin
   `color-scheme` to the resolved theme to stop it.
+- Never call `save*()` from inside a `setState` updater: updaters must be pure,
+  and React 19 runs them twice under StrictMode, which wrote the config (and
+  fired the backend command) twice. Use `usePersistedConfig`, or derive the next
+  value from a ref.
+- `t()` keys are type-checked against `locales/pt-BR.json`
+  (`i18n/react-i18next.d.ts`, augmenting **`i18next`** — not `react-i18next`,
+  which type-checks fine while doing nothing), and `i18n/localeParity.ts` fails
+  the build if en.json drifts from pt-BR's shape.
+- Config values are validated on read (`lib/configSchema.ts`) against option
+  lists exported from `lib/config.ts`; add a new option to that list, not to a
+  second copy in the dropdown.
 - **Logging**: the GUI build is `windows_subsystem = "windows"`, so nothing
   printed reaches a console — always use `log::` (never `println!`/`eprintln!`)
   and read the rotating file via Settings → General → "Abrir pasta de logs".

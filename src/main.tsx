@@ -38,6 +38,20 @@ function Root({ initialTheme }: { initialTheme: ThemePreference }) {
   );
 }
 
+/**
+ * Themed wrapper for the click-through mute overlay. It used to render bare,
+ * with its colours hardcoded in CSS, so it ignored the theme entirely.
+ */
+function OverlayRoot({ themePref }: { themePref: ThemePreference }) {
+  const { theme, isDark } = useSystemTheme(themePref);
+  useColorScheme(isDark);
+  return (
+    <FluentProvider theme={theme} style={{ background: "transparent" }}>
+      <Overlay />
+    </FluentProvider>
+  );
+}
+
 /** Themed wrapper for the transparent tray flyout window. */
 function FlyoutRoot({ themePref }: { themePref: ThemePreference }) {
   const { theme, isDark } = useSystemTheme(themePref);
@@ -68,7 +82,7 @@ document.documentElement.dataset.window = label;
 function content(themePref: ThemePreference) {
   switch (label) {
     case "overlay":
-      return <Overlay />;
+      return <OverlayRoot themePref={themePref} />;
     case "flyout":
       return <FlyoutRoot themePref={themePref} />;
     case "banner":

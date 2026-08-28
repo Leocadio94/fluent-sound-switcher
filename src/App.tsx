@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import {
   Body1,
   Button,
+  Caption1,
   MessageBar,
   MessageBarActions,
   MessageBarBody,
@@ -12,8 +13,7 @@ import {
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
-import { useEffect, useState } from "react";
-import { listen } from "@tauri-apps/api/event";
+import { useCallback, useEffect, useState } from "react";
 import {
   ArrowClockwiseRegular,
   MicProhibitedFilled,
@@ -30,6 +30,7 @@ import { useMute } from "./hooks/useMute";
 import { useMuteIndicator } from "./hooks/useMuteIndicator";
 import { useNotifications } from "./hooks/useNotifications";
 import { useAutoSwitch } from "./hooks/useAutoSwitch";
+import { useTauriEvent } from "./hooks/useTauriEvent";
 import {
   installUpdate,
   mainWindowReady,
@@ -74,6 +75,12 @@ const useStyles = makeStyles({
     justifyContent: "center",
     padding: tokens.spacingVerticalXXL,
   },
+  errorDetail: {
+    display: "block",
+    marginTop: tokens.spacingVerticalXS,
+    color: tokens.colorNeutralForeground3,
+    wordBreak: "break-word",
+  },
 });
 
 interface AppProps {
@@ -108,29 +115,20 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
   }, []);
 
   // The tray "Configurações" item asks the main window to open settings.
-  useEffect(() => {
-    const unlisten = listen("open-settings", () => setSettingsOpen(true));
-    return () => {
-      void unlisten.then((off) => off());
-    };
-  }, []);
+  useTauriEvent("open-settings", () => setSettingsOpen(true));
 
   // The updater only detects a new version; installing (which restarts the
   // app) stays an explicit user action.
-  useEffect(() => {
-    const unlistenAvailable = listen<{ version: string }>(
-      "update-available",
-      (event) => setUpdate(event.payload.version),
-    );
-    const unlistenFinished = listen("update-finished", () => {
+  useTauriEvent<{ version: string }>("update-available", (event) =>
+    setUpdate(event.payload.version),
+  );
+  useTauriEvent(
+    "update-finished",
+    useCallback(() => {
       setUpdating(false);
       setUpdate(null);
-    });
-    return () => {
-      void unlistenAvailable.then((off) => off());
-      void unlistenFinished.then((off) => off());
-    };
-  }, []);
+    }, []),
+  );
 
   return (
     <div className={styles.root}>
@@ -144,6 +142,10 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
             <Button
               icon={muted ? <MicProhibitedFilled /> : <MicRegular />}
               appearance={muted ? "primary" : "subtle"}
+              aria-pressed={muted}
+              aria-label={
+                muted ? t("muteIndicator.muted") : t("muteIndicator.live")
+              }
               onClick={toggleMute}
             />
           </Tooltip>
@@ -151,6 +153,7 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
             <Button
               icon={<SettingsRegular />}
               appearance="subtle"
+              aria-label={t("settings.title")}
               onClick={() => setSettingsOpen(true)}
             />
           </Tooltip>
@@ -160,6 +163,7 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
               appearance="subtle"
               onClick={() => void refresh()}
               disabled={loading}
+              aria-label={t("common.refresh")}
             />
           </Tooltip>
         </div>
@@ -213,8 +217,16 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
         {error && (
           <MessageBar intent="error">
             <MessageBarBody>
-              {t("common.error")}: {error}
+              {t(`errors.${error.kind}`)}
+              {/* The raw backend message is a COM error in English; keep it
+                  available for a bug report, but not as the headline. */}
+              <Caption1 className={styles.errorDetail}>{error.detail}</Caption1>
             </MessageBarBody>
+            <MessageBarActions>
+              <Button size="small" onClick={() => void refresh()}>
+                {t("errors.retry")}
+              </Button>
+            </MessageBarActions>
           </MessageBar>
         )}
 

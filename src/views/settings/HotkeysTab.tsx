@@ -1,0 +1,59 @@
+import { useTranslation } from "react-i18next";
+import { Field, MessageBar, MessageBarBody } from "@fluentui/react-components";
+
+import HotkeyInput from "../../components/HotkeyInput";
+import type { Hotkeys } from "../../lib/config";
+import type { HotkeyFailure } from "../../lib/tauri";
+import { useSettingsStyles, type TranslationKey } from "./shared";
+
+const ACTIONS: { key: keyof Hotkeys; labelKey: TranslationKey }[] = [
+  { key: "cycleOutput", labelKey: "hotkeys.cycleOutput" },
+  { key: "cycleInput", labelKey: "hotkeys.cycleInput" },
+  { key: "toggleMute", labelKey: "hotkeys.toggleMute" },
+];
+
+interface HotkeysTabProps {
+  hotkeys: Hotkeys;
+  onChange: (action: keyof Hotkeys, accelerator: string) => void;
+  failures: HotkeyFailure[];
+}
+
+export default function HotkeysTab({
+  hotkeys,
+  onChange,
+  failures,
+}: HotkeysTabProps) {
+  const styles = useSettingsStyles();
+  const { t } = useTranslation();
+
+  return (
+    <>
+      {/* Registration can fail when another app already owns the combination.
+          It used to fail silently, leaving a dead shortcut on screen. */}
+      {failures.length > 0 && (
+        <MessageBar intent="warning">
+          <MessageBarBody>
+            {t("hotkeys.conflict", {
+              list: failures
+                .map((f) => `${t(`hotkeys.${f.action}`)} (${f.accelerator})`)
+                .join(", "),
+            })}
+          </MessageBarBody>
+        </MessageBar>
+      )}
+      {ACTIONS.map(({ key, labelKey }) => (
+        <Field
+          key={key}
+          className={styles.row}
+          label={t(labelKey)}
+          orientation="horizontal"
+        >
+          <HotkeyInput
+            value={hotkeys[key]}
+            onChange={(accelerator) => onChange(key, accelerator)}
+          />
+        </Field>
+      ))}
+    </>
+  );
+}

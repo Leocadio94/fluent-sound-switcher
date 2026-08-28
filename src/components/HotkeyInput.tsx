@@ -17,8 +17,10 @@ const useStyles = makeStyles({
  * Translates a keydown into a Tauri accelerator string (e.g. "Ctrl+Alt+F11").
  * Requires at least one modifier plus a letter, digit or function key so the
  * binding can't collide with plain typing.
+ *
+ * Exported for testing.
  */
-function toAccelerator(e: KeyboardEvent): string | null {
+export function toAccelerator(e: KeyboardEvent): string | null {
   const mods: string[] = [];
   if (e.ctrlKey) mods.push("Ctrl");
   if (e.altKey) mods.push("Alt");

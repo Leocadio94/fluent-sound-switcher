@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { DEFAULT_HOTKEYS, loadHotkeys, saveHotkeys, type Hotkeys } from "../lib/config";
 import { updateHotkeys, type HotkeyFailure } from "../lib/tauri";
@@ -20,21 +20,29 @@ interface UseHotkeys {
 export function useHotkeys(): UseHotkeys {
   const [hotkeys, setHotkeys] = useState<Hotkeys>(DEFAULT_HOTKEYS);
   const [failures, setFailures] = useState<HotkeyFailure[]>([]);
+  const latest = useRef(hotkeys);
 
   useEffect(() => {
-    void loadHotkeys().then(setHotkeys);
+    void loadHotkeys().then((loaded) => {
+      latest.current = loaded;
+      setHotkeys(loaded);
+    });
   }, []);
 
   const setBinding = useCallback(
     (action: keyof Hotkeys, accelerator: string) => {
-      setHotkeys((prev) => {
-        const next = { ...prev, [action]: accelerator };
-        void saveHotkeys(next)
-          .then(() => updateHotkeys(next))
-          .then(setFailures)
-          .catch(() => setFailures([]));
-        return next;
-      });
+      const next = { ...latest.current, [action]: accelerator };
+      latest.current = next;
+      setHotkeys(next);
+      // Outside the state updater: updaters must be pure, and React 19 runs
+      // them twice under StrictMode — which re-registered the shortcuts twice.
+      void saveHotkeys(next)
+        .then(() => updateHotkeys(next))
+        .then(setFailures)
+        .catch((e) => {
+          console.error("could not update hotkeys", e);
+          setFailures([]);
+        });
     },
     [],
   );

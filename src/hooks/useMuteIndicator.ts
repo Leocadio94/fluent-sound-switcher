@@ -1,5 +1,3 @@
-import { useCallback, useEffect, useState } from "react";
-
 import {
   DEFAULT_MUTE_INDICATOR,
   loadMuteIndicator,
@@ -7,6 +5,7 @@ import {
   type MuteIndicator,
 } from "../lib/config";
 import { refreshMuteIndicator } from "../lib/tauri";
+import { usePersistedConfig } from "./usePersistedConfig";
 
 interface UseMuteIndicator {
   indicator: MuteIndicator;
@@ -21,24 +20,12 @@ interface UseMuteIndicator {
  * backend to re-apply the overlay after each change.
  */
 export function useMuteIndicator(): UseMuteIndicator {
-  const [indicator, setIndicator] = useState<MuteIndicator>(
-    DEFAULT_MUTE_INDICATOR,
-  );
+  const { value, setField } = usePersistedConfig({
+    defaults: DEFAULT_MUTE_INDICATOR,
+    load: loadMuteIndicator,
+    save: saveMuteIndicator,
+    apply: refreshMuteIndicator,
+  });
 
-  useEffect(() => {
-    void loadMuteIndicator().then(setIndicator);
-  }, []);
-
-  const setField = useCallback(
-    <K extends keyof MuteIndicator>(key: K, value: MuteIndicator[K]) => {
-      setIndicator((prev) => {
-        const next = { ...prev, [key]: value };
-        void saveMuteIndicator(next).then(() => refreshMuteIndicator(next));
-        return next;
-      });
-    },
-    [],
-  );
-
-  return { indicator, setField };
+  return { indicator: value, setField };
 }

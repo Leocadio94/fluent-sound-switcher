@@ -3,6 +3,8 @@ import { initReactI18next } from "react-i18next";
 
 import ptBR from "./locales/pt-BR.json";
 import en from "./locales/en.json";
+// Type-only: fails the build if the two catalogues drift apart.
+import "./localeParity";
 
 export const SUPPORTED_LANGUAGES = [
   { code: "pt-BR", label: "Português (Brasil)" },

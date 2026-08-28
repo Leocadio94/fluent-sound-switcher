@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   EMPTY_FAVORITES,
@@ -25,9 +25,13 @@ interface UseFavorites {
 export function useFavorites(): UseFavorites {
   const [favorites, setFavorites] = useState<Favorites>(EMPTY_FAVORITES);
   const [showOnlyFavorites, setShowOnlyFavoritesState] = useState(false);
+  const latest = useRef(favorites);
 
   useEffect(() => {
-    void loadFavorites().then(setFavorites);
+    void loadFavorites().then((loaded) => {
+      latest.current = loaded;
+      setFavorites(loaded);
+    });
     void loadShowOnlyFavorites().then(setShowOnlyFavoritesState);
   }, []);
 
@@ -37,20 +41,20 @@ export function useFavorites(): UseFavorites {
     [favorites],
   );
 
-  const toggleFavorite = useCallback(
-    (direction: DeviceDirection, id: string) => {
-      setFavorites((prev) => {
-        const list = prev[direction];
-        const next = list.includes(id)
-          ? list.filter((x) => x !== id)
-          : [...list, id];
-        const updated = { ...prev, [direction]: next };
-        void saveFavorites(updated);
-        return updated;
-      });
-    },
-    [],
-  );
+  const toggleFavorite = useCallback((direction: DeviceDirection, id: string) => {
+    const list = latest.current[direction];
+    const next = list.includes(id)
+      ? list.filter((x) => x !== id)
+      : [...list, id];
+    const updated = { ...latest.current, [direction]: next };
+    latest.current = updated;
+    setFavorites(updated);
+    // Persisted outside the state updater: updaters must be pure, and React 19
+    // runs them twice under StrictMode, which wrote the file twice.
+    void saveFavorites(updated).catch((e) =>
+      console.error("could not save favorites", e),
+    );
+  }, []);
 
   const setShowOnlyFavorites = useCallback((value: boolean) => {
     setShowOnlyFavoritesState(value);

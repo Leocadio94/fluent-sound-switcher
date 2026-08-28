@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { listen } from "@tauri-apps/api/event";
 
 import { getMicMuted, toggleMicMute } from "../lib/tauri";
+import { useTauriEvent } from "./useTauriEvent";
 
 interface UseMute {
   muted: boolean;
@@ -18,19 +18,15 @@ export function useMute(): UseMute {
   useEffect(() => {
     void getMicMuted()
       .then(setMuted)
-      .catch(() => {});
-    const unlisten = listen<boolean>("mic-mute-changed", (e) =>
-      setMuted(e.payload),
-    );
-    return () => {
-      void unlisten.then((off) => off());
-    };
+      .catch((e) => console.error("could not read the mic mute state", e));
   }, []);
+
+  useTauriEvent<boolean>("mic-mute-changed", (event) => setMuted(event.payload));
 
   const toggle = useCallback(() => {
     void toggleMicMute()
       .then(setMuted)
-      .catch(() => {});
+      .catch((e) => console.error("could not toggle the mic mute", e));
   }, []);
 
   return { muted, toggle };

@@ -2,18 +2,20 @@ import { useLayoutEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Caption1,
+  MessageBar,
+  MessageBarBody,
   Spinner,
   makeStyles,
   mergeClasses,
   tokens,
 } from "@fluentui/react-components";
 import {
-  CheckmarkCircleFilled,
   MicProhibitedFilled,
   MicRegular,
   Speaker2Regular,
 } from "@fluentui/react-icons";
 
+import DeviceRow from "../components/DeviceRow";
 import { useDevices } from "../hooks/useDevices";
 import { useFavorites } from "../hooks/useFavorites";
 import { useMute } from "../hooks/useMute";
@@ -37,7 +39,17 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground3,
     padding: `${tokens.spacingVerticalXXS} ${tokens.spacingHorizontalS}`,
   },
-  row: {
+  empty: {
+    padding: tokens.spacingVerticalM,
+    textAlign: "center",
+    color: tokens.colorNeutralForeground3,
+  },
+  divider: {
+    height: tokens.strokeWidthThin,
+    backgroundColor: tokens.colorNeutralStroke2,
+    margin: `${tokens.spacingVerticalXS} ${tokens.spacingHorizontalS}`,
+  },
+  muteButton: {
     display: "flex",
     alignItems: "center",
     gap: tokens.spacingHorizontalS,
@@ -52,31 +64,13 @@ const useStyles = makeStyles({
     borderRadius: tokens.borderRadiusMedium,
     cursor: "pointer",
     ":hover": { backgroundColor: tokens.colorNeutralBackground1Hover },
+    ":focus-visible": {
+      outline: `${tokens.strokeWidthThick} solid ${tokens.colorStrokeFocus2}`,
+    },
   },
-  rowActive: {
-    backgroundColor: tokens.colorBrandBackground2,
-  },
-  icon: { fontSize: "18px", color: tokens.colorNeutralForeground3, flexShrink: 0 },
-  name: {
-    flexGrow: 1,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    fontSize: tokens.fontSizeBase300,
-  },
-  check: { color: tokens.colorBrandForeground1, flexShrink: 0 },
-  empty: { padding: tokens.spacingVerticalM, textAlign: "center", color: tokens.colorNeutralForeground3 },
-  divider: {
-    height: tokens.strokeWidthThin,
-    backgroundColor: tokens.colorNeutralStroke2,
-    margin: `${tokens.spacingVerticalXS} ${tokens.spacingHorizontalS}`,
-  },
-  muteRow: {
-    color: tokens.colorNeutralForeground1,
-  },
-  muteActive: {
-    color: tokens.colorPaletteRedForeground1,
-  },
+  muteActive: { color: tokens.colorPaletteRedForeground1 },
+  muteIcon: { fontSize: "18px", flexShrink: 0 },
+  muteLabel: { flexGrow: 1, fontSize: tokens.fontSizeBase300 },
 });
 
 /**
@@ -86,7 +80,7 @@ const useStyles = makeStyles({
 export default function Flyout() {
   const styles = useStyles();
   const { t } = useTranslation();
-  const { devices, loading, switchTo } = useDevices();
+  const { devices, loading, error, switchTo, switching } = useDevices();
   const { favorites } = useFavorites();
   const { muted, toggle: toggleMute } = useMute();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -99,7 +93,9 @@ export default function Flyout() {
   );
   const isEmpty = outputs.length === 0 && inputs.length === 0;
 
-  // Keep the window sized to the content.
+  // Keep the window sized to the content. The ResizeObserver covers content
+  // changes on its own; the effect only needs to re-run when the element is
+  // replaced, which it never is.
   useLayoutEffect(() => {
     const el = cardRef.current;
     if (!el) return;
@@ -108,7 +104,7 @@ export default function Flyout() {
     const observer = new ResizeObserver(report);
     observer.observe(el);
     return () => observer.disconnect();
-  }, [loading, outputs.length, inputs.length, isEmpty]);
+  }, []);
 
   const pick = async (device: AudioDevice) => {
     await switchTo(device, true);
@@ -127,19 +123,13 @@ export default function Flyout() {
           <Caption1>{label}</Caption1>
         </div>
         {list.map((device) => (
-          <button
+          <DeviceRow
             key={device.id}
-            type="button"
-            className={mergeClasses(
-              styles.row,
-              device.isDefault && styles.rowActive,
-            )}
-            onClick={() => void pick(device)}
-          >
-            <Icon className={styles.icon} />
-            <span className={styles.name}>{device.name}</span>
-            {device.isDefault && <CheckmarkCircleFilled className={styles.check} />}
-          </button>
+            device={device}
+            variant="compact"
+            busy={switching === device.id}
+            onSwitch={(d) => void pick(d)}
+          />
         ))}
       </>
     );
@@ -152,7 +142,14 @@ export default function Flyout() {
         </div>
       ) : (
         <>
-          {isEmpty ? (
+          {/* The flyout used to discard `error` entirely, so a failure here
+              looked like "no favorites". */}
+          {error && (
+            <MessageBar intent="error">
+              <MessageBarBody>{t(`errors.${error.kind}`)}</MessageBarBody>
+            </MessageBar>
+          )}
+          {isEmpty && !error ? (
             <Caption1 className={styles.empty}>{t("flyout.empty")}</Caption1>
           ) : (
             <>
@@ -163,15 +160,16 @@ export default function Flyout() {
           <div className={styles.divider} />
           <button
             type="button"
-            className={mergeClasses(styles.row, muted && styles.muteActive)}
+            aria-pressed={muted}
+            className={mergeClasses(styles.muteButton, muted && styles.muteActive)}
             onClick={() => toggleMute()}
           >
             {muted ? (
-              <MicProhibitedFilled className={styles.icon} />
+              <MicProhibitedFilled className={styles.muteIcon} />
             ) : (
-              <MicRegular className={styles.icon} />
+              <MicRegular className={styles.muteIcon} />
             )}
-            <span className={styles.name}>
+            <span className={styles.muteLabel}>
               {muted ? t("flyout.unmute") : t("flyout.mute")}
             </span>
           </button>

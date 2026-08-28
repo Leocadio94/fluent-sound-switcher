@@ -6,6 +6,68 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 14 — Frontend correctness & structure
+
+#### Fixes
+- **Settings wrote to disk twice per change.** Five hooks called `save(...)`
+  *inside* a `setState` updater. Updaters must be pure, and React 19 runs them
+  twice under StrictMode, so every toggle wrote the config twice and fired its
+  backend command twice (re-registering hotkeys, re-applying the overlay). The
+  new value is now derived from a ref and persisted outside the updater.
+- **The refresh button gave no feedback.** `loading` was only ever set to
+  `false`, so it never returned to `true` and the button never disabled. A
+  background refresh (from a `device-changed` event) deliberately skips the
+  flag, so the list the user is reading does not blank out.
+- **A pending switch froze the whole list.** Every row was disabled while any
+  device was switching; only the row being switched is now.
+- **Errors were shown as raw COM text in English.** Failures now map to a
+  translated sentence with a "try again" button, keeping the backend message as
+  secondary detail for a bug report. The flyout discarded errors entirely, so a
+  failure there looked like "no favorites".
+- **The mute overlay and the switch banner ignored the theme.** Their colours
+  were hardcoded hex in plain CSS, so they were always dark. Both use Fluent
+  tokens now, and the overlay finally renders inside a `FluentProvider` like the
+  other windows.
+
+#### Structure
+- New `DeviceRow` is shared by the main list and the tray flyout, which had
+  hand-rolled two copies of the same markup and near-identical style blocks.
+- `SettingsDialog` went from 415 lines and fourteen drilled props to a 147-line
+  shell over four tab components. Its panel no longer changes height between
+  tabs.
+- New `usePersistedConfig` and `useTauriEvent` replace the load/save and
+  listen/unlisten boilerplate repeated across the hooks.
+
+#### Config
+- The store is versioned (`schemaVersion`) with a migration hook, and every
+  value is validated on read. Loading used to be a shallow merge with no
+  checking, so a hand-edited or downgraded `config.json` could hold
+  `"position": "middle"` and hand it straight to the backend. The option lists
+  are exported once and used by both the dropdowns and the validation.
+- `startMinimized`, `showDeviceIcon` and `overlayMonitor` were missing from the
+  store defaults, so a fresh `config.json` did not contain them.
+
+#### Translations
+- `t()` keys are now type-checked against the catalogue, and en.json is held to
+  pt-BR's exact shape at compile time — a missing or misspelled key used to
+  render as the raw key at runtime. Turning this on immediately caught
+  `settings.deviceIcon`, which does not exist (the key is `showDeviceIcon`).
+- Removed five keys referenced nowhere; moved the shared anchor points to their
+  own `positions` namespace (the banner dropdown was borrowing the mute
+  overlay's); `hotkeys.close` labelled the dialog's close button and is now
+  `common.close`; nested the theme labels, which were flattened
+  `"theme.system"` keys that only resolved by accident.
+
+#### Accessibility
+- `aria-pressed` on the favorite star and the mute toggles, `aria-current` on
+  the active device, `aria-label` on the icon-only header buttons, list
+  semantics on the device sections, and a visible focus ring on the custom
+  buttons, which had none once their border was cleared.
+
+#### Tests
+- Vitest, with 14 tests covering the config validation/migration and the
+  accelerator parsing. `pnpm test` runs in CI.
+
 ### Phase 13 — Backend correctness
 
 #### Fixes

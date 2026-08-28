@@ -1,6 +1,13 @@
 import { load, type Store } from "@tauri-apps/plugin-store";
 
 import type { DeviceDirection } from "./tauri";
+import {
+  boolOr,
+  migrate,
+  oneOf,
+  stringList,
+  stringOr,
+} from "./configSchema";
 
 /** Device ids the user picked to take part in the cycle list, per direction. */
 export interface Favorites {
@@ -23,21 +30,26 @@ export const DEFAULT_HOTKEYS: Hotkeys = {
   toggleMute: "Ctrl+Alt+M",
 };
 
-export type MuteIndicatorMode =
-  | "always"
-  | "mutedOnly"
-  | "unmutedOnly"
-  | "hidden";
+export const MUTE_INDICATOR_MODES = [
+  "always",
+  "mutedOnly",
+  "unmutedOnly",
+  "hidden",
+] as const;
+export type MuteIndicatorMode = (typeof MUTE_INDICATOR_MODES)[number];
 
-export type OverlayPosition =
-  | "topCenter"
-  | "bottomCenter"
-  | "topLeft"
-  | "topRight"
-  | "bottomLeft"
-  | "bottomRight";
+export const OVERLAY_POSITIONS = [
+  "topCenter",
+  "bottomCenter",
+  "topLeft",
+  "topRight",
+  "bottomLeft",
+  "bottomRight",
+] as const;
+export type OverlayPosition = (typeof OVERLAY_POSITIONS)[number];
 
-export type OverlayStyle = "full" | "icon";
+export const OVERLAY_STYLES = ["full", "icon"] as const;
+export type OverlayStyle = (typeof OVERLAY_STYLES)[number];
 
 /** On-screen mute overlay preferences. */
 export interface MuteIndicator {
@@ -73,12 +85,14 @@ export const DEFAULT_NOTIFICATIONS: NotificationConfig = {
  * user is looking at — the whole point of these windows is being visible over
  * the fullscreen game in front of them.
  */
-export type MonitorPreference = "cursor" | "primary" | "foreground";
+export const MONITOR_PREFERENCES = ["cursor", "primary", "foreground"] as const;
+export type MonitorPreference = (typeof MONITOR_PREFERENCES)[number];
 
 export const DEFAULT_MONITOR_PREFERENCE: MonitorPreference = "cursor";
 
 /** When a newly-connected output may grab the default: only curated favorites, or any device. */
-export type AutoSwitchMode = "favoritesOnly" | "any";
+export const AUTO_SWITCH_MODES = ["favoritesOnly", "any"] as const;
+export type AutoSwitchMode = (typeof AUTO_SWITCH_MODES)[number];
 
 /** Auto-switch-on-connect preferences (e.g. plug a TV/monitor → switch to it). */
 export interface AutoSwitchConfig {
@@ -104,9 +118,23 @@ const OVERLAY_MONITOR_KEY = "overlayMonitor";
 const LANGUAGE_KEY = "language";
 const THEME_KEY = "theme";
 
+const SCHEMA_VERSION_KEY = "schemaVersion";
+
 let storePromise: Promise<Store> | null = null;
 
-/** Lazily opens the AppData-backed config store (auto-saves on every set). */
+/**
+ * Lazily opens the AppData-backed config store (auto-saves on every set) and
+ * brings the document up to the current schema on first open.
+ *
+ * `schemaVersion` is deliberately *not* in `defaults`: the plugin serves
+ * defaults for absent keys, so listing it would make an old file read back as
+ * already-current and skip the very migration it needs. It is read on its own
+ * and written explicitly.
+ *
+ * The other defaults only cover reads in this process — the plugin does not
+ * write them to disk until something calls `set`. The backend keeps its own
+ * fallbacks for the keys it reads straight from the file.
+ */
 function getStore(): Promise<Store> {
   if (!storePromise) {
     storePromise = load(STORE_FILE, {
@@ -118,7 +146,18 @@ function getStore(): Promise<Store> {
         [MUTE_INDICATOR_KEY]: DEFAULT_MUTE_INDICATOR,
         [NOTIFICATIONS_KEY]: DEFAULT_NOTIFICATIONS,
         [AUTO_SWITCH_KEY]: DEFAULT_AUTO_SWITCH,
+        [START_MINIMIZED_KEY]: false,
+        [SHOW_DEVICE_ICON_KEY]: true,
+        [OVERLAY_MONITOR_KEY]: DEFAULT_MONITOR_PREFERENCE,
       },
+    }).then(async (store) => {
+      const version = await store.get(SCHEMA_VERSION_KEY);
+      const stored = Object.fromEntries(await store.entries());
+      const migrated = migrate({ ...stored, [SCHEMA_VERSION_KEY]: version });
+      for (const [key, value] of Object.entries(migrated)) {
+        if (stored[key] !== value) await store.set(key, value);
+      }
+      return store;
     });
   }
   return storePromise;
@@ -126,10 +165,10 @@ function getStore(): Promise<Store> {
 
 export async function loadFavorites(): Promise<Favorites> {
   const store = await getStore();
-  const stored = await store.get<Favorites>(FAVORITES_KEY);
+  const stored = await store.get<Partial<Favorites>>(FAVORITES_KEY);
   return {
-    output: stored?.output ?? [],
-    input: stored?.input ?? [],
+    output: stringList(stored?.output),
+    input: stringList(stored?.input),
   };
 }
 
@@ -140,7 +179,7 @@ export async function saveFavorites(favorites: Favorites): Promise<void> {
 
 export async function loadShowOnlyFavorites(): Promise<boolean> {
   const store = await getStore();
-  return (await store.get<boolean>(ONLY_FAVORITES_KEY)) ?? false;
+  return boolOr(await store.get(ONLY_FAVORITES_KEY), false);
 }
 
 export async function saveShowOnlyFavorites(value: boolean): Promise<void> {
@@ -151,7 +190,11 @@ export async function saveShowOnlyFavorites(value: boolean): Promise<void> {
 export async function loadHotkeys(): Promise<Hotkeys> {
   const store = await getStore();
   const stored = await store.get<Partial<Hotkeys>>(HOTKEYS_KEY);
-  return { ...DEFAULT_HOTKEYS, ...stored };
+  return {
+    cycleOutput: stringOr(stored?.cycleOutput, DEFAULT_HOTKEYS.cycleOutput),
+    cycleInput: stringOr(stored?.cycleInput, DEFAULT_HOTKEYS.cycleInput),
+    toggleMute: stringOr(stored?.toggleMute, DEFAULT_HOTKEYS.toggleMute),
+  };
 }
 
 export async function saveHotkeys(hotkeys: Hotkeys): Promise<void> {
@@ -162,7 +205,15 @@ export async function saveHotkeys(hotkeys: Hotkeys): Promise<void> {
 export async function loadMuteIndicator(): Promise<MuteIndicator> {
   const store = await getStore();
   const stored = await store.get<Partial<MuteIndicator>>(MUTE_INDICATOR_KEY);
-  return { ...DEFAULT_MUTE_INDICATOR, ...stored };
+  return {
+    mode: oneOf(stored?.mode, MUTE_INDICATOR_MODES, DEFAULT_MUTE_INDICATOR.mode),
+    position: oneOf(
+      stored?.position,
+      OVERLAY_POSITIONS,
+      DEFAULT_MUTE_INDICATOR.position,
+    ),
+    style: oneOf(stored?.style, OVERLAY_STYLES, DEFAULT_MUTE_INDICATOR.style),
+  };
 }
 
 export async function saveMuteIndicator(value: MuteIndicator): Promise<void> {
@@ -173,7 +224,16 @@ export async function saveMuteIndicator(value: MuteIndicator): Promise<void> {
 export async function loadNotifications(): Promise<NotificationConfig> {
   const store = await getStore();
   const stored = await store.get<Partial<NotificationConfig>>(NOTIFICATIONS_KEY);
-  return { ...DEFAULT_NOTIFICATIONS, ...stored };
+  return {
+    native: boolOr(stored?.native, DEFAULT_NOTIFICATIONS.native),
+    banner: boolOr(stored?.banner, DEFAULT_NOTIFICATIONS.banner),
+    sound: boolOr(stored?.sound, DEFAULT_NOTIFICATIONS.sound),
+    bannerPosition: oneOf(
+      stored?.bannerPosition,
+      OVERLAY_POSITIONS,
+      DEFAULT_NOTIFICATIONS.bannerPosition,
+    ),
+  };
 }
 
 export async function saveNotifications(value: NotificationConfig): Promise<void> {
@@ -184,7 +244,10 @@ export async function saveNotifications(value: NotificationConfig): Promise<void
 export async function loadAutoSwitch(): Promise<AutoSwitchConfig> {
   const store = await getStore();
   const stored = await store.get<Partial<AutoSwitchConfig>>(AUTO_SWITCH_KEY);
-  return { ...DEFAULT_AUTO_SWITCH, ...stored };
+  return {
+    enabled: boolOr(stored?.enabled, DEFAULT_AUTO_SWITCH.enabled),
+    mode: oneOf(stored?.mode, AUTO_SWITCH_MODES, DEFAULT_AUTO_SWITCH.mode),
+  };
 }
 
 export async function saveAutoSwitch(value: AutoSwitchConfig): Promise<void> {
@@ -194,7 +257,7 @@ export async function saveAutoSwitch(value: AutoSwitchConfig): Promise<void> {
 
 export async function loadStartMinimized(): Promise<boolean> {
   const store = await getStore();
-  return (await store.get<boolean>(START_MINIMIZED_KEY)) ?? false;
+  return boolOr(await store.get(START_MINIMIZED_KEY), false);
 }
 
 export async function saveStartMinimized(value: boolean): Promise<void> {
@@ -204,7 +267,7 @@ export async function saveStartMinimized(value: boolean): Promise<void> {
 
 export async function loadShowDeviceIcon(): Promise<boolean> {
   const store = await getStore();
-  return (await store.get<boolean>(SHOW_DEVICE_ICON_KEY)) ?? true;
+  return boolOr(await store.get(SHOW_DEVICE_ICON_KEY), true);
 }
 
 export async function saveShowDeviceIcon(value: boolean): Promise<void> {
@@ -214,9 +277,10 @@ export async function saveShowDeviceIcon(value: boolean): Promise<void> {
 
 export async function loadMonitorPreference(): Promise<MonitorPreference> {
   const store = await getStore();
-  return (
-    (await store.get<MonitorPreference>(OVERLAY_MONITOR_KEY)) ??
-    DEFAULT_MONITOR_PREFERENCE
+  return oneOf(
+    await store.get(OVERLAY_MONITOR_KEY),
+    MONITOR_PREFERENCES,
+    DEFAULT_MONITOR_PREFERENCE,
   );
 }
 
