@@ -103,6 +103,13 @@
   "general": {
     "logs": "Diagnóstico",
     "logsHint": "Abre a pasta com o arquivo de log, útil para anexar a um relato de erro.",
-    "openLogs": "Abrir pasta de logs"
+    "openLogs": "Abrir pasta de logs",
+    "monitor": "Monitor das janelas flutuantes",
+    "monitorHint": "Onde o indicador de mute, o aviso de troca e o menu rápido aparecem.",
+    "monitors": {
+      "cursor": "Onde está o cursor",
+      "primary": "Monitor principal",
+      "foreground": "Monitor da janela em foco"
+    }
   }
 }

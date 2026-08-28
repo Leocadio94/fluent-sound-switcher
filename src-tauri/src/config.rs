@@ -3,13 +3,19 @@
 //! the hotkey bindings (to register global shortcuts) without round-tripping
 //! through the webview.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::sync::{OnceLock, RwLock};
+use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::{AppHandle, Manager};
 
 pub const STORE_FILE: &str = "config.json";
+
+/// Bundle identifier, mirroring `tauri.conf.json`. The CLI runs without an
+/// `AppHandle` and has to derive the app-data dir from `%APPDATA%` itself.
+pub const IDENTIFIER: &str = "com.fluentsoundswitcher.app";
 
 pub const DEFAULT_CYCLE_OUTPUT: &str = "Ctrl+Alt+F11";
 pub const DEFAULT_CYCLE_INPUT: &str = "Ctrl+Alt+F12";
@@ -87,8 +93,30 @@ impl Default for NotificationConfig {
     }
 }
 
-fn store_path(app: &AppHandle) -> Option<PathBuf> {
-    app.path().app_data_dir().ok().map(|d| d.join(STORE_FILE))
+/// Path of the frontend store file inside a given app-data directory.
+pub fn store_path_in(app_data_dir: &Path) -> PathBuf {
+    app_data_dir.join(STORE_FILE)
+}
+
+/// Path of the frontend store file, resolved through Tauri.
+pub fn store_path(app: &AppHandle) -> Option<PathBuf> {
+    app.path().app_data_dir().ok().map(|d| store_path_in(&d))
+}
+
+/// Parsed config, kept until the file's mtime moves.
+///
+/// Every getter used to re-read and re-parse the whole file: a single device
+/// switch cost three full reads (notification prefs, favorites, auto-switch),
+/// some of them from a COM callback on the Windows audio thread.
+static CACHE: OnceLock<RwLock<Option<(SystemTime, Value)>>> = OnceLock::new();
+
+fn cache() -> &'static RwLock<Option<(SystemTime, Value)>> {
+    CACHE.get_or_init(|| RwLock::new(None))
+}
+
+/// mtime of the store file, or `None` when it is missing/unreadable.
+fn modified(path: &PathBuf) -> Option<SystemTime> {
+    std::fs::metadata(path).ok()?.modified().ok()
 }
 
 fn read(app: &AppHandle) -> Value {
@@ -96,6 +124,18 @@ fn read(app: &AppHandle) -> Value {
         log::warn!("app data dir unavailable; falling back to default config");
         return Value::Null;
     };
+
+    let stamp = modified(&path);
+    if let Some(stamp) = stamp {
+        if let Ok(guard) = cache().read() {
+            if let Some((cached_stamp, value)) = guard.as_ref() {
+                if *cached_stamp == stamp {
+                    return value.clone();
+                }
+            }
+        }
+    }
+
     let raw = match std::fs::read_to_string(&path) {
         Ok(raw) => raw,
         Err(e) => {
@@ -106,8 +146,13 @@ fn read(app: &AppHandle) -> Value {
             return Value::Null;
         }
     };
-    match serde_json::from_str(&raw) {
-        Ok(value) => value,
+    match serde_json::from_str::<Value>(&raw) {
+        Ok(value) => {
+            if let (Some(stamp), Ok(mut guard)) = (stamp, cache().write()) {
+                *guard = Some((stamp, value.clone()));
+            }
+            value
+        }
         Err(e) => {
             // Silently reverting every setting to its default is the worst
             // possible failure mode to debug, so say so loudly.
@@ -120,9 +165,10 @@ fn read(app: &AppHandle) -> Value {
     }
 }
 
-/// Favorite device ids for a direction ("output"/"input"), empty when unset.
-pub fn favorites(app: &AppHandle, direction: &str) -> Vec<String> {
-    read(app)
+/// Favorite device ids for a direction ("output"/"input") in an already-parsed
+/// store document. Shared with the CLI, which reads the file on its own.
+pub fn favorites_from(value: &Value, direction: &str) -> Vec<String> {
+    value
         .get("favorites")
         .and_then(|f| f.get(direction))
         .and_then(|a| a.as_array())
@@ -132,6 +178,11 @@ pub fn favorites(app: &AppHandle, direction: &str) -> Vec<String> {
                 .collect()
         })
         .unwrap_or_default()
+}
+
+/// Favorite device ids for a direction ("output"/"input"), empty when unset.
+pub fn favorites(app: &AppHandle, direction: &str) -> Vec<String> {
+    favorites_from(&read(app), direction)
 }
 
 /// Hotkey bindings, falling back to defaults for any missing key.
@@ -209,4 +260,24 @@ pub fn show_device_icon(app: &AppHandle) -> bool {
         .get("showDeviceIcon")
         .and_then(|v| v.as_bool())
         .unwrap_or(true)
+}
+
+/// Which monitor the aux windows target: "cursor" (default), "primary" or
+/// "foreground". See `auxwin::work_area`.
+pub fn overlay_monitor(app: &AppHandle) -> String {
+    read(app)
+        .get("overlayMonitor")
+        .and_then(|v| v.as_str())
+        .unwrap_or(crate::auxwin::MONITOR_CURSOR)
+        .to_string()
+}
+
+/// UI language for the backend-owned strings (tray menu, notifications).
+/// Mirrors the frontend's `language` key.
+pub fn language(app: &AppHandle) -> String {
+    read(app)
+        .get("language")
+        .and_then(|v| v.as_str())
+        .unwrap_or(crate::i18n::DEFAULT_LANGUAGE)
+        .to_string()
 }

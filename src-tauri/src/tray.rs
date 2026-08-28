@@ -3,6 +3,7 @@
 //! Windows shows for it in the Sound control panel). Left-click on either opens
 //! the quick-switch flyout; right-click opens the menu.
 
+use crate::i18n::{self, Msg};
 use tauri::{
     image::Image,
     menu::{Menu, MenuItem, PredefinedMenuItem},
@@ -41,7 +42,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
     // are filled in by `refresh_device_icon`. Hidden until enabled.
     TrayIconBuilder::with_id(DEVICE_TRAY_ID)
         .icon(base_icon)
-        .tooltip("Dispositivo de saída")
+        .tooltip(i18n::t(app, Msg::OutputDevice))
         .menu(&build_menu(app)?)
         .show_menu_on_left_click(false)
         .on_menu_event(on_menu_event)
@@ -52,31 +53,52 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
     Ok(())
 }
 
+/// Rebuilds both trays' menus and tooltips, e.g. after the UI language changed.
+pub fn rebuild_menus(app: &AppHandle) -> tauri::Result<()> {
+    for id in [TRAY_ID, DEVICE_TRAY_ID] {
+        let Some(tray) = app.tray_by_id(id) else {
+            log::warn!("tray '{id}' missing; cannot rebuild its menu");
+            continue;
+        };
+        tray.set_menu(Some(build_menu(app)?))?;
+    }
+    // The tooltips carry translated text too.
+    set_mute_icon(app, crate::mute::current(app));
+    refresh_device_icon(app);
+    Ok(())
+}
+
 fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
-    let show = MenuItem::with_id(app, "show", "Abrir", true, None::<&str>)?;
+    let show = MenuItem::with_id(app, "show", i18n::t(app, Msg::TrayOpen), true, None::<&str>)?;
     let sound_panel = MenuItem::with_id(
         app,
         "sound_panel",
-        "Dispositivos de reprodução",
+        i18n::t(app, Msg::TrayPlaybackDevices),
         true,
         None::<&str>,
     )?;
-    let settings = MenuItem::with_id(app, "settings", "Configurações", true, None::<&str>)?;
+    let settings = MenuItem::with_id(
+        app,
+        "settings",
+        i18n::t(app, Msg::TraySettings),
+        true,
+        None::<&str>,
+    )?;
     let toggle_mute = MenuItem::with_id(
         app,
         "toggle_mute",
-        "Mutar/desmutar microfone",
+        i18n::t(app, Msg::TrayToggleMute),
         true,
         None::<&str>,
     )?;
     let check_updates = MenuItem::with_id(
         app,
         "check_updates",
-        "Verificar atualizações",
+        i18n::t(app, Msg::TrayCheckUpdates),
         true,
         None::<&str>,
     )?;
-    let quit = MenuItem::with_id(app, "quit", "Sair", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", i18n::t(app, Msg::TrayQuit), true, None::<&str>)?;
     let sep = PredefinedMenuItem::separator(app)?;
     let sep2 = PredefinedMenuItem::separator(app)?;
     Menu::with_items(
@@ -152,11 +174,14 @@ pub fn set_mute_icon(app: &AppHandle, muted: bool) {
         }
         Err(e) => log::error!("bundled mic icon failed to decode: {e}"),
     }
-    if let Err(e) = tray.set_tooltip(Some(if muted {
-        "Microfone mudo"
-    } else {
-        "Microfone ativo"
-    })) {
+    if let Err(e) = tray.set_tooltip(Some(i18n::t(
+        app,
+        if muted {
+            Msg::TrayMicMuted
+        } else {
+            Msg::TrayMicLive
+        },
+    ))) {
         log::warn!("could not set the mic tray tooltip: {e}");
     }
 }
@@ -204,7 +229,7 @@ fn update_device_image(app: &AppHandle, tray: &TrayIcon) {
     let tooltip = device
         .as_ref()
         .map(|d| d.name.clone())
-        .unwrap_or_else(|| "Dispositivo de saída".to_string());
+        .unwrap_or_else(|| i18n::t(app, Msg::OutputDevice).to_string());
     if let Err(e) = tray.set_tooltip(Some(&tooltip)) {
         log::warn!("could not set the device tray tooltip: {e}");
     }

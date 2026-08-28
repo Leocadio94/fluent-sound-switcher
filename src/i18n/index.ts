@@ -23,4 +23,13 @@ i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 });
 
+/**
+ * Keeps `<html lang>` in step with the active language, so assistive tech and
+ * the browser's own text handling see the right one. It was pinned to pt-BR in
+ * `index.html`.
+ */
+i18n.on("languageChanged", (language) => {
+  document.documentElement.lang = language;
+});
+
 export default i18n;

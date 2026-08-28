@@ -107,6 +107,14 @@ export function installUpdate(): Promise<void> {
 }
 
 /**
+ * Switches the language of the strings the backend owns (tray menu,
+ * notification titles, updater messages) and rebuilds the tray.
+ */
+export function setLanguage(language: string): Promise<void> {
+  return invoke<void>("set_language", { language });
+}
+
+/**
  * Opens the folder with the rotating log file in Explorer. Nothing the backend
  * prints reaches a console in the packaged app, so this is how a user gets the
  * log for a bug report.

@@ -12,6 +12,8 @@ use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_notification::NotificationExt;
 use tauri_plugin_updater::UpdaterExt;
 
+use crate::i18n::{self, Msg};
+
 /// Payload of the `update-available` event consumed by the main window.
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -33,7 +35,10 @@ pub fn check(app: &AppHandle, silent: bool) {
             Err(e) => {
                 log::error!("updater unavailable: {e}");
                 if !silent {
-                    notify(&app, &format!("Updater indisponível: {e}"));
+                    notify(
+                        &app,
+                        &i18n::fmt1(&app, Msg::UpdaterUnavailable, &e.to_string()),
+                    );
                 }
                 return;
             }
@@ -64,7 +69,7 @@ pub fn check(app: &AppHandle, silent: bool) {
                 };
                 notify(
                     &app,
-                    &format!("Atualização {} disponível.", payload.version),
+                    &i18n::fmt1(&app, Msg::UpdateAvailable, &payload.version),
                 );
                 if let Err(e) = app.emit("update-available", payload) {
                     log::warn!("could not emit update-available: {e}");
@@ -82,13 +87,16 @@ pub fn check(app: &AppHandle, silent: bool) {
             Ok(None) => {
                 log::info!("update check: already on the latest version");
                 if !silent {
-                    notify(&app, "Você já está na versão mais recente.");
+                    notify(&app, i18n::t(&app, Msg::UpToDate));
                 }
             }
             Err(e) => {
                 log::warn!("update check failed: {e}");
                 if !silent {
-                    notify(&app, &format!("Erro ao verificar atualizações: {e}"));
+                    notify(
+                        &app,
+                        &i18n::fmt1(&app, Msg::UpdateCheckFailed, &e.to_string()),
+                    );
                 }
             }
         }
@@ -104,18 +112,24 @@ pub fn install(app: &AppHandle) {
             Ok(updater) => match updater.check().await {
                 Ok(Some(update)) => update,
                 Ok(None) => {
-                    notify(&app, "Você já está na versão mais recente.");
+                    notify(&app, i18n::t(&app, Msg::UpToDate));
                     let _ = app.emit("update-finished", ());
                     return;
                 }
                 Err(e) => {
-                    notify(&app, &format!("Erro ao verificar atualizações: {e}"));
+                    notify(
+                        &app,
+                        &i18n::fmt1(&app, Msg::UpdateCheckFailed, &e.to_string()),
+                    );
                     let _ = app.emit("update-finished", ());
                     return;
                 }
             },
             Err(e) => {
-                notify(&app, &format!("Updater indisponível: {e}"));
+                notify(
+                    &app,
+                    &i18n::fmt1(&app, Msg::UpdaterUnavailable, &e.to_string()),
+                );
                 let _ = app.emit("update-finished", ());
                 return;
             }
@@ -123,15 +137,15 @@ pub fn install(app: &AppHandle) {
 
         let version = update.version.clone();
         log::info!("downloading update {version}");
-        notify(&app, &format!("Baixando atualização {version}…"));
+        notify(&app, &i18n::fmt1(&app, Msg::Downloading, &version));
         if let Err(e) = update.download_and_install(|_, _| {}, || {}).await {
             log::error!("update {version} failed to install: {e}");
-            notify(&app, &format!("Falha ao atualizar: {e}"));
+            notify(&app, &i18n::fmt1(&app, Msg::UpdateFailed, &e.to_string()));
             let _ = app.emit("update-finished", ());
             return;
         }
         log::info!("updated to {version}; restarting");
-        notify(&app, &format!("Atualizado para {version}. Reiniciando…"));
+        notify(&app, &i18n::fmt1(&app, Msg::UpdatedRestarting, &version));
         app.restart();
     });
 }

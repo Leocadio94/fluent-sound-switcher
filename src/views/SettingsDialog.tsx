@@ -23,7 +23,8 @@ import {
 
 import HotkeyInput from "../components/HotkeyInput";
 import { useGeneral } from "../hooks/useGeneral";
-import { openLogFolder, type HotkeyFailure } from "../lib/tauri";
+import { openLogFolder, setLanguage, type HotkeyFailure } from "../lib/tauri";
+import { saveLanguage, type MonitorPreference } from "../lib/config";
 import { SUPPORTED_LANGUAGES } from "../i18n";
 import type { ThemePreference } from "../theme/useSystemTheme";
 import type {
@@ -73,6 +74,7 @@ const POSITIONS: OverlayPosition[] = [
 ];
 const STYLES: OverlayStyle[] = ["full", "icon"];
 const AUTO_SWITCH_MODES: AutoSwitchMode[] = ["favoritesOnly", "any"];
+const MONITORS: MonitorPreference[] = ["cursor", "primary", "foreground"];
 const HOTKEY_ACTIONS: { key: keyof Hotkeys; labelKey: string }[] = [
   { key: "cycleOutput", labelKey: "hotkeys.cycleOutput" },
   { key: "cycleInput", labelKey: "hotkeys.cycleInput" },
@@ -159,9 +161,16 @@ export default function SettingsDialog(props: SettingsDialogProps) {
                         ?.label ?? i18n.language
                     }
                     selectedOptions={[i18n.language]}
-                    onOptionSelect={(_, d) =>
-                      d.optionValue && i18n.changeLanguage(d.optionValue)
-                    }
+                    onOptionSelect={(_, d) => {
+                      if (!d.optionValue) return;
+                      const language = d.optionValue;
+                      void i18n.changeLanguage(language);
+                      // Persist it, and hand it to the backend directly: the
+                      // tray menu and notification titles are translated there,
+                      // and the store write is async.
+                      void saveLanguage(language);
+                      void setLanguage(language);
+                    }}
                   >
                     {SUPPORTED_LANGUAGES.map((lang) => (
                       <Option key={lang.code} value={lang.code}>
@@ -252,6 +261,27 @@ export default function SettingsDialog(props: SettingsDialogProps) {
                     {AUTO_SWITCH_MODES.map((m) => (
                       <Option key={m} value={m}>
                         {t(`autoSwitch.modes.${m}`)}
+                      </Option>
+                    ))}
+                  </Dropdown>
+                </Field>
+                <Field
+                  className={styles.row}
+                  label={t("general.monitor")}
+                  hint={t("general.monitorHint")}
+                  orientation="horizontal"
+                >
+                  <Dropdown
+                    value={t(`general.monitors.${general.monitor}`)}
+                    selectedOptions={[general.monitor]}
+                    onOptionSelect={(_, d) =>
+                      d.optionValue &&
+                      general.setMonitor(d.optionValue as MonitorPreference)
+                    }
+                  >
+                    {MONITORS.map((m) => (
+                      <Option key={m} value={m}>
+                        {t(`general.monitors.${m}`)}
                       </Option>
                     ))}
                   </Dropdown>

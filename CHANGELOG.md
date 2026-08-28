@@ -6,6 +6,58 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 13 — Backend correctness
+
+#### Fixes
+- **Changing the default microphone left the mute state stale.**
+  `OnDefaultDeviceChanged` only handled `eRender`, so after switching mics the
+  tray icon and the on-screen overlay kept reporting the *previous* device's
+  mute status until something else refreshed it. The capture branch now calls
+  `mute::refresh`.
+- **The floating windows ignored every monitor but the primary one.** The mute
+  overlay and the switch banner positioned themselves from `primary_monitor()`
+  with a hardcoded 1920x1080 fallback, and the flyout read `SPI_GETWORKAREA`,
+  which is also primary-only. On a multi-monitor setup they appeared on the
+  wrong screen — for windows whose entire purpose is being visible over the
+  fullscreen game in front of you. New `auxwin.rs` resolves the target monitor's
+  work area (and its real scale factor), with a new "Monitor for floating
+  windows" setting: follow the cursor (default), the primary monitor, or the
+  monitor of the focused window.
+- **Renaming a device did nothing.** `OnPropertyValueChanged` was a no-op, so a
+  device renamed in the sound panel kept its old name in the list. It now
+  refreshes on `PKEY_Device_FriendlyName`, debounced because Windows fires those
+  notifications in bursts.
+
+#### Windows audio callback thread
+- The `IMMNotificationClient` handlers ran everything inline on the Windows
+  audio service's thread: a single device arrival did three config-file reads,
+  two COM enumerations and a default-device switch, which Microsoft explicitly
+  warns against. Handlers now capture what they need and hand the work to a
+  blocking task.
+
+#### Performance
+- `config.rs` re-read *and* re-parsed the whole store file on every getter — one
+  device switch cost three full reads, some from that COM callback. It now
+  caches the parsed document and only re-reads when the file's mtime moves.
+
+#### Translations
+- The tray menu, its tooltips, the notification titles and all ten updater
+  messages were hardcoded in pt-BR, so an English user got a half-translated
+  app. New `i18n.rs` holds them, keyed off the frontend's `language`; switching
+  the language rebuilds the tray immediately (`set_language`).
+- **Language and theme now persist.** Both lived in component state only and
+  reset to the defaults on every launch, and the flyout/banner windows hardcoded
+  "system" no matter what was chosen. They are read before the first render, and
+  `<html lang>` follows the active language instead of being pinned to pt-BR.
+
+#### Housekeeping
+- The CLI reimplemented the store path and the favorites parsing; both now come
+  from `config` (the CLI still derives its app-data dir from `%APPDATA%`, having
+  no `AppHandle`).
+- First unit tests in the project (`i18n.rs` language fallback).
+- Fixed a `clippy::chunks_exact_to_as_chunks` failure in `device_icon.rs`; the
+  CI toolchain is newer than the local one and caught it first.
+
 ### Phase 12 — Observability & CI
 
 Foundation work for V2: the app could not be debugged from a user report, and

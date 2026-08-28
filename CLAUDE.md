@@ -64,7 +64,11 @@ cargo test --manifest-path src-tauri/Cargo.toml
     `events.rs` (`IMMNotificationClient`), `mod.rs` (`ensure_com`,
     `cycle_default`). `sessions.rs` (per-app) not built yet.
   - Windows: `overlay.rs` (mute indicator), `banner.rs` (switch banner),
-    `flyout.rs` (tray quick-switch) — all transparent/topmost/click-through.
+    `flyout.rs` (tray quick-switch) — all transparent/topmost/click-through;
+    `auxwin.rs` holds what the three share (monitor resolution, anchoring, the
+    click-through extended style).
+  - `i18n.rs` — the strings the backend owns (tray menu, notification titles,
+    updater messages), keyed off the frontend's `language`.
   - `tray.rs` (two tray icons: mic + output device), `device_icon.rs` (extract
     the Windows endpoint icon → RGBA), `mute.rs` (central mute state),
     `notify.rs` (toast/banner/sound), `hotkeys.rs` (global shortcuts),
@@ -84,18 +88,27 @@ cargo test --manifest-path src-tauri/Cargo.toml
   generated `::windows_core` paths resolve.
 - Device monitoring: `IMMNotificationClient` (`audio/events.rs`) registered for
   the process lifetime (leaked, never unregistered). `OnDefaultDeviceChanged`
-  (console role) mirrors external changes to the GUI (`device-changed` event) and
-  refreshes the output tray icon — single chokepoint for any switch
-  (ours/hotkey/CLI/sound-panel). Setting the default never loops there (the
-  callback only mirrors). Optional auto-switch happens on device arrival.
+  (console role) mirrors external changes to the GUI (`device-changed` event),
+  refreshes the output tray icon on `eRender` and re-reads the mute state on
+  `eCapture` — single chokepoint for any switch (ours/hotkey/CLI/sound-panel).
+  Setting the default never loops there (the callback only mirrors). Optional
+  auto-switch happens on device arrival.
+- **These callbacks run on the Windows audio service's thread**: never block or
+  call COM in them. Every handler captures what it needs and hands the work to
+  `dispatch()` (a blocking task). The same applies to any callback added later
+  (e.g. `IAudioEndpointVolumeCallback`).
 - Output tray icon (`device_icon.rs`): reads the endpoint icon-path property
   (best-effort key, `SHDefExtractIconW` → `HICON` → RGBA via GetDIBits, BGRA→RGBA),
   falls back to the app icon.
 - The aux windows must be topmost + click-through (`WS_EX_NOACTIVATE |
   WS_EX_TOOLWINDOW`, `set_ignore_cursor_events`, `always_on_top`) so they render
-  over fullscreen games — the SoundSwitch fix. Positioned via the work area
-  (`SystemParametersInfoW SPI_GETWORKAREA`). Pattern from sibling
+  over fullscreen games — the SoundSwitch fix. Pattern from sibling
   `ponto-app/src-tauri/src/overlay.rs`.
+- Position them through `auxwin::anchor` / `auxwin::work_area`, never from
+  `primary_monitor()`: a secondary monitor can sit at negative coordinates, so
+  primary-relative maths puts the window on the wrong screen. The target monitor
+  follows the `overlayMonitor` setting (cursor / primary / foreground) and the
+  scale factor comes from *that* monitor, not the window.
 - HWND version mismatch: `window.hwnd()` returns a `windows` 0.61 HWND; rebuild as
   our 0.58 HWND with `HWND(raw.0)` (0.58 HWND is `*mut c_void`).
 - The `main` window is created with `visible: false` and revealed by the
@@ -109,9 +122,10 @@ cargo test --manifest-path src-tauri/Cargo.toml
   the main window's update bar) downloads/installs/restarts. Release must be
   published, not draft/prerelease, or `releases/latest` 404s.
 - The backend reads config straight from the store file (`config.rs`) instead of
-  IPC. The store autosaves **asynchronously**, so any setting that must apply
-  immediately is passed directly as a command argument (don't re-read the file) —
-  e.g. `refresh_mute_indicator`, `update_hotkeys`, `set_device_icon`.
+  IPC, caching the parsed document until the file's mtime moves. The store
+  autosaves **asynchronously**, so any setting that must apply immediately is
+  passed directly as a command argument (don't re-read the file) — e.g.
+  `refresh_mute_indicator`, `update_hotkeys`, `set_device_icon`, `set_language`.
 - Dual GUI/CLI binary: `main.rs` parses argv first; `cli::run_if_cli` filters
   `--autostart`, `AttachConsole(ATTACH_PARENT_PROCESS)` for output, returns an
   exit code when a subcommand ran. `#![windows_subsystem = "windows"]` in release.

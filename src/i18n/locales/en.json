@@ -103,6 +103,13 @@
   "general": {
     "logs": "Diagnostics",
     "logsHint": "Opens the folder holding the log file, handy to attach to a bug report.",
-    "openLogs": "Open log folder"
+    "openLogs": "Open log folder",
+    "monitor": "Monitor for floating windows",
+    "monitorHint": "Where the mute indicator, the switch banner and the quick menu appear.",
+    "monitors": {
+      "cursor": "Wherever the cursor is",
+      "primary": "Primary monitor",
+      "foreground": "Monitor of the focused window"
+    }
   }
 }

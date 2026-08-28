@@ -176,13 +176,14 @@ unsafe fn hicon_to_rgba(
     }
 
     // GetDIBits gives BGRA; the tray wants RGBA.
-    for px in buf.chunks_exact_mut(4) {
+    let (pixels, _) = buf.as_chunks_mut::<4>();
+    for px in pixels.iter_mut() {
         px.swap(0, 2);
     }
     // Some legacy icons report no alpha (all zero) — make them opaque so they
     // don't render as a blank square.
-    if buf.chunks_exact(4).all(|p| p[3] == 0) {
-        for px in buf.chunks_exact_mut(4) {
+    if pixels.iter().all(|p| p[3] == 0) {
+        for px in pixels.iter_mut() {
             px[3] = 255;
         }
     }

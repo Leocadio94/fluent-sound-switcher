@@ -36,7 +36,10 @@ Before finishing a change, run all of the above — they are exactly what
   abstractions that aren't needed.
 - Keep the Core Audio COM code inside `src-tauri/src/audio/`.
 - Every user-facing string goes through `react-i18next` — add the key to **both**
-  `src/i18n/locales/pt-BR.json` and `src/i18n/locales/en.json`.
+  `src/i18n/locales/pt-BR.json` and `src/i18n/locales/en.json`. Strings the
+  *backend* owns (tray, notifications, updater) go in `src-tauri/src/i18n.rs`.
+- Never block or call COM inside an `IMMNotificationClient` callback; hand the
+  work to `dispatch()` in `src-tauri/src/audio/events.rs`.
 - Never `println!`/`eprintln!` in the GUI paths: the release binary is
   `windows_subsystem = "windows"` and nothing reaches a console. Use `log::`.
 - Work in phases: one phase per iteration, update `CHANGELOG.md` and keep

@@ -67,6 +67,16 @@ export const DEFAULT_NOTIFICATIONS: NotificationConfig = {
   bannerPosition: "topCenter",
 };
 
+/**
+ * Which monitor the overlay, banner and flyout appear on. `cursor` (the
+ * default) follows the mouse, which is the cheapest proxy for the screen the
+ * user is looking at — the whole point of these windows is being visible over
+ * the fullscreen game in front of them.
+ */
+export type MonitorPreference = "cursor" | "primary" | "foreground";
+
+export const DEFAULT_MONITOR_PREFERENCE: MonitorPreference = "cursor";
+
 /** When a newly-connected output may grab the default: only curated favorites, or any device. */
 export type AutoSwitchMode = "favoritesOnly" | "any";
 
@@ -90,6 +100,9 @@ const NOTIFICATIONS_KEY = "notifications";
 const AUTO_SWITCH_KEY = "autoSwitch";
 const START_MINIMIZED_KEY = "startMinimized";
 const SHOW_DEVICE_ICON_KEY = "showDeviceIcon";
+const OVERLAY_MONITOR_KEY = "overlayMonitor";
+const LANGUAGE_KEY = "language";
+const THEME_KEY = "theme";
 
 let storePromise: Promise<Store> | null = null;
 
@@ -197,6 +210,46 @@ export async function loadShowDeviceIcon(): Promise<boolean> {
 export async function saveShowDeviceIcon(value: boolean): Promise<void> {
   const store = await getStore();
   await store.set(SHOW_DEVICE_ICON_KEY, value);
+}
+
+export async function loadMonitorPreference(): Promise<MonitorPreference> {
+  const store = await getStore();
+  return (
+    (await store.get<MonitorPreference>(OVERLAY_MONITOR_KEY)) ??
+    DEFAULT_MONITOR_PREFERENCE
+  );
+}
+
+export async function saveMonitorPreference(
+  value: MonitorPreference,
+): Promise<void> {
+  const store = await getStore();
+  await store.set(OVERLAY_MONITOR_KEY, value);
+}
+
+/**
+ * The UI language. Read by the backend too, for the strings it owns (tray menu,
+ * notification titles, updater messages).
+ */
+export async function loadLanguage(): Promise<string | null> {
+  const store = await getStore();
+  return (await store.get<string>(LANGUAGE_KEY)) ?? null;
+}
+
+export async function saveLanguage(value: string): Promise<void> {
+  const store = await getStore();
+  await store.set(LANGUAGE_KEY, value);
+}
+
+/** Theme preference: "system" | "light" | "dark". */
+export async function loadTheme(): Promise<string | null> {
+  const store = await getStore();
+  return (await store.get<string>(THEME_KEY)) ?? null;
+}
+
+export async function saveTheme(value: string): Promise<void> {
+  const store = await getStore();
+  await store.set(THEME_KEY, value);
 }
 
 export type { DeviceDirection };

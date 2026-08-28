@@ -1,6 +1,7 @@
 //! Fluent Sound Switcher — Tauri backend entry point.
 
 mod audio;
+mod auxwin;
 mod banner;
 pub mod cli;
 mod commands;
@@ -8,6 +9,7 @@ mod config;
 mod device_icon;
 mod flyout;
 mod hotkeys;
+mod i18n;
 mod logging;
 mod mute;
 mod notify;
@@ -108,6 +110,7 @@ pub fn run() {
             commands::main_window_ready,
             commands::install_update,
             commands::open_log_folder,
+            commands::set_language,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Fluent Sound Switcher");

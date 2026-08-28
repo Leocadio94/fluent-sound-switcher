@@ -6,9 +6,7 @@
 use std::path::PathBuf;
 
 use crate::audio;
-
-const IDENTIFIER: &str = "com.fluentsoundswitcher.app";
-const STORE_FILE: &str = "config.json";
+use crate::config;
 
 /// If the process was invoked as a CLI command, runs it and returns the exit
 /// code. Returns `None` to mean "no CLI command — launch the GUI".
@@ -143,22 +141,15 @@ fn read_favorites(direction: &str) -> Vec<String> {
     std::fs::read_to_string(path)
         .ok()
         .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
-        .and_then(|v| {
-            v.get("favorites")
-                .and_then(|f| f.get(direction))
-                .and_then(|a| a.as_array())
-                .map(|arr| {
-                    arr.iter()
-                        .filter_map(|x| x.as_str().map(String::from))
-                        .collect()
-                })
-        })
+        .map(|v| config::favorites_from(&v, direction))
         .unwrap_or_default()
 }
 
+/// The GUI resolves this through Tauri; without an `AppHandle` the CLI has to
+/// build the app-data dir itself, but the file layout stays in `config`.
 fn store_path() -> Option<PathBuf> {
     std::env::var_os("APPDATA")
-        .map(|appdata| PathBuf::from(appdata).join(IDENTIFIER).join(STORE_FILE))
+        .map(|appdata| config::store_path_in(&PathBuf::from(appdata).join(config::IDENTIFIER)))
 }
 
 fn fail(message: &str) -> i32 {

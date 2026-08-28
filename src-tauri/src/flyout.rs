@@ -5,6 +5,8 @@
 
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewWindow};
 
+use crate::auxwin;
+
 pub const FLYOUT_LABEL: &str = "flyout";
 
 const WIDTH: f64 = 300.0;
@@ -17,8 +19,7 @@ pub fn configure(app: &AppHandle) {
     if let Some(window) = app.get_webview_window(FLYOUT_LABEL) {
         let _ = window.set_always_on_top(true);
         let _ = window.set_skip_taskbar(true);
-        #[cfg(windows)]
-        apply_toolwindow(&window);
+        auxwin::apply_overlay_exstyle(&window);
 
         let dismiss = window.clone();
         window.on_window_event(move |event| {
@@ -39,7 +40,7 @@ pub fn toggle(app: &AppHandle) {
         let _ = window.hide();
     } else {
         let height = current_height(&window);
-        reposition(&window, height);
+        reposition(app, &window, height);
         let _ = window.show();
         let _ = window.set_focus();
         // The webview is suspended while hidden and may have missed live
@@ -66,7 +67,7 @@ pub fn set_size(app: &AppHandle, height: f64) {
         (WIDTH * scale) as u32,
         (height.max(64.0) * scale) as u32,
     ));
-    reposition(&window, height);
+    reposition(app, &window, height);
 }
 
 fn current_height(window: &WebviewWindow) -> f64 {
@@ -77,63 +78,19 @@ fn current_height(window: &WebviewWindow) -> f64 {
         .unwrap_or(DEFAULT_HEIGHT)
 }
 
-fn reposition(window: &WebviewWindow, height_logical: f64) {
-    let scale = window.scale_factor().unwrap_or(1.0);
-    let (left, top, right, bottom) = work_area();
+fn reposition(app: &AppHandle, window: &WebviewWindow, height_logical: f64) {
+    let preference = crate::config::overlay_monitor(app);
+    let Some(area) = auxwin::work_area(app, &preference) else {
+        log::warn!("no monitor resolved; leaving the flyout where it is");
+        return;
+    };
+    // Match the monitor the flyout lands on, not the window's stale DPI.
+    let scale = area.scale;
+    let (left, top, right, bottom) = (area.left, area.top, area.right, area.bottom);
     let width_p = WIDTH * scale;
     let height_p = height_logical * scale;
     let margin_p = MARGIN * scale;
     let x = (right - width_p - margin_p).max(left);
     let y = (bottom - height_p - margin_p).max(top);
     let _ = window.set_position(PhysicalPosition::new(x, y));
-}
-
-/// Returns the primary monitor work area (physical px), i.e. excluding the
-/// taskbar, so the flyout sits just above it.
-#[cfg(windows)]
-fn work_area() -> (f64, f64, f64, f64) {
-    use windows::Win32::Foundation::RECT;
-    use windows::Win32::UI::WindowsAndMessaging::{
-        SystemParametersInfoW, SPI_GETWORKAREA, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS,
-    };
-    let mut rect = RECT::default();
-    unsafe {
-        if let Err(e) = SystemParametersInfoW(
-            SPI_GETWORKAREA,
-            0,
-            Some(&mut rect as *mut _ as *mut core::ffi::c_void),
-            SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
-        ) {
-            // `rect` stays zeroed, which parks the flyout in the top-left
-            // corner — a symptom that is otherwise impossible to explain.
-            log::error!("SPI_GETWORKAREA failed ({e}); flyout position will be wrong");
-        }
-    }
-    (
-        rect.left as f64,
-        rect.top as f64,
-        rect.right as f64,
-        rect.bottom as f64,
-    )
-}
-
-#[cfg(not(windows))]
-fn work_area() -> (f64, f64, f64, f64) {
-    (0.0, 0.0, 1920.0, 1040.0)
-}
-
-#[cfg(windows)]
-fn apply_toolwindow(window: &WebviewWindow) {
-    use windows::Win32::Foundation::HWND;
-    use windows::Win32::UI::WindowsAndMessaging::{
-        GetWindowLongPtrW, SetWindowLongPtrW, GWL_EXSTYLE, WS_EX_TOOLWINDOW,
-    };
-    let Ok(raw) = window.hwnd() else {
-        return;
-    };
-    let hwnd = HWND(raw.0);
-    unsafe {
-        let ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-        SetWindowLongPtrW(hwnd, GWL_EXSTYLE, ex | (WS_EX_TOOLWINDOW.0 as isize));
-    }
 }

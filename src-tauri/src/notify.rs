@@ -5,6 +5,7 @@ use tauri::AppHandle;
 use tauri_plugin_notification::NotificationExt;
 
 use crate::config;
+use crate::i18n::{self, Msg};
 
 /// Notifies that the default `direction` device changed to `name`.
 pub fn device_changed(app: &AppHandle, name: &str, direction: &str) {
@@ -15,11 +16,14 @@ pub fn device_changed(app: &AppHandle, name: &str, direction: &str) {
     }
 
     if cfg.native {
-        let label = if direction == "output" {
-            "Dispositivo de saída"
-        } else {
-            "Dispositivo de entrada"
-        };
+        let label = i18n::t(
+            app,
+            if direction == "output" {
+                Msg::OutputDevice
+            } else {
+                Msg::InputDevice
+            },
+        );
         if let Err(e) = app.notification().builder().title(label).body(name).show() {
             log::warn!("native toast failed: {e}");
         }

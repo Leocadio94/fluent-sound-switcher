@@ -160,3 +160,13 @@ pub fn update_hotkeys(
 pub fn open_log_folder(app: tauri::AppHandle) -> Result<(), String> {
     crate::logging::open_log_dir(&app)
 }
+
+/// Switches the language of the backend-owned strings (tray menu, notification
+/// titles, updater messages) and rebuilds the tray so the change is visible at
+/// once. The value is passed directly rather than re-read, to avoid racing the
+/// store's async write.
+#[tauri::command]
+pub fn set_language(app: tauri::AppHandle, language: String) -> Result<(), String> {
+    crate::i18n::set_language(&language);
+    crate::tray::rebuild_menus(&app).map_err(|e| e.to_string())
+}

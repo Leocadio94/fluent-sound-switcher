@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 
 import {
+  DEFAULT_MONITOR_PREFERENCE,
+  loadMonitorPreference,
   loadShowDeviceIcon,
   loadStartMinimized,
+  saveMonitorPreference,
   saveShowDeviceIcon,
   saveStartMinimized,
+  type MonitorPreference,
 } from "../lib/config";
 import {
   getAutostart,
@@ -19,6 +23,8 @@ interface UseGeneral {
   setStartMinimized: (value: boolean) => void;
   showDeviceIcon: boolean;
   setShowDeviceIcon: (value: boolean) => void;
+  monitor: MonitorPreference;
+  setMonitor: (value: MonitorPreference) => void;
 }
 
 /**
@@ -29,6 +35,9 @@ export function useGeneral(): UseGeneral {
   const [autostart, setAutostartState] = useState(false);
   const [startMinimized, setStartMinimizedState] = useState(false);
   const [showDeviceIcon, setShowDeviceIconState] = useState(true);
+  const [monitor, setMonitorState] = useState<MonitorPreference>(
+    DEFAULT_MONITOR_PREFERENCE,
+  );
 
   useEffect(() => {
     void getAutostart()
@@ -36,6 +45,7 @@ export function useGeneral(): UseGeneral {
       .catch(() => {});
     void loadStartMinimized().then(setStartMinimizedState);
     void loadShowDeviceIcon().then(setShowDeviceIconState);
+    void loadMonitorPreference().then(setMonitorState);
   }, []);
 
   const setAutostart = useCallback((value: boolean) => {
@@ -55,6 +65,13 @@ export function useGeneral(): UseGeneral {
     void apiSetDeviceIcon(value).catch(() => {});
   }, []);
 
+  // Read by the backend the next time an aux window is positioned, so there is
+  // no command to call here.
+  const setMonitor = useCallback((value: MonitorPreference) => {
+    setMonitorState(value);
+    void saveMonitorPreference(value);
+  }, []);
+
   return {
     autostart,
     setAutostart,
@@ -62,5 +79,7 @@ export function useGeneral(): UseGeneral {
     setStartMinimized,
     showDeviceIcon,
     setShowDeviceIcon,
+    monitor,
+    setMonitor,
   };
 }
