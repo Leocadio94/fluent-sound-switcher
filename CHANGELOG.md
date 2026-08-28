@@ -23,7 +23,10 @@ than reasoning about the markup.
 - **The app name is out of the window body.** The native title bar already
   carries it, along with the same icon, so the header is now a plain toolbar.
   The "favorites only" switch moved up into it, removing a row of its own.
-- Capped the slider width — spanning the full row it read as a progress bar.
+- The slider spans the row, with the level readout in the same column as the
+  favourite star, so the row has a straight trailing edge. (It was briefly
+  capped at 280px on the theory that a full-width slider reads as a progress
+  bar; on screen that just left a wide gap and stranded the number mid-row.)
 - **The check and the chevron now line up.** They sit in the same column but
   had different widths (an 18px icon against a 28px button), so the two
   staggered down the list. Both occupy one 28px slot now.

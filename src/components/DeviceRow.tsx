@@ -168,7 +168,7 @@ const useStyles = makeStyles({
     display: "flex",
     alignItems: "center",
     gap: tokens.spacingHorizontalXS,
-    padding: `0 ${tokens.spacingHorizontalM} ${tokens.spacingVerticalXS}`,
+    padding: `0 ${tokens.spacingHorizontalS} ${tokens.spacingVerticalXS} ${tokens.spacingHorizontalM}`,
   },
   volumeRowCompact: {
     padding: `0 ${tokens.spacingHorizontalS} ${tokens.spacingVerticalXXS}`,
@@ -196,12 +196,12 @@ const useStyles = makeStyles({
     },
   },
   muteButtonActive: { color: tokens.colorPaletteRedForeground1 },
-  // Capped: a volume slider spanning the whole row reads as a progress bar,
-  // and the pointer has to travel further than the control deserves.
-  slider: { flexGrow: 1, minWidth: 0, maxWidth: "280px" },
+  slider: { flexGrow: 1, minWidth: 0 },
+  // Sized and padded to land in the same column as the star above it, so the
+  // row has a straight trailing edge.
   level: {
-    minWidth: "3ch",
-    textAlign: "right",
+    minWidth: "32px",
+    textAlign: "center",
     fontVariantNumeric: "tabular-nums",
     fontSize: tokens.fontSizeBase200,
     color: tokens.colorNeutralForeground3,
