@@ -93,6 +93,16 @@ cargo check --manifest-path src-tauri/Cargo.toml
   `ponto-app/src-tauri/src/overlay.rs`.
 - HWND version mismatch: `window.hwnd()` returns a `windows` 0.61 HWND; rebuild as
   our 0.58 HWND with `HWND(raw.0)` (0.58 HWND is `*mut c_void`).
+- The `main` window is created with `visible: false` and revealed by the
+  `main_window_ready` command that the React root invokes after its first render
+  — this is why an autostart at login doesn't flash a window. Whether to stay in
+  the tray is decided once in `setup()` (`--autostart` + `startMinimized`) and
+  kept as the managed `commands::StartHidden`.
+- Updater (`updater.rs`): public repo, so the endpoint is GitHub's
+  `releases/latest/download/latest.json` with no token. `check()` only detects
+  and emits `update-available`; `install()` (the `install_update` command behind
+  the main window's update bar) downloads/installs/restarts. Release must be
+  published, not draft/prerelease, or `releases/latest` 404s.
 - The backend reads config straight from the store file (`config.rs`) instead of
   IPC. The store autosaves **asynchronously**, so any setting that must apply
   immediately is passed directly as a command argument (don't re-read the file) —
@@ -102,6 +112,11 @@ cargo check --manifest-path src-tauri/Cargo.toml
   exit code when a subcommand ran. `#![windows_subsystem = "windows"]` in release.
 - WebView2 auto-darkens controls in dark mode; `index.html` + the theme pin
   `color-scheme` to the resolved theme to stop it.
+
+## For other agents
+
+`AGENTS.md` is a thin pointer to this file, for agents that look for that name.
+Keep it in sync if the commands or ground rules change.
 
 ## Working style
 

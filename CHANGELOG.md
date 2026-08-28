@@ -6,6 +6,33 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Fixes
+- **No more window flash when starting with Windows.** The `main` window was
+  created with `visible: true` and only hidden later from `setup()`, so an
+  auto-start at login painted the window on screen before it vanished. It is now
+  created with `visible: false` and revealed by a new `main_window_ready`
+  command that the React root calls after its first render — which also removes
+  the blank-white frame on a normal launch. "Iniciar minimizado" is decided in
+  `setup()` (stored as `StartHidden`) and simply skips the reveal.
+
+### Auto-update
+- The repository is public, so the updater talks to GitHub Releases directly
+  (`releases/latest/download/latest.json`) — no token or proxy needed.
+- The release workflow now **publishes** instead of drafting the release
+  (`releaseDraft: false`, `includeUpdaterJson: true`). GitHub excludes drafts
+  from `releases/latest`, so a draft made every client's check 404 until it was
+  manually published.
+- Updates no longer install themselves behind the user's back. A check only
+  detects and reports (toast + an update bar in the main window); **Atualizar
+  agora** does the download/install/restart. The tray check also brings the main
+  window forward on a hit.
+- The silent startup check retries (15s/30s) while the network comes up at
+  login, instead of failing once and staying quiet until the next launch.
+
+### Docs
+- Added `AGENTS.md` pointing AI coding agents at `CLAUDE.md`, with the command
+  quick reference and the project ground rules.
+
 ## [0.1.2]
 
 ### Fixes
