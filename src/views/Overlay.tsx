@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   MicProhibitedFilled,
   MicFilled,
@@ -10,15 +10,7 @@ import { useTranslation } from "react-i18next";
 import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 
 import { useTauriEvent } from "../hooks/useTauriEvent";
-
-interface OverlayState {
-  /** Which face the overlay is showing. */
-  kind: "mute" | "volume";
-  muted: boolean;
-  style: "full" | "icon";
-  /** 0-1, only meaningful when `kind` is "volume". */
-  level: number;
-}
+import { getOverlayState, type OverlayState } from "../lib/tauri";
 
 // Colours come from Fluent tokens rather than the hardcoded hex values this
 // used to carry, so the pill follows the light/dark theme like the rest of the
@@ -106,13 +98,29 @@ export default function Overlay() {
   const [state, setState] = useState<OverlayState>({
     kind: "mute",
     muted: false,
-    style: "full",
+    style: "icon",
     level: 0,
   });
+  const gotEvent = useRef(false);
 
-  useTauriEvent<OverlayState>("overlay-state", (event) =>
-    setState(event.payload),
-  );
+  useTauriEvent<OverlayState>("overlay-state", (event) => {
+    gotEvent.current = true;
+    setState(event.payload);
+  });
+
+  // This window is created hidden, so its renderer is frozen and can drop every
+  // `overlay-state` event pushed at it. When that happened the component kept
+  // its initial guess and drew the wrong face - the text label inside a window
+  // sized for the icon-only style, clipped. Ask for the real state on mount.
+  useEffect(() => {
+    void getOverlayState()
+      .then((current) => {
+        // A real event outranks this: it may describe a volume OSD that the
+        // backend is showing right now, which the fetched state does not.
+        if (!gotEvent.current) setState(current);
+      })
+      .catch((e) => console.error("could not read the overlay state", e));
+  }, []);
 
   const { kind, muted, style, level } = state;
 

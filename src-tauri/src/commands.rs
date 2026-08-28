@@ -209,6 +209,14 @@ pub fn update_hotkeys(
     Ok(failures)
 }
 
+/// The state the mute overlay should currently be showing. Called by the
+/// overlay window when it mounts, so it never has to rely on having caught the
+/// events pushed at it while its renderer was frozen.
+#[tauri::command]
+pub fn get_overlay_state(app: tauri::AppHandle) -> crate::overlay::OverlayState {
+    crate::overlay::current_state(&app)
+}
+
 /// Opens the folder holding the rotating log file, so a user can attach it to a
 /// bug report. Nothing in the GUI build reaches stdout, so this is the only way
 /// to see what the backend did.

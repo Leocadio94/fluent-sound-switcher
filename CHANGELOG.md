@@ -24,6 +24,15 @@ than reasoning about the markup.
   carries it, along with the same icon, so the header is now a plain toolbar.
   The "favorites only" switch moved up into it, removing a row of its own.
 - Capped the slider width — spanning the full row it read as a progress bar.
+- **The check and the chevron now line up.** They sit in the same column but
+  had different widths (an 18px icon against a 28px button), so the two
+  staggered down the list. Both occupy one 28px slot now.
+- **Fixed the mute overlay drawing its full-width face inside the icon-only
+  window**, clipping the label. The window is created hidden, so its WebView2
+  renderer is frozen and can drop every `overlay-state` event pushed at it; the
+  component then kept its initial guess forever. It now asks the backend for the
+  real state on mount (`get_overlay_state`) instead of depending on having
+  caught an event.
 
 ### Phase 16 — Volume: the UI
 

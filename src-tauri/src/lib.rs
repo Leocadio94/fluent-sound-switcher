@@ -113,6 +113,7 @@ pub fn run() {
             commands::main_window_ready,
             commands::install_update,
             commands::open_log_folder,
+            commands::get_overlay_state,
             commands::set_language,
             commands::get_device_volume,
             commands::set_device_volume,

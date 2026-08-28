@@ -42,13 +42,29 @@ const VOLUME_SHOW_MS: u64 = 1500;
 
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
-struct OverlayState {
+pub struct OverlayState {
     /// "mute" or "volume" — which face the overlay is currently showing.
-    kind: &'static str,
-    muted: bool,
-    style: String,
+    pub kind: &'static str,
+    pub muted: bool,
+    pub style: String,
     /// 0.0–1.0, only meaningful when `kind` is "volume".
-    level: f32,
+    pub level: f32,
+}
+
+/// The state the overlay should be showing right now.
+///
+/// The overlay window is created hidden, so its WebView2 renderer is frozen and
+/// can drop the `overlay-state` events pushed at it. When every one was missed
+/// the React side kept its initial guess — full style — and rendered the text
+/// label inside a window sized for the icon-only style, clipping it. Letting it
+/// *ask* on mount removes the dependency on that timing entirely.
+pub fn current_state(app: &AppHandle) -> OverlayState {
+    OverlayState {
+        kind: "mute",
+        muted: crate::mute::current(app),
+        style: config::mute_indicator(app).style,
+        level: 0.0,
+    }
 }
 
 /// Monotonic counter so only the newest volume OSD's timer takes effect: a

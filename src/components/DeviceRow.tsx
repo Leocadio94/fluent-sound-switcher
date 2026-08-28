@@ -105,7 +105,18 @@ const useStyles = makeStyles({
   },
   nameCompact: { fontSize: tokens.fontSizeBase300 },
   check: { color: tokens.colorBrandForeground1, flexShrink: 0 },
-  checkFull: { fontSize: "18px" },
+  // The active row shows a check where the others show a chevron button. They
+  // have to occupy the same box or the two columns do not line up down the
+  // list.
+  slot: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    width: "28px",
+    height: "28px",
+    fontSize: "18px",
+  },
   star: {
     display: "flex",
     alignItems: "center",
@@ -281,18 +292,21 @@ export default function DeviceRow({
           )}
         </button>
 
-        {full &&
-          (busy ? (
-            <Spinner size="tiny" />
-          ) : device.isDefault ? (
-            // A discreet check rather than a labelled badge: the brand border
-            // and background already say "active", but colour alone does not
-            // carry for everyone.
-            <CheckmarkCircleFilled
-              className={mergeClasses(styles.check, styles.checkFull)}
-              aria-label={t("common.active")}
-            />
-          ) : null)}
+        {full && (busy || device.isDefault) && (
+          <span className={styles.slot}>
+            {busy ? (
+              <Spinner size="tiny" />
+            ) : (
+              // A discreet check rather than a labelled badge: the brand border
+              // and background already say "active", but colour alone does not
+              // carry for everyone.
+              <CheckmarkCircleFilled
+                className={styles.check}
+                aria-label={t("common.active")}
+              />
+            )}
+          </span>
+        )}
 
         {volumeAvailable && !device.isDefault && (
           <Tooltip

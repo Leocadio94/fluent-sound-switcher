@@ -86,6 +86,23 @@ export function getOutputMuted(): Promise<boolean> {
   return invoke<boolean>("get_output_muted");
 }
 
+/** State of the mute overlay, as the backend sees it. */
+export interface OverlayState {
+  kind: "mute" | "volume";
+  muted: boolean;
+  style: "full" | "icon";
+  level: number;
+}
+
+/**
+ * Asks for the overlay's current state. The overlay window's renderer is frozen
+ * while hidden and can miss the events pushed at it, so it reads the state
+ * directly on mount instead of assuming a default.
+ */
+export function getOverlayState(): Promise<OverlayState> {
+  return invoke<OverlayState>("get_overlay_state");
+}
+
 /** Payload of the `volume-changed` event. */
 export interface VolumeChanged {
   level: number;
