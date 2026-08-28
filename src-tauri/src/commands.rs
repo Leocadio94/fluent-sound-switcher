@@ -1,8 +1,28 @@
 //! Tauri commands — the bridge invoked from the frontend.
 
+use tauri::Manager;
+
 use crate::audio::{self, AudioDevice};
 use crate::config::{HotkeyConfig, MuteIndicator};
 use crate::hotkeys;
+
+/// Whether this run should keep the main window hidden in the tray (set at
+/// startup: auto-launched at login with "start minimized" enabled).
+pub struct StartHidden(pub bool);
+
+/// Called by the main window's React root once it has rendered. The window is
+/// created invisible so an auto-start at login never flashes on screen; this
+/// reveals it at the first painted frame, unless we should stay in the tray.
+#[tauri::command]
+pub fn main_window_ready(app: tauri::AppHandle, hidden: tauri::State<'_, StartHidden>) {
+    if hidden.0 {
+        return;
+    }
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
+}
 
 /// Returns all active input/output devices with the current defaults marked.
 #[tauri::command]

@@ -50,6 +50,14 @@ pub fn run() {
             overlay::configure(handle);
             flyout::configure(handle);
             banner::configure(handle);
+            // The main window is created hidden (`visible: false` in
+            // tauri.conf.json) so a login auto-start never flashes a window on
+            // screen. It is revealed by the `main_window_ready` command once
+            // React has painted -- unless this run should stay in the tray.
+            let auto_launched = std::env::args().any(|a| a == "--autostart");
+            let start_hidden = auto_launched && config::start_minimized(handle);
+            handle.manage(commands::StartHidden(start_hidden));
+
             // Closing the main window hides it to the tray instead of quitting,
             // so the tray "Abrir" can bring it back.
             if let Some(main) = handle.get_webview_window("main") {
@@ -60,12 +68,6 @@ pub fn run() {
                         let _ = hide_target.hide();
                     }
                 });
-
-                // When auto-launched at login, optionally start hidden in tray.
-                let auto_launched = std::env::args().any(|a| a == "--autostart");
-                if auto_launched && config::start_minimized(handle) {
-                    let _ = main.hide();
-                }
             }
             // Read the real mic state and sync the tray icon + overlay.
             mute::refresh(handle);
@@ -90,6 +92,7 @@ pub fn run() {
             commands::get_autostart,
             commands::set_autostart,
             commands::set_device_icon,
+            commands::main_window_ready,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Fluent Sound Switcher");

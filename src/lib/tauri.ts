@@ -77,3 +77,11 @@ export function closeFlyout(): Promise<void> {
 export function setDeviceIcon(enabled: boolean): Promise<void> {
   return invoke<void>("set_device_icon", { enabled });
 }
+
+/**
+ * Tells the backend the main window has painted, so it can be revealed. The
+ * window is created hidden so a login auto-start never flashes on screen.
+ */
+export function mainWindowReady(): Promise<void> {
+  return invoke<void>("main_window_ready");
+}

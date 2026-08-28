@@ -29,7 +29,7 @@ import { useMute } from "./hooks/useMute";
 import { useMuteIndicator } from "./hooks/useMuteIndicator";
 import { useNotifications } from "./hooks/useNotifications";
 import { useAutoSwitch } from "./hooks/useAutoSwitch";
-import { previewNotification } from "./lib/tauri";
+import { mainWindowReady, previewNotification } from "./lib/tauri";
 import type { ThemePreference } from "./theme/useSystemTheme";
 
 const useStyles = makeStyles({
@@ -93,6 +93,11 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
   const { autoSwitch, setField: setAutoSwitchField } = useAutoSwitch();
   const { muted, toggle: toggleMute } = useMute();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // The window is created hidden so a login auto-start never flashes on
+  // screen; reveal it now that the first frame is up.
+  useEffect(() => {
+    void mainWindowReady();
+  }, []);
 
   // The tray "Configurações" item asks the main window to open settings.
   useEffect(() => {
