@@ -34,7 +34,7 @@ export default function HotkeysTab({
       {/* Registration can fail when another app already owns the combination.
           It used to fail silently, leaving a dead shortcut on screen. */}
       {failures.length > 0 && (
-        <MessageBar intent="warning">
+        <MessageBar intent="warning" layout="multiline">
           <MessageBarBody>
             {t("hotkeys.conflict", {
               list: failures
@@ -46,7 +46,7 @@ export default function HotkeysTab({
       )}
       {/* Binding a media key takes it away from Windows for as long as the app
           runs, so say so rather than let it surprise people. */}
-      <MessageBar intent="info">
+      <MessageBar intent="info" layout="multiline">
         <MessageBarBody>{t("hotkeys.mediaKeysHint")}</MessageBarBody>
       </MessageBar>
       {ACTIONS.map(({ key, labelKey }) => (

@@ -160,7 +160,7 @@ export default function Flyout() {
           {/* The flyout used to discard `error` entirely, so a failure here
               looked like "no favorites". */}
           {error && (
-            <MessageBar intent="error">
+            <MessageBar intent="error" layout="multiline">
               <MessageBarBody>{t(`errors.${error.kind}`)}</MessageBarBody>
             </MessageBar>
           )}

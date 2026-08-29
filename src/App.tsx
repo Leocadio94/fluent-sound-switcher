@@ -213,7 +213,7 @@ export default function App({
         )}
 
         {error && (
-          <MessageBar intent="error">
+          <MessageBar intent="error" layout="multiline">
             <MessageBarBody>
               {t(`errors.${error.kind}`)}
               {/* The raw backend message is a COM error in English; keep it

@@ -6,6 +6,23 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+<!-- release-notes -->
+A round of fixes for things that were visibly wrong.
+
+- **The custom title bar actually works now.** Minimize, maximize, close and
+  dragging the window all did nothing before — the app was missing the
+  permissions Windows requires for them, and the click never reached the
+  buttons.
+- **Volume changed from Windows moves the app's slider again.** It only tracked
+  changes made inside the app.
+- **The floating indicators stopped flickering** when cycling devices or holding
+  a volume key: they were replaying every intermediate state on the way to the
+  final one.
+- Tidied the Hotkeys tab, where the shortcut buttons did not line up and a long
+  note overflowed its box.
+
+<!-- /release-notes -->
+
 ### Fixes
 
 - **The custom title bar's buttons did nothing, and the window would not drag.**
@@ -31,6 +48,9 @@ the project follows phased iterations (see `README.md`).
   sized to its content left the column with an uneven edge. The hotkey button
   is a fixed width now.
 - Added the `key` prop missing from two settings lists rendered with `.map()`.
+- Message bars carrying a sentence rather than a few words now use Fluent's
+  `multiline` layout: the default does not grow the bar to fit, so the text
+  spilled past its own border.
 
 ## [0.3.1] - 2026-08-29
 
