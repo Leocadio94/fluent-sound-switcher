@@ -164,6 +164,9 @@ cargo test --manifest-path src-tauri/Cargo.toml
   (`i18n/react-i18next.d.ts`, augmenting **`i18next`** — not `react-i18next`,
   which type-checks fine while doing nothing), and `i18n/localeParity.ts` fails
   the build if en.json drifts from pt-BR's shape.
+- Fluent's `MessageBar` sizes its box for two lines even with
+  `layout="multiline"`, drawing a third outside the border. Use
+  `views/settings/SettingsNotice.tsx` for anything longer.
 - Config values are validated on read (`lib/configSchema.ts`) against option
   lists exported from `lib/config.ts`; add a new option to that list, not to a
   second copy in the dropdown.

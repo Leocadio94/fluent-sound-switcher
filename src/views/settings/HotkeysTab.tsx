@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { MessageBar, MessageBarBody } from "@fluentui/react-components";
 
 import HotkeyInput from "../../components/HotkeyInput";
 import type { Hotkeys } from "../../lib/config";
 import type { HotkeyFailure } from "../../lib/tauri";
 import SettingRow from "./SettingRow";
+import SettingsNotice from "./SettingsNotice";
 import type { TranslationKey } from "./shared";
 
 const ACTIONS: { key: keyof Hotkeys; labelKey: TranslationKey }[] = [
@@ -34,21 +34,17 @@ export default function HotkeysTab({
       {/* Registration can fail when another app already owns the combination.
           It used to fail silently, leaving a dead shortcut on screen. */}
       {failures.length > 0 && (
-        <MessageBar intent="warning" layout="multiline">
-          <MessageBarBody>
-            {t("hotkeys.conflict", {
-              list: failures
-                .map((f) => `${t(`hotkeys.${f.action}`)} (${f.accelerator})`)
-                .join(", "),
-            })}
-          </MessageBarBody>
-        </MessageBar>
+        <SettingsNotice intent="warning">
+          {t("hotkeys.conflict", {
+            list: failures
+              .map((f) => `${t(`hotkeys.${f.action}`)} (${f.accelerator})`)
+              .join(", "),
+          })}
+        </SettingsNotice>
       )}
       {/* Binding a media key takes it away from Windows for as long as the app
           runs, so say so rather than let it surprise people. */}
-      <MessageBar intent="info" layout="multiline">
-        <MessageBarBody>{t("hotkeys.mediaKeysHint")}</MessageBarBody>
-      </MessageBar>
+      <SettingsNotice>{t("hotkeys.mediaKeysHint")}</SettingsNotice>
       {ACTIONS.map(({ key, labelKey }) => (
         <SettingRow key={key} label={t(labelKey)}>
           <HotkeyInput

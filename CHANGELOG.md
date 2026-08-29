@@ -4,6 +4,21 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+<!-- release-notes -->
+Fixes the note in the Hotkeys settings that was drawn outside its own box.
+
+<!-- /release-notes -->
+
+### Fixes
+
+- **The media-key note in the Hotkeys tab still spilled out of its box.** The
+  previous attempt switched Fluent's `MessageBar` to `layout="multiline"`, which
+  is not enough: it sizes the box for two lines and simply draws a third one
+  past the border. Settings notices are a plain box now (`SettingsNotice`) that
+  grows with whatever it holds — the same reason `SettingRow` exists.
+
 ## [0.3.2] - 2026-08-29
 
 <!-- release-notes -->
