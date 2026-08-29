@@ -6,6 +6,19 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+<!-- release-notes -->
+**A headset that falls asleep no longer disappears.**
+
+If you favourited a wireless headset and it went to sleep — or you unplugged
+something — it used to drop out of the list entirely and lose its turn in the
+cycle order until it came back. Now it stays where it was, dimmed and marked
+"Disconnected", keeping its star and its place. Cycling simply skips over it.
+
+Only favourites are kept that way. Windows remembers plenty of devices you have
+plugged in over the years, and listing all of them would be noise.
+
+<!-- /release-notes -->
+
 ### Phase 21 — Disconnected devices keep their place
 
 A sleeping wireless headset used to vanish from the list *and* from the cycle
