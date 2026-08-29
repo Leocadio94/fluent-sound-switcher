@@ -6,6 +6,33 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+<!-- release-notes -->
+This one is about the app looking like it belongs on your desktop.
+
+**It uses your Windows accent colour.** Not just the one colour — Windows also
+derives three darker and three lighter shades, already tuned, and the whole
+palette is built from those. On by default; Settings → General turns it off if
+you prefer the standard blue. Change the accent in Windows and the app follows
+without a restart.
+
+**The app draws its own title bar**, with its controls in it. The favourites
+filter, the mic toggle, settings and refresh moved up into the caption instead
+of taking a row of their own.
+
+Prefer the Windows title bar? Settings → General switches back, live. Worth
+knowing: the system bar is the only way to get the Windows 11 snap-layouts menu
+when you hover the maximize button — an app-drawn bar cannot offer it, because
+the flyout needs a hit test the webview never lets through.
+
+**Also**
+
+- A **Download for Windows** button on the README and every release page,
+  pointing at a link that does not change between versions.
+- Settings rows are easier to read: each explanation now sits under its label
+  instead of squeezing it into a narrow column.
+
+<!-- /release-notes -->
+
 ### Phase 20 — Custom title bar
 
 - **The app draws its own title bar**, matching the rest of the interface: the
