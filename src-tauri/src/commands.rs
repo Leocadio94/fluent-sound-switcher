@@ -225,6 +225,19 @@ pub fn get_accent_palette() -> Option<crate::accent::AccentPalette> {
     crate::accent::palette()
 }
 
+/// Switches between the app-drawn title bar and the system one. Applied live,
+/// so the choice does not need a restart; the value is passed directly rather
+/// than re-read, to avoid racing the store's async write.
+#[tauri::command]
+pub fn set_title_bar_style(app: tauri::AppHandle, style: String) -> Result<(), String> {
+    let Some(window) = app.get_webview_window("main") else {
+        return Err("main window is gone".to_string());
+    };
+    window
+        .set_decorations(style == "native")
+        .map_err(|e| e.to_string())
+}
+
 /// Opens the folder holding the rotating log file, so a user can attach it to a
 /// bug report. Nothing in the GUI build reaches stdout, so this is the only way
 /// to see what the backend did.

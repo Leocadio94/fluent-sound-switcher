@@ -145,6 +145,7 @@ const VOLUME_OSD_KEY = "volumeOsd";
 const LANGUAGE_KEY = "language";
 const THEME_KEY = "theme";
 const SYSTEM_ACCENT_KEY = "useSystemAccent";
+const TITLE_BAR_KEY = "titleBarStyle";
 
 const SCHEMA_VERSION_KEY = "schemaVersion";
 
@@ -178,6 +179,7 @@ function getStore(): Promise<Store> {
         [SHOW_DEVICE_ICON_KEY]: true,
         [OVERLAY_MONITOR_KEY]: DEFAULT_MONITOR_PREFERENCE,
         [SYSTEM_ACCENT_KEY]: true,
+        [TITLE_BAR_KEY]: "custom",
         [VOLUME_OSD_KEY]: DEFAULT_VOLUME_OSD,
       },
     }).then(async (store) => {
@@ -387,6 +389,27 @@ export async function loadUseSystemAccent(): Promise<boolean> {
 export async function saveUseSystemAccent(value: boolean): Promise<void> {
   const store = await getStore();
   await store.set(SYSTEM_ACCENT_KEY, value);
+}
+
+/**
+ * Who draws the window's title bar.
+ *
+ * `custom` (the default) matches the rest of the UI; `native` hands it back to
+ * Windows, which brings back the snap-layouts flyout on the maximize button.
+ * That flyout needs the top-level window to answer a hit test, and the webview
+ * covers the whole client area, so an app-drawn bar cannot offer it.
+ */
+export const TITLE_BAR_STYLES = ["custom", "native"] as const;
+export type TitleBarStyle = (typeof TITLE_BAR_STYLES)[number];
+
+export async function loadTitleBarStyle(): Promise<TitleBarStyle> {
+  const store = await getStore();
+  return oneOf(await store.get(TITLE_BAR_KEY), TITLE_BAR_STYLES, "custom");
+}
+
+export async function saveTitleBarStyle(value: TitleBarStyle): Promise<void> {
+  const store = await getStore();
+  await store.set(TITLE_BAR_KEY, value);
 }
 
 export type { DeviceDirection };

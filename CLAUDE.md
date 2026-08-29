@@ -161,6 +161,14 @@ cargo test --manifest-path src-tauri/Cargo.toml
 - Config values are validated on read (`lib/configSchema.ts`) against option
   lists exported from `lib/config.ts`; add a new option to that list, not to a
   second copy in the dropdown.
+- The `main` window is declared `decorations: false` and the app draws its own
+  caption (`components/TitleBar.tsx`); `titleBarStyle` in the config switches
+  back to the system one live via `set_decorations`.
+- **Do not try to bring back the Windows 11 snap-layouts flyout.** It needs the
+  top-level window to answer `WM_NCHITTEST` with `HTMAXBUTTON`, and WRY's child
+  windows cover the whole client area and consume the pointer first — measured:
+  18 hit tests reached a subclassed window proc from the borders, zero from over
+  the maximize button. That is why the "system" title bar option exists.
 - The Fluent brand ramp is built from the *seven* shades Windows exposes
   (`theme/accentTheme.ts`), not from the accent hex alone: those are the shades
   the desktop already uses. The accent proper is pinned to stop 80

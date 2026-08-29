@@ -27,6 +27,7 @@ import type {
   Hotkeys,
   MuteIndicator,
   NotificationConfig,
+  TitleBarStyle,
   VolumeOsd,
 } from "../lib/config";
 
@@ -64,6 +65,8 @@ interface SettingsDialogProps {
   onThemePrefChange: (pref: ThemePreference) => void;
   useSystemAccent: boolean;
   onUseSystemAccentChange: (value: boolean) => void;
+  titleBarStyle: TitleBarStyle;
+  onTitleBarStyleChange: (value: TitleBarStyle) => void;
   hotkeys: Hotkeys;
   onHotkeyChange: (action: keyof Hotkeys, accelerator: string) => void;
   hotkeyFailures: HotkeyFailure[];
@@ -126,6 +129,8 @@ export default function SettingsDialog(props: SettingsDialogProps) {
                 onThemePrefChange={props.onThemePrefChange}
                 useSystemAccent={props.useSystemAccent}
                 onUseSystemAccentChange={props.onUseSystemAccentChange}
+                titleBarStyle={props.titleBarStyle}
+                onTitleBarStyleChange={props.onTitleBarStyleChange}
                 autoSwitch={props.autoSwitch}
                 onAutoSwitchChange={props.onAutoSwitchChange}
               />

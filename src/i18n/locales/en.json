@@ -90,7 +90,13 @@
       "dark": "Dark"
     },
     "systemAccent": "Use the Windows accent colour",
-    "systemAccentHint": "Follows the accent colour set in Windows. Turn it off for the default blue."
+    "systemAccentHint": "Follows the accent colour set in Windows. Turn it off for the default blue.",
+    "titleBar": "Title bar",
+    "titleBarHint": "The app-drawn bar matches the rest of the interface; the system one brings back the snap-layouts menu when you hover the maximize button.",
+    "titleBars": {
+      "custom": "App",
+      "native": "System"
+    }
   },
   "general": {
     "logs": "Diagnostics",
@@ -130,5 +136,14 @@
     "slidersInFlyoutHint": "The tray menu is compact; leave this off to keep it tight.",
     "show": "Show volume",
     "hide": "Hide volume"
+  },
+  "app": {
+    "name": "Fluent Sound Switcher"
+  },
+  "titlebar": {
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "restore": "Restore",
+    "close": "Close"
   }
 }

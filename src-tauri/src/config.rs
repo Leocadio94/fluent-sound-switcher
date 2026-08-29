@@ -313,6 +313,19 @@ pub fn overlay_monitor(app: &AppHandle) -> String {
         .to_string()
 }
 
+/// "custom" (the app draws its own title bar) or "native" (Windows draws it).
+///
+/// Custom is the default; the app-drawn bar matches the rest of the UI, at the
+/// cost of the Windows 11 snap-layouts flyout, which needs the top-level window
+/// to answer a hit test the webview never lets through.
+pub fn title_bar_style(app: &AppHandle) -> String {
+    read(app)
+        .get("titleBarStyle")
+        .and_then(|v| v.as_str())
+        .unwrap_or("custom")
+        .to_string()
+}
+
 /// UI language for the backend-owned strings (tray menu, notifications).
 /// Mirrors the frontend's `language` key.
 pub fn language(app: &AppHandle) -> String {

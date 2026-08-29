@@ -77,6 +77,13 @@ pub fn run() {
             // Closing the main window hides it to the tray instead of quitting,
             // so the tray "Abrir" can bring it back.
             if let Some(main) = handle.get_webview_window("main") {
+                // The window is declared undecorated; honour the stored
+                // preference for someone who asked for the system title bar.
+                if config::title_bar_style(handle) == "native" {
+                    if let Err(e) = main.set_decorations(true) {
+                        log::warn!("could not restore the native title bar: {e}");
+                    }
+                }
                 let hide_target = main.clone();
                 main.on_window_event(move |event| {
                     if let tauri::WindowEvent::CloseRequested { api, .. } = event {
@@ -118,6 +125,7 @@ pub fn run() {
             commands::open_log_folder,
             commands::get_overlay_state,
             commands::get_accent_palette,
+            commands::set_title_bar_style,
             commands::set_language,
             commands::get_device_volume,
             commands::set_device_volume,

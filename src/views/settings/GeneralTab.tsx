@@ -6,8 +6,10 @@ import { SUPPORTED_LANGUAGES } from "../../i18n";
 import {
   AUTO_SWITCH_MODES,
   MONITOR_PREFERENCES as MONITORS,
+  TITLE_BAR_STYLES,
   saveLanguage,
   type MonitorPreference,
+  type TitleBarStyle,
 } from "../../lib/config";
 import { openLogFolder, setLanguage } from "../../lib/tauri";
 import type { ThemePreference } from "../../theme/useSystemTheme";
@@ -21,6 +23,8 @@ interface GeneralTabProps {
   onThemePrefChange: (pref: ThemePreference) => void;
   useSystemAccent: boolean;
   onUseSystemAccentChange: (value: boolean) => void;
+  titleBarStyle: TitleBarStyle;
+  onTitleBarStyleChange: (value: TitleBarStyle) => void;
   autoSwitch: AutoSwitchConfig;
   onAutoSwitchChange: <K extends keyof AutoSwitchConfig>(
     key: K,
@@ -33,6 +37,8 @@ export default function GeneralTab({
   onThemePrefChange,
   useSystemAccent,
   onUseSystemAccentChange,
+  titleBarStyle,
+  onTitleBarStyleChange,
   autoSwitch,
   onAutoSwitchChange,
 }: GeneralTabProps) {
@@ -87,6 +93,27 @@ export default function GeneralTab({
           {THEMES.map((option) => (
             <Option key={option} value={option}>
               {t(`settings.themes.${option}`)}
+            </Option>
+          ))}
+        </Dropdown>
+      </Field>
+
+      <Field
+        className={styles.row}
+        label={t("settings.titleBar")}
+        hint={t("settings.titleBarHint")}
+        orientation="horizontal"
+      >
+        <Dropdown
+          value={t(`settings.titleBars.${titleBarStyle}`)}
+          selectedOptions={[titleBarStyle]}
+          onOptionSelect={(_, d) =>
+            d.optionValue && onTitleBarStyleChange(d.optionValue as TitleBarStyle)
+          }
+        >
+          {TITLE_BAR_STYLES.map((style) => (
+            <Option key={style} value={style}>
+              {t(`settings.titleBars.${style}`)}
             </Option>
           ))}
         </Dropdown>

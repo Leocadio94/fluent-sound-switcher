@@ -20,6 +20,7 @@ import {
   SettingsRegular,
 } from "@fluentui/react-icons";
 
+import TitleBar from "./components/TitleBar";
 import DeviceList from "./views/DeviceList";
 import SettingsDialog from "./views/SettingsDialog";
 import { useDevices } from "./hooks/useDevices";
@@ -38,6 +39,7 @@ import {
   previewNotification,
 } from "./lib/tauri";
 import type { ThemePreference } from "./theme/useSystemTheme";
+import type { TitleBarStyle } from "./lib/config";
 
 const useStyles = makeStyles({
   root: {
@@ -96,6 +98,8 @@ interface AppProps {
   onThemePrefChange: (pref: ThemePreference) => void;
   useSystemAccent: boolean;
   onUseSystemAccentChange: (value: boolean) => void;
+  titleBarStyle: TitleBarStyle;
+  onTitleBarStyleChange: (value: TitleBarStyle) => void;
 }
 
 export default function App({
@@ -103,6 +107,8 @@ export default function App({
   onThemePrefChange,
   useSystemAccent,
   onUseSystemAccentChange,
+  titleBarStyle,
+  onTitleBarStyleChange,
 }: AppProps) {
   const styles = useStyles();
   const { t } = useTranslation();
@@ -149,6 +155,8 @@ export default function App({
 
   return (
     <div className={styles.root}>
+      {/* Windows draws the caption itself in "native" mode. */}
+      {titleBarStyle === "custom" && <TitleBar />}
       <header className={styles.header}>
         <div className={styles.headerControls}>
           {/* Moved up from a row of its own: the header had space to spare and
@@ -201,6 +209,8 @@ export default function App({
         onThemePrefChange={onThemePrefChange}
         useSystemAccent={useSystemAccent}
         onUseSystemAccentChange={onUseSystemAccentChange}
+        titleBarStyle={titleBarStyle}
+        onTitleBarStyleChange={onTitleBarStyleChange}
         hotkeys={hotkeys}
         onHotkeyChange={setBinding}
         hotkeyFailures={hotkeyFailures}

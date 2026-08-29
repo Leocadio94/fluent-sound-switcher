@@ -90,7 +90,13 @@
       "dark": "Escuro"
     },
     "systemAccent": "Usar a cor do Windows",
-    "systemAccentHint": "Segue a cor de destaque escolhida nas configurações do Windows. Desligue para usar o azul padrão."
+    "systemAccentHint": "Segue a cor de destaque escolhida nas configurações do Windows. Desligue para usar o azul padrão.",
+    "titleBar": "Barra de título",
+    "titleBarHint": "A barra do app combina com o restante da interface; a do sistema traz de volta o menu de layouts ao passar o mouse no maximizar.",
+    "titleBars": {
+      "custom": "Do aplicativo",
+      "native": "Do sistema"
+    }
   },
   "general": {
     "logs": "Diagnóstico",
@@ -130,5 +136,14 @@
     "slidersInFlyoutHint": "O menu da bandeja é compacto; deixe desligado se preferir a lista enxuta.",
     "show": "Mostrar volume",
     "hide": "Ocultar volume"
+  },
+  "app": {
+    "name": "Fluent Sound Switcher"
+  },
+  "titlebar": {
+    "minimize": "Minimizar",
+    "maximize": "Maximizar",
+    "restore": "Restaurar",
+    "close": "Fechar"
   }
 }

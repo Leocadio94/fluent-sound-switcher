@@ -12,10 +12,14 @@ import { useAccentTheme } from "./theme/useAccentTheme";
 import {
   loadLanguage,
   loadTheme,
+  loadTitleBarStyle,
   loadUseSystemAccent,
   saveTheme,
+  saveTitleBarStyle,
   saveUseSystemAccent,
+  type TitleBarStyle,
 } from "./lib/config";
+import { setTitleBarStyle } from "./lib/tauri";
 import i18n from "./i18n";
 import "./styles.css";
 
@@ -29,11 +33,17 @@ function useColorScheme(isDark: boolean) {
 interface WindowProps {
   themePref: ThemePreference;
   accent: boolean;
+  titleBar: TitleBarStyle;
 }
 
-function Root({ themePref: initialTheme, accent: initialAccent }: WindowProps) {
+function Root({
+  themePref: initialTheme,
+  accent: initialAccent,
+  titleBar: initialTitleBar,
+}: WindowProps) {
   const [themePref, setThemePref] = useState<ThemePreference>(initialTheme);
   const [useSystemAccent, setUseSystemAccent] = useState(initialAccent);
+  const [titleBarStyle, setTitleBar] = useState<TitleBarStyle>(initialTitleBar);
   const themes = useAccentTheme(useSystemAccent);
   const { theme, isDark } = useSystemTheme(themePref, themes);
   useColorScheme(isDark);
@@ -50,6 +60,16 @@ function Root({ themePref: initialTheme, accent: initialAccent }: WindowProps) {
     void saveUseSystemAccent(value);
   }, []);
 
+  // Applied live: the backend toggles the window decorations, so the choice
+  // does not need a restart the way VS Code's does.
+  const changeTitleBar = useCallback((value: TitleBarStyle) => {
+    setTitleBar(value);
+    void saveTitleBarStyle(value);
+    void setTitleBarStyle(value).catch((e) =>
+      console.error("could not change the title bar style", e),
+    );
+  }, []);
+
   return (
     <FluentProvider theme={theme} style={{ height: "100vh" }}>
       <App
@@ -57,6 +77,8 @@ function Root({ themePref: initialTheme, accent: initialAccent }: WindowProps) {
         onThemePrefChange={changeTheme}
         useSystemAccent={useSystemAccent}
         onUseSystemAccentChange={changeAccent}
+        titleBarStyle={titleBarStyle}
+        onTitleBarStyleChange={changeTitleBar}
       />
     </FluentProvider>
   );
@@ -123,10 +145,11 @@ function content(props: WindowProps) {
  * its first frame anyway.
  */
 async function bootstrap() {
-  const [language, theme, accent] = await Promise.all([
+  const [language, theme, accent, titleBar] = await Promise.all([
     loadLanguage().catch(() => null),
     loadTheme().catch(() => null),
     loadUseSystemAccent().catch(() => true),
+    loadTitleBarStyle().catch(() => "custom" as TitleBarStyle),
   ]);
 
   if (language && language !== i18n.language) {
@@ -139,6 +162,7 @@ async function bootstrap() {
   const props: WindowProps = {
     themePref: (theme ?? "system") as ThemePreference,
     accent,
+    titleBar,
   };
 
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(

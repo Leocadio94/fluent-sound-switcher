@@ -100,6 +100,11 @@ export interface AccentPalette {
   light3: string;
 }
 
+/** Switches between the app-drawn title bar and the system one, live. */
+export function setTitleBarStyle(style: "custom" | "native"): Promise<void> {
+  return invoke<void>("set_title_bar_style", { style });
+}
+
 /** Reads the accent palette; null when Windows will not report it. */
 export function getAccentPalette(): Promise<AccentPalette | null> {
   return invoke<AccentPalette | null>("get_accent_palette");

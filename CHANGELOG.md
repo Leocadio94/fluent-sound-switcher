@@ -6,6 +6,28 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 20 — Custom title bar
+
+- **The app draws its own title bar**, matching the rest of the interface: the
+  icon, the name and caption buttons using the same Segoe Fluent Icons glyphs
+  Windows uses, down to the red hover on close. Dragging, double-click to
+  maximize and edge resizing all still work.
+- **Settings → General picks who draws it**, app or system, applied live with no
+  restart (`titleBarStyle`, default `custom`).
+
+The reason that option exists: **the Windows 11 snap-layouts flyout cannot work
+under an app-drawn bar here**, and this was measured rather than assumed. The
+flyout needs the top-level window to answer `WM_NCHITTEST` with `HTMAXBUTTON`,
+so the window procedure was subclassed to do exactly that. Instrumenting it
+showed 18 hit tests arriving while the pointer was over the window's borders and
+zero over the maximize button: WRY stacks six child windows (`WRY_WEBVIEW`,
+`Chrome_WidgetWin_0/1`, `Chrome_RenderWidgetHostHWND` and others) across the
+whole client area, and they consume the pointer before the top-level window is
+ever consulted. Tauri hits the same wall — it ships a `TAURI_DRAG_RESIZE_BORDERS`
+child window precisely because it cannot use the parent's hit test for resizing
+either. The subclassing code was deleted rather than left in place doing
+nothing, and anyone who wants the flyout can switch the title bar to `system`.
+
 ### Phase 19 — Follow the Windows accent colour
 
 The app was Fluent-shaped but always Fluent-blue, next to a desktop the user
