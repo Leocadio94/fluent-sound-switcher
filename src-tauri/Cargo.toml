@@ -40,6 +40,10 @@ windows = { version = "0.58", features = [
   "Win32_UI_Shell_PropertiesSystem",
   "Win32_UI_WindowsAndMessaging",
   "Win32_Devices_FunctionDiscovery",
+  # WinRT, for the Windows accent colour (UISettings).
+  "UI",
+  "UI_ViewManagement",
+  "Foundation",
 ] }
 # Required so the `#[interface]` macro's generated `::windows_core` paths resolve.
 windows-core = "0.58"

@@ -94,9 +94,16 @@ const useStyles = makeStyles({
 interface AppProps {
   themePref: ThemePreference;
   onThemePrefChange: (pref: ThemePreference) => void;
+  useSystemAccent: boolean;
+  onUseSystemAccentChange: (value: boolean) => void;
 }
 
-export default function App({ themePref, onThemePrefChange }: AppProps) {
+export default function App({
+  themePref,
+  onThemePrefChange,
+  useSystemAccent,
+  onUseSystemAccentChange,
+}: AppProps) {
   const styles = useStyles();
   const { t } = useTranslation();
   const { devices, loading, error, refresh, switchTo, switching } =
@@ -192,6 +199,8 @@ export default function App({ themePref, onThemePrefChange }: AppProps) {
         onOpenChange={setSettingsOpen}
         themePref={themePref}
         onThemePrefChange={onThemePrefChange}
+        useSystemAccent={useSystemAccent}
+        onUseSystemAccentChange={onUseSystemAccentChange}
         hotkeys={hotkeys}
         onHotkeyChange={setBinding}
         hotkeyFailures={hotkeyFailures}

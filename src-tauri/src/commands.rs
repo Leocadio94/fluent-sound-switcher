@@ -217,6 +217,14 @@ pub fn get_overlay_state(app: tauri::AppHandle) -> crate::overlay::OverlayState 
     crate::overlay::current_state(&app)
 }
 
+/// The Windows accent colour and the shades Windows derives around it, which
+/// the frontend turns into a Fluent brand ramp. `None` when Windows will not
+/// report them, in which case the frontend keeps the default palette.
+#[tauri::command]
+pub fn get_accent_palette() -> Option<crate::accent::AccentPalette> {
+    crate::accent::palette()
+}
+
 /// Opens the folder holding the rotating log file, so a user can attach it to a
 /// bug report. Nothing in the GUI build reaches stdout, so this is the only way
 /// to see what the backend did.

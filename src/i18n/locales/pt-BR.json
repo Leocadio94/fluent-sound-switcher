@@ -88,7 +88,9 @@
       "system": "Seguir o sistema",
       "light": "Claro",
       "dark": "Escuro"
-    }
+    },
+    "systemAccent": "Usar a cor do Windows",
+    "systemAccentHint": "Segue a cor de destaque escolhida nas configurações do Windows. Desligue para usar o azul padrão."
   },
   "general": {
     "logs": "Diagnóstico",

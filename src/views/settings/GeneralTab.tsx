@@ -19,6 +19,8 @@ const THEMES: ThemePreference[] = ["system", "light", "dark"];
 interface GeneralTabProps {
   themePref: ThemePreference;
   onThemePrefChange: (pref: ThemePreference) => void;
+  useSystemAccent: boolean;
+  onUseSystemAccentChange: (value: boolean) => void;
   autoSwitch: AutoSwitchConfig;
   onAutoSwitchChange: <K extends keyof AutoSwitchConfig>(
     key: K,
@@ -29,6 +31,8 @@ interface GeneralTabProps {
 export default function GeneralTab({
   themePref,
   onThemePrefChange,
+  useSystemAccent,
+  onUseSystemAccentChange,
   autoSwitch,
   onAutoSwitchChange,
 }: GeneralTabProps) {
@@ -86,6 +90,18 @@ export default function GeneralTab({
             </Option>
           ))}
         </Dropdown>
+      </Field>
+
+      <Field
+        className={styles.row}
+        label={t("settings.systemAccent")}
+        hint={t("settings.systemAccentHint")}
+        orientation="horizontal"
+      >
+        <Switch
+          checked={useSystemAccent}
+          onChange={(_, d) => onUseSystemAccentChange(d.checked)}
+        />
       </Field>
 
       <Field

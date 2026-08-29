@@ -78,6 +78,8 @@ cargo test --manifest-path src-tauri/Cargo.toml
     click-through extended style).
   - `i18n.rs` — the strings the backend owns (tray menu, notification titles,
     updater messages), keyed off the frontend's `language`.
+  - `accent.rs` — the Windows accent colour and the six shades Windows derives
+    around it (`UISettings`, WinRT), plus a watcher for the user changing it.
   - `tray.rs` (two tray icons: mic + output device), `device_icon.rs` (extract
     the Windows endpoint icon → RGBA), `mute.rs` (central mute state),
     `notify.rs` (toast/banner/sound), `hotkeys.rs` (global shortcuts),
@@ -159,6 +161,11 @@ cargo test --manifest-path src-tauri/Cargo.toml
 - Config values are validated on read (`lib/configSchema.ts`) against option
   lists exported from `lib/config.ts`; add a new option to that list, not to a
   second copy in the dropdown.
+- The Fluent brand ramp is built from the *seven* shades Windows exposes
+  (`theme/accentTheme.ts`), not from the accent hex alone: those are the shades
+  the desktop already uses. The accent proper is pinned to stop 80
+  (`colorBrandBackground`), so buttons and the active row are exactly the colour
+  the user picked. An unreadable shade falls back to the default palette.
 - Device volume is fetched per device on demand (`useVolume`), never folded into
   `list_audio_devices`: that would activate an `IAudioEndpointVolume` interface
   per endpoint on every refresh, and the list refetches on each

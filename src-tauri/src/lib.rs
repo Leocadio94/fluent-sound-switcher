@@ -1,5 +1,6 @@
 //! Fluent Sound Switcher — Tauri backend entry point.
 
+mod accent;
 mod audio;
 mod auxwin;
 mod banner;
@@ -92,6 +93,8 @@ pub fn run() {
             // Mirror volume/mute changes made outside the app (keyboard wheel,
             // Windows mixer) on the current default output.
             audio::volume_events::rearm(handle);
+            // Follow the Windows accent colour while the app is open.
+            accent::watch(handle);
             // Silent check for a newer signed release on startup.
             updater::check(handle, true);
             Ok(())
@@ -114,6 +117,7 @@ pub fn run() {
             commands::install_update,
             commands::open_log_folder,
             commands::get_overlay_state,
+            commands::get_accent_palette,
             commands::set_language,
             commands::get_device_volume,
             commands::set_device_volume,

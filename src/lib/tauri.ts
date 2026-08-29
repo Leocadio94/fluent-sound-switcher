@@ -86,6 +86,25 @@ export function getOutputMuted(): Promise<boolean> {
   return invoke<boolean>("get_output_muted");
 }
 
+/**
+ * The Windows accent colour and the shades Windows derives around it, darkest
+ * to lightest. Turned into a Fluent brand ramp by `theme/accentTheme.ts`.
+ */
+export interface AccentPalette {
+  dark3: string;
+  dark2: string;
+  dark1: string;
+  accent: string;
+  light1: string;
+  light2: string;
+  light3: string;
+}
+
+/** Reads the accent palette; null when Windows will not report it. */
+export function getAccentPalette(): Promise<AccentPalette | null> {
+  return invoke<AccentPalette | null>("get_accent_palette");
+}
+
 /** State of the mute overlay, as the backend sees it. */
 export interface OverlayState {
   kind: "mute" | "volume";

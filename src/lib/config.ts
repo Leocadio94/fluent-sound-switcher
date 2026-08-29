@@ -144,6 +144,7 @@ const OVERLAY_MONITOR_KEY = "overlayMonitor";
 const VOLUME_OSD_KEY = "volumeOsd";
 const LANGUAGE_KEY = "language";
 const THEME_KEY = "theme";
+const SYSTEM_ACCENT_KEY = "useSystemAccent";
 
 const SCHEMA_VERSION_KEY = "schemaVersion";
 
@@ -176,6 +177,7 @@ function getStore(): Promise<Store> {
         [START_MINIMIZED_KEY]: false,
         [SHOW_DEVICE_ICON_KEY]: true,
         [OVERLAY_MONITOR_KEY]: DEFAULT_MONITOR_PREFERENCE,
+        [SYSTEM_ACCENT_KEY]: true,
         [VOLUME_OSD_KEY]: DEFAULT_VOLUME_OSD,
       },
     }).then(async (store) => {
@@ -371,6 +373,20 @@ export async function loadTheme(): Promise<string | null> {
 export async function saveTheme(value: string): Promise<void> {
   const store = await getStore();
   await store.set(THEME_KEY, value);
+}
+
+/**
+ * Whether to build the palette from the Windows accent colour. On by default:
+ * matching the desktop is the point of a Fluent app.
+ */
+export async function loadUseSystemAccent(): Promise<boolean> {
+  const store = await getStore();
+  return boolOr(await store.get(SYSTEM_ACCENT_KEY), true);
+}
+
+export async function saveUseSystemAccent(value: boolean): Promise<void> {
+  const store = await getStore();
+  await store.set(SYSTEM_ACCENT_KEY, value);
 }
 
 export type { DeviceDirection };

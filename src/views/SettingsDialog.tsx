@@ -62,6 +62,8 @@ interface SettingsDialogProps {
   onOpenChange: (open: boolean) => void;
   themePref: ThemePreference;
   onThemePrefChange: (pref: ThemePreference) => void;
+  useSystemAccent: boolean;
+  onUseSystemAccentChange: (value: boolean) => void;
   hotkeys: Hotkeys;
   onHotkeyChange: (action: keyof Hotkeys, accelerator: string) => void;
   hotkeyFailures: HotkeyFailure[];
@@ -122,6 +124,8 @@ export default function SettingsDialog(props: SettingsDialogProps) {
               <GeneralTab
                 themePref={props.themePref}
                 onThemePrefChange={props.onThemePrefChange}
+                useSystemAccent={props.useSystemAccent}
+                onUseSystemAccentChange={props.onUseSystemAccentChange}
                 autoSwitch={props.autoSwitch}
                 onAutoSwitchChange={props.onAutoSwitchChange}
               />

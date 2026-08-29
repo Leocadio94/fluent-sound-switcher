@@ -8,7 +8,14 @@ import Overlay from "./views/Overlay";
 import Flyout from "./views/Flyout";
 import Banner from "./views/Banner";
 import { useSystemTheme, type ThemePreference } from "./theme/useSystemTheme";
-import { loadLanguage, loadTheme, saveTheme } from "./lib/config";
+import { useAccentTheme } from "./theme/useAccentTheme";
+import {
+  loadLanguage,
+  loadTheme,
+  loadUseSystemAccent,
+  saveTheme,
+  saveUseSystemAccent,
+} from "./lib/config";
 import i18n from "./i18n";
 import "./styles.css";
 
@@ -19,57 +26,58 @@ function useColorScheme(isDark: boolean) {
   }, [isDark]);
 }
 
-function Root({ initialTheme }: { initialTheme: ThemePreference }) {
+interface WindowProps {
+  themePref: ThemePreference;
+  accent: boolean;
+}
+
+function Root({ themePref: initialTheme, accent: initialAccent }: WindowProps) {
   const [themePref, setThemePref] = useState<ThemePreference>(initialTheme);
-  const { theme, isDark } = useSystemTheme(themePref);
+  const [useSystemAccent, setUseSystemAccent] = useState(initialAccent);
+  const themes = useAccentTheme(useSystemAccent);
+  const { theme, isDark } = useSystemTheme(themePref, themes);
   useColorScheme(isDark);
 
-  // Persist the choice: it used to live only in component state and reset to
-  // "system" on every launch.
+  // Persist both: they used to live only in component state and reset to the
+  // defaults on every launch.
   const changeTheme = useCallback((pref: ThemePreference) => {
     setThemePref(pref);
     void saveTheme(pref);
   }, []);
 
+  const changeAccent = useCallback((value: boolean) => {
+    setUseSystemAccent(value);
+    void saveUseSystemAccent(value);
+  }, []);
+
   return (
     <FluentProvider theme={theme} style={{ height: "100vh" }}>
-      <App themePref={themePref} onThemePrefChange={changeTheme} />
+      <App
+        themePref={themePref}
+        onThemePrefChange={changeTheme}
+        useSystemAccent={useSystemAccent}
+        onUseSystemAccentChange={changeAccent}
+      />
     </FluentProvider>
   );
 }
 
 /**
- * Themed wrapper for the click-through mute overlay. It used to render bare,
- * with its colours hardcoded in CSS, so it ignored the theme entirely.
+ * Shared shell for the three transparent auxiliary windows. Each one resolves
+ * the theme itself: they are separate webviews, so they cannot read the main
+ * window's React state.
  */
-function OverlayRoot({ themePref }: { themePref: ThemePreference }) {
-  const { theme, isDark } = useSystemTheme(themePref);
+function AuxWindow({
+  themePref,
+  accent,
+  children,
+}: WindowProps & { children: React.ReactNode }) {
+  const themes = useAccentTheme(accent);
+  const { theme, isDark } = useSystemTheme(themePref, themes);
   useColorScheme(isDark);
   return (
     <FluentProvider theme={theme} style={{ background: "transparent" }}>
-      <Overlay />
-    </FluentProvider>
-  );
-}
-
-/** Themed wrapper for the transparent tray flyout window. */
-function FlyoutRoot({ themePref }: { themePref: ThemePreference }) {
-  const { theme, isDark } = useSystemTheme(themePref);
-  useColorScheme(isDark);
-  return (
-    <FluentProvider theme={theme} style={{ background: "transparent" }}>
-      <Flyout />
-    </FluentProvider>
-  );
-}
-
-/** Themed wrapper for the transparent device-change banner window. */
-function BannerRoot({ themePref }: { themePref: ThemePreference }) {
-  const { theme, isDark } = useSystemTheme(themePref);
-  useColorScheme(isDark);
-  return (
-    <FluentProvider theme={theme} style={{ background: "transparent" }}>
-      <Banner />
+      {children}
     </FluentProvider>
   );
 }
@@ -79,31 +87,46 @@ const label = getCurrentWindow().label;
 // so the global bundle doesn't shrink the main window.
 document.documentElement.dataset.window = label;
 
-function content(themePref: ThemePreference) {
+function content(props: WindowProps) {
   switch (label) {
     case "overlay":
-      return <OverlayRoot themePref={themePref} />;
+      return (
+        <AuxWindow {...props}>
+          <Overlay />
+        </AuxWindow>
+      );
     case "flyout":
-      return <FlyoutRoot themePref={themePref} />;
+      return (
+        <AuxWindow {...props}>
+          <Flyout />
+        </AuxWindow>
+      );
     case "banner":
-      return <BannerRoot themePref={themePref} />;
+      return (
+        <AuxWindow {...props}>
+          <Banner />
+        </AuxWindow>
+      );
     default:
-      return <Root initialTheme={themePref} />;
+      return <Root {...props} />;
   }
 }
 
 /**
- * Reads the persisted language and theme *before* the first render.
+ * Reads the persisted language, theme and accent preference *before* the first
+ * render.
  *
- * Both used to live in component state only, so they reset on every launch, and
- * the auxiliary windows hardcoded "system" regardless of the choice. Awaiting
- * here costs one small file read and avoids a flash of the wrong language: the
- * main window stays hidden until React reports its first frame anyway.
+ * Language and theme used to live in component state only, so they reset on
+ * every launch, and the auxiliary windows hardcoded "system" regardless of the
+ * choice. Awaiting here costs one small file read and avoids a flash of the
+ * wrong language or palette: the main window stays hidden until React reports
+ * its first frame anyway.
  */
 async function bootstrap() {
-  const [language, theme] = await Promise.all([
+  const [language, theme, accent] = await Promise.all([
     loadLanguage().catch(() => null),
     loadTheme().catch(() => null),
+    loadUseSystemAccent().catch(() => true),
   ]);
 
   if (language && language !== i18n.language) {
@@ -113,10 +136,13 @@ async function bootstrap() {
     document.documentElement.lang = i18n.language;
   }
 
-  const themePref = (theme ?? "system") as ThemePreference;
+  const props: WindowProps = {
+    themePref: (theme ?? "system") as ThemePreference,
+    accent,
+  };
 
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-    <React.StrictMode>{content(themePref)}</React.StrictMode>,
+    <React.StrictMode>{content(props)}</React.StrictMode>,
   );
 }
 

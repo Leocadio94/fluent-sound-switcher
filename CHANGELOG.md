@@ -6,6 +6,29 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Phase 19 — Follow the Windows accent colour
+
+The app was Fluent-shaped but always Fluent-blue, next to a desktop the user
+had already coloured to taste.
+
+- **The palette is built from the Windows accent colour**, on by default, with a
+  switch in Settings → General to go back to the Fluent blue.
+- Windows does not just expose one accent colour: it derives three darker and
+  three lighter shades, already tuned by Microsoft. Those are used as anchors
+  for the sixteen-stop Fluent brand ramp instead of computing shades from a
+  single hex — they are the shades the rest of the desktop uses. The accent
+  proper is pinned to stop 80, the one Fluent paints buttons and the active row
+  with, so that shade is exactly what the user picked rather than an
+  interpolation near it.
+- Changing the accent colour in Windows updates the app live
+  (`UISettings::ColorValuesChanged`), including the tray flyout and the banner.
+  The handler re-reads and compares before emitting, since that event also fires
+  for light/dark switches.
+- Falls back to the default palette when Windows will not report the colour, or
+  when a shade comes back unparseable — a half-derived ramp is worse than none.
+- `useSystemTheme` takes its light/dark pair as an argument now, so the same
+  hook serves the default palette and the accent-derived one.
+
 ### Release tooling
 - **A download button that points at a stable URL.** Asset names carry the
   version, so `releases/latest/download/...` was never a link that kept

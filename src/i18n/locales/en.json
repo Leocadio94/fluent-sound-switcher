@@ -88,7 +88,9 @@
       "system": "Follow system",
       "light": "Light",
       "dark": "Dark"
-    }
+    },
+    "systemAccent": "Use the Windows accent colour",
+    "systemAccentHint": "Follows the accent colour set in Windows. Turn it off for the default blue."
   },
   "general": {
     "logs": "Diagnostics",
