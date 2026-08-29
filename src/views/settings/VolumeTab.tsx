@@ -1,8 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { Dropdown, Field, Option, Switch } from "@fluentui/react-components";
+import { Dropdown, Option, Switch } from "@fluentui/react-components";
 
 import type { OverlayPosition, VolumeOsd } from "../../lib/config";
-import { POSITIONS, useSettingsStyles } from "./shared";
+import SettingRow from "./SettingRow";
+import { POSITIONS } from "./shared";
 
 interface VolumeTabProps {
   osd: VolumeOsd;
@@ -10,28 +11,18 @@ interface VolumeTabProps {
 }
 
 export default function VolumeTab({ osd, onChange }: VolumeTabProps) {
-  const styles = useSettingsStyles();
   const { t } = useTranslation();
 
   return (
     <>
-      <Field
-        className={styles.row}
-        label={t("volume.osd")}
-        hint={t("volume.osdHint")}
-        orientation="horizontal"
-      >
+      <SettingRow label={t("volume.osd")} hint={t("volume.osdHint")}>
         <Switch
           checked={osd.enabled}
           onChange={(_, d) => onChange("enabled", d.checked)}
         />
-      </Field>
+      </SettingRow>
 
-      <Field
-        className={styles.row}
-        label={t("volume.osdPosition")}
-        orientation="horizontal"
-      >
+      <SettingRow label={t("volume.osdPosition")}>
         <Dropdown
           disabled={!osd.enabled}
           value={t(`positions.${osd.position}`)}
@@ -47,31 +38,21 @@ export default function VolumeTab({ osd, onChange }: VolumeTabProps) {
             </Option>
           ))}
         </Dropdown>
-      </Field>
+      </SettingRow>
 
-      <Field
-        className={styles.row}
-        label={t("volume.sliders")}
-        hint={t("volume.slidersHint")}
-        orientation="horizontal"
-      >
+      <SettingRow label={t("volume.sliders")} hint={t("volume.slidersHint")}>
         <Switch
           checked={osd.sliders}
           onChange={(_, d) => onChange("sliders", d.checked)}
         />
-      </Field>
+      </SettingRow>
 
-      <Field
-        className={styles.row}
-        label={t("volume.slidersInFlyout")}
-        hint={t("volume.slidersInFlyoutHint")}
-        orientation="horizontal"
-      >
+      <SettingRow label={t("volume.slidersInFlyout")} hint={t("volume.slidersInFlyoutHint")}>
         <Switch
           checked={osd.slidersInFlyout}
           onChange={(_, d) => onChange("slidersInFlyout", d.checked)}
         />
-      </Field>
+      </SettingRow>
     </>
   );
 }

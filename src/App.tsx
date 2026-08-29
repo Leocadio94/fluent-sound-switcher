@@ -7,20 +7,13 @@ import {
   MessageBarActions,
   MessageBarBody,
   Spinner,
-  Switch,
-  Tooltip,
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
 import { useCallback, useEffect, useState } from "react";
-import {
-  ArrowClockwiseRegular,
-  MicProhibitedFilled,
-  MicRegular,
-  SettingsRegular,
-} from "@fluentui/react-icons";
 
 import TitleBar from "./components/TitleBar";
+import AppControls from "./components/AppControls";
 import DeviceList from "./views/DeviceList";
 import SettingsDialog from "./views/SettingsDialog";
 import { useDevices } from "./hooks/useDevices";
@@ -61,11 +54,6 @@ const useStyles = makeStyles({
     padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalXL}`,
     borderBottom: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
   },
-  headerControls: {
-    display: "flex",
-    alignItems: "center",
-    gap: tokens.spacingHorizontalS,
-  },
   content: {
     display: "flex",
     flexDirection: "column",
@@ -74,12 +62,6 @@ const useStyles = makeStyles({
     overflowY: "auto",
   },
   // Separates the favorites toggle from the icon buttons that follow it.
-  headerDivider: {
-    width: tokens.strokeWidthThin,
-    alignSelf: "stretch",
-    marginBlock: tokens.spacingVerticalXS,
-    backgroundColor: tokens.colorNeutralStroke2,
-  },
   centered: {
     display: "flex",
     justifyContent: "center",
@@ -153,54 +135,31 @@ export default function App({
     }, []),
   );
 
+  const controlProps = {
+    showOnlyFavorites,
+    onShowOnlyFavoritesChange: setShowOnlyFavorites,
+    muted,
+    onToggleMute: toggleMute,
+    onOpenSettings: () => setSettingsOpen(true),
+    onRefresh: () => void refresh(),
+    refreshing: loading,
+  };
+
   return (
     <div className={styles.root}>
       {/* Windows draws the caption itself in "native" mode. */}
-      {titleBarStyle === "custom" && <TitleBar />}
-      <header className={styles.header}>
-        <div className={styles.headerControls}>
-          {/* Moved up from a row of its own: the header had space to spare and
-              the filter is part of how you view the list. */}
-          <Switch
-            checked={showOnlyFavorites}
-            onChange={(_, data) => setShowOnlyFavorites(data.checked)}
-            label={t("devices.onlyFavorites")}
-            labelPosition="before"
-          />
-          <div className={styles.headerDivider} />
-          <Tooltip
-            content={muted ? t("muteIndicator.muted") : t("muteIndicator.live")}
-            relationship="label"
-          >
-            <Button
-              icon={muted ? <MicProhibitedFilled /> : <MicRegular />}
-              appearance={muted ? "primary" : "subtle"}
-              aria-pressed={muted}
-              aria-label={
-                muted ? t("muteIndicator.muted") : t("muteIndicator.live")
-              }
-              onClick={toggleMute}
-            />
-          </Tooltip>
-          <Tooltip content={t("settings.title")} relationship="label">
-            <Button
-              icon={<SettingsRegular />}
-              appearance="subtle"
-              aria-label={t("settings.title")}
-              onClick={() => setSettingsOpen(true)}
-            />
-          </Tooltip>
-          <Tooltip content={t("common.refresh")} relationship="label">
-            <Button
-              icon={<ArrowClockwiseRegular />}
-              appearance="subtle"
-              onClick={() => void refresh()}
-              disabled={loading}
-              aria-label={t("common.refresh")}
-            />
-          </Tooltip>
-        </div>
-      </header>
+      {titleBarStyle === "custom" && (
+        <TitleBar>
+          <AppControls {...controlProps} />
+        </TitleBar>
+      )}
+      {/* In "native" mode Windows draws the caption, so the controls need a
+          row of their own; in "custom" mode they ride in the title bar. */}
+      {titleBarStyle === "native" && (
+        <header className={styles.header}>
+          <AppControls {...controlProps} />
+        </header>
+      )}
 
       <SettingsDialog
         open={settingsOpen}

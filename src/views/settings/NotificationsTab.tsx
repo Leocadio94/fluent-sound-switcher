@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { Button, Dropdown, Field, Option, Switch } from "@fluentui/react-components";
+import { Button, Dropdown, Option, Switch } from "@fluentui/react-components";
 
 import type { NotificationConfig, OverlayPosition } from "../../lib/config";
+import SettingRow from "./SettingRow";
 import { POSITIONS, useSettingsStyles, type TranslationKey } from "./shared";
 
 interface NotificationsTabProps {
@@ -30,23 +31,14 @@ export default function NotificationsTab({
   return (
     <>
       {toggles.map(({ key, labelKey }) => (
-        <Field
-          key={key}
-          className={styles.row}
-          label={t(labelKey)}
-          orientation="horizontal"
-        >
+        <SettingRow label={t(labelKey)}>
           <Switch
             checked={notifications[key] as boolean}
             onChange={(_, d) => onChange(key, d.checked as never)}
           />
-        </Field>
+        </SettingRow>
       ))}
-      <Field
-        className={styles.row}
-        label={t("notifications.bannerPosition")}
-        orientation="horizontal"
-      >
+      <SettingRow label={t("notifications.bannerPosition")}>
         <Dropdown
           value={t(`positions.${notifications.bannerPosition}`)}
           selectedOptions={[notifications.bannerPosition]}
@@ -61,7 +53,7 @@ export default function NotificationsTab({
             </Option>
           ))}
         </Dropdown>
-      </Field>
+      </SettingRow>
       <div className={styles.testRow}>
         <Button appearance="secondary" onClick={onPreview}>
           {t("notifications.test")}

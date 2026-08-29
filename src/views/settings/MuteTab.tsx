@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Dropdown, Field, Option } from "@fluentui/react-components";
+import { Dropdown, Option } from "@fluentui/react-components";
 
 import {
   MUTE_INDICATOR_MODES as MODES,
@@ -9,7 +9,8 @@ import {
   type OverlayPosition,
   type OverlayStyle,
 } from "../../lib/config";
-import { POSITIONS, useSettingsStyles } from "./shared";
+import SettingRow from "./SettingRow";
+import { POSITIONS } from "./shared";
 
 interface MuteTabProps {
   indicator: MuteIndicator;
@@ -20,16 +21,11 @@ interface MuteTabProps {
 }
 
 export default function MuteTab({ indicator, onChange }: MuteTabProps) {
-  const styles = useSettingsStyles();
   const { t } = useTranslation();
 
   return (
     <>
-      <Field
-        className={styles.row}
-        label={t("muteIndicator.mode")}
-        orientation="horizontal"
-      >
+      <SettingRow label={t("muteIndicator.mode")}>
         <Dropdown
           value={t(`muteIndicator.modes.${indicator.mode}`)}
           selectedOptions={[indicator.mode]}
@@ -43,12 +39,8 @@ export default function MuteTab({ indicator, onChange }: MuteTabProps) {
             </Option>
           ))}
         </Dropdown>
-      </Field>
-      <Field
-        className={styles.row}
-        label={t("muteIndicator.position")}
-        orientation="horizontal"
-      >
+      </SettingRow>
+      <SettingRow label={t("muteIndicator.position")}>
         <Dropdown
           value={t(`positions.${indicator.position}`)}
           selectedOptions={[indicator.position]}
@@ -63,12 +55,8 @@ export default function MuteTab({ indicator, onChange }: MuteTabProps) {
             </Option>
           ))}
         </Dropdown>
-      </Field>
-      <Field
-        className={styles.row}
-        label={t("muteIndicator.style")}
-        orientation="horizontal"
-      >
+      </SettingRow>
+      <SettingRow label={t("muteIndicator.style")}>
         <Dropdown
           value={t(`muteIndicator.styles.${indicator.style}`)}
           selectedOptions={[indicator.style]}
@@ -82,7 +70,7 @@ export default function MuteTab({ indicator, onChange }: MuteTabProps) {
             </Option>
           ))}
         </Dropdown>
-      </Field>
+      </SettingRow>
     </>
   );
 }

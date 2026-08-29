@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
+import type { ReactNode } from "react";
+
 /**
  * Windows draws its own caption buttons with these glyphs from Segoe Fluent
  * Icons (Windows 11) or Segoe MDL2 Assets (Windows 10). Using the same ones is
@@ -15,8 +17,12 @@ const GLYPH = {
   close: "",
 } as const;
 
-/** Matches the Windows 11 caption: 32px tall, 46px-wide buttons. */
-const BAR_HEIGHT = 32;
+/**
+ * Windows 11 captions are 32px, but this one carries the app's own controls, so
+ * it is a little taller to give them room — the way VS Code and Discord do it.
+ * The caption buttons keep their native 46px width.
+ */
+const BAR_HEIGHT = 40;
 const BUTTON_WIDTH = 46;
 
 const useStyles = makeStyles({
@@ -36,6 +42,15 @@ const useStyles = makeStyles({
     minWidth: 0,
     height: "100%",
     paddingLeft: tokens.spacingHorizontalM,
+  },
+  // The controls sit inside the caption but must not drag the window, so they
+  // stay outside the drag region rather than opting out of it.
+  slot: {
+    display: "flex",
+    alignItems: "center",
+    height: "100%",
+    paddingRight: tokens.spacingHorizontalM,
+    flexShrink: 0,
   },
   icon: {
     width: "16px",
@@ -93,13 +108,17 @@ const useStyles = makeStyles({
  * drag region and the caption buttons. `data-tauri-drag-region` gives us
  * dragging and double-click-to-maximize for free.
  *
+ * `children` are the app's own controls, placed between the title and the
+ * caption buttons. They are deliberately outside the drag region: anything
+ * inside it would drag the window instead of taking the click.
+ *
  * One thing an app-drawn bar cannot offer is the Windows 11 snap-layouts
  * flyout: it needs the top-level window to answer `WM_NCHITTEST` with
  * `HTMAXBUTTON`, and the webview's child windows cover the whole client area,
  * so the hit test never reaches it — measured, not assumed. Settings has a
  * "native" option for anyone who would rather have that back.
  */
-export default function TitleBar() {
+export default function TitleBar({ children }: { children?: ReactNode }) {
   const styles = useStyles();
   const { t } = useTranslation();
   const [maximized, setMaximized] = useState(false);
@@ -136,6 +155,7 @@ export default function TitleBar() {
         <img src="/favicon.png" alt="" className={styles.icon} />
         <span className={styles.title}>{t("app.name")}</span>
       </div>
+      {children && <div className={styles.slot}>{children}</div>}
       <div className={styles.buttons}>
         <button
           type="button"

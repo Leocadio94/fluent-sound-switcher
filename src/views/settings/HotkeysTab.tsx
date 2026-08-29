@@ -1,10 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { Field, MessageBar, MessageBarBody } from "@fluentui/react-components";
+import { MessageBar, MessageBarBody } from "@fluentui/react-components";
 
 import HotkeyInput from "../../components/HotkeyInput";
 import type { Hotkeys } from "../../lib/config";
 import type { HotkeyFailure } from "../../lib/tauri";
-import { useSettingsStyles, type TranslationKey } from "./shared";
+import SettingRow from "./SettingRow";
+import type { TranslationKey } from "./shared";
 
 const ACTIONS: { key: keyof Hotkeys; labelKey: TranslationKey }[] = [
   { key: "cycleOutput", labelKey: "hotkeys.cycleOutput" },
@@ -26,7 +27,6 @@ export default function HotkeysTab({
   onChange,
   failures,
 }: HotkeysTabProps) {
-  const styles = useSettingsStyles();
   const { t } = useTranslation();
 
   return (
@@ -50,17 +50,12 @@ export default function HotkeysTab({
         <MessageBarBody>{t("hotkeys.mediaKeysHint")}</MessageBarBody>
       </MessageBar>
       {ACTIONS.map(({ key, labelKey }) => (
-        <Field
-          key={key}
-          className={styles.row}
-          label={t(labelKey)}
-          orientation="horizontal"
-        >
+        <SettingRow label={t(labelKey)}>
           <HotkeyInput
             value={hotkeys[key]}
             onChange={(accelerator) => onChange(key, accelerator)}
           />
-        </Field>
+        </SettingRow>
       ))}
     </>
   );

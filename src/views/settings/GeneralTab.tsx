@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Button, Dropdown, Field, Option, Switch } from "@fluentui/react-components";
+import { Button, Dropdown, Option, Switch } from "@fluentui/react-components";
 
 import { useGeneral } from "../../hooks/useGeneral";
 import { SUPPORTED_LANGUAGES } from "../../i18n";
@@ -14,7 +14,7 @@ import {
 import { openLogFolder, setLanguage } from "../../lib/tauri";
 import type { ThemePreference } from "../../theme/useSystemTheme";
 import type { AutoSwitchConfig, AutoSwitchMode } from "../../lib/config";
-import { useSettingsStyles } from "./shared";
+import SettingRow from "./SettingRow";
 
 const THEMES: ThemePreference[] = ["system", "light", "dark"];
 
@@ -42,17 +42,12 @@ export default function GeneralTab({
   autoSwitch,
   onAutoSwitchChange,
 }: GeneralTabProps) {
-  const styles = useSettingsStyles();
   const { t, i18n } = useTranslation();
   const general = useGeneral();
 
   return (
     <>
-      <Field
-        className={styles.row}
-        label={t("settings.language")}
-        orientation="horizontal"
-      >
+      <SettingRow label={t("settings.language")}>
         <Dropdown
           value={
             SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language)?.label ??
@@ -76,13 +71,9 @@ export default function GeneralTab({
             </Option>
           ))}
         </Dropdown>
-      </Field>
+      </SettingRow>
 
-      <Field
-        className={styles.row}
-        label={t("settings.theme")}
-        orientation="horizontal"
-      >
+      <SettingRow label={t("settings.theme")}>
         <Dropdown
           value={t(`settings.themes.${themePref}`)}
           selectedOptions={[themePref]}
@@ -96,14 +87,9 @@ export default function GeneralTab({
             </Option>
           ))}
         </Dropdown>
-      </Field>
+      </SettingRow>
 
-      <Field
-        className={styles.row}
-        label={t("settings.titleBar")}
-        hint={t("settings.titleBarHint")}
-        orientation="horizontal"
-      >
+      <SettingRow label={t("settings.titleBar")} hint={t("settings.titleBarHint")}>
         <Dropdown
           value={t(`settings.titleBars.${titleBarStyle}`)}
           selectedOptions={[titleBarStyle]}
@@ -117,72 +103,45 @@ export default function GeneralTab({
             </Option>
           ))}
         </Dropdown>
-      </Field>
+      </SettingRow>
 
-      <Field
-        className={styles.row}
-        label={t("settings.systemAccent")}
-        hint={t("settings.systemAccentHint")}
-        orientation="horizontal"
-      >
+      <SettingRow label={t("settings.systemAccent")} hint={t("settings.systemAccentHint")}>
         <Switch
           checked={useSystemAccent}
           onChange={(_, d) => onUseSystemAccentChange(d.checked)}
         />
-      </Field>
+      </SettingRow>
 
-      <Field
-        className={styles.row}
-        label={t("settings.autostart")}
-        orientation="horizontal"
-      >
+      <SettingRow label={t("settings.autostart")}>
         <Switch
           checked={general.autostart}
           onChange={(_, d) => general.setAutostart(d.checked)}
         />
-      </Field>
+      </SettingRow>
 
-      <Field
-        className={styles.row}
-        label={t("settings.startMinimized")}
-        orientation="horizontal"
-      >
+      <SettingRow label={t("settings.startMinimized")}>
         <Switch
           disabled={!general.autostart}
           checked={general.startMinimized}
           onChange={(_, d) => general.setStartMinimized(d.checked)}
         />
-      </Field>
+      </SettingRow>
 
-      <Field
-        className={styles.row}
-        label={t("settings.showDeviceIcon")}
-        hint={t("settings.showDeviceIconHint")}
-        orientation="horizontal"
-      >
+      <SettingRow label={t("settings.showDeviceIcon")} hint={t("settings.showDeviceIconHint")}>
         <Switch
           checked={general.showDeviceIcon}
           onChange={(_, d) => general.setShowDeviceIcon(d.checked)}
         />
-      </Field>
+      </SettingRow>
 
-      <Field
-        className={styles.row}
-        label={t("autoSwitch.enabled")}
-        hint={t("autoSwitch.hint")}
-        orientation="horizontal"
-      >
+      <SettingRow label={t("autoSwitch.enabled")} hint={t("autoSwitch.hint")}>
         <Switch
           checked={autoSwitch.enabled}
           onChange={(_, d) => onAutoSwitchChange("enabled", d.checked)}
         />
-      </Field>
+      </SettingRow>
 
-      <Field
-        className={styles.row}
-        label={t("autoSwitch.mode")}
-        orientation="horizontal"
-      >
+      <SettingRow label={t("autoSwitch.mode")}>
         <Dropdown
           disabled={!autoSwitch.enabled}
           value={t(`autoSwitch.modes.${autoSwitch.mode}`)}
@@ -198,14 +157,9 @@ export default function GeneralTab({
             </Option>
           ))}
         </Dropdown>
-      </Field>
+      </SettingRow>
 
-      <Field
-        className={styles.row}
-        label={t("general.monitor")}
-        hint={t("general.monitorHint")}
-        orientation="horizontal"
-      >
+      <SettingRow label={t("general.monitor")} hint={t("general.monitorHint")}>
         <Dropdown
           value={t(`general.monitors.${general.monitor}`)}
           selectedOptions={[general.monitor]}
@@ -220,18 +174,13 @@ export default function GeneralTab({
             </Option>
           ))}
         </Dropdown>
-      </Field>
+      </SettingRow>
 
-      <Field
-        className={styles.row}
-        label={t("general.logs")}
-        hint={t("general.logsHint")}
-        orientation="horizontal"
-      >
+      <SettingRow label={t("general.logs")} hint={t("general.logsHint")}>
         <Button onClick={() => void openLogFolder()}>
           {t("general.openLogs")}
         </Button>
-      </Field>
+      </SettingRow>
     </>
   );
 }

@@ -14,6 +14,17 @@ the project follows phased iterations (see `README.md`).
   maximize and edge resizing all still work.
 - **Settings → General picks who draws it**, app or system, applied live with no
   restart (`titleBarStyle`, default `custom`).
+- **The app's controls moved into the caption** — the favourites filter, mic
+  toggle, settings and refresh now ride in the title bar's empty middle instead
+  of a row of their own, the way VS Code and Discord do it. That is a whole row
+  of vertical space back. They sit outside the drag region, since anything
+  inside it drags the window instead of taking the click; in "system" mode they
+  fall back to a header row.
+- **Settings rows stopped looking cramped.** Fluent's `Field` with
+  `orientation="horizontal"` puts the hint in a third column to the *right* of
+  the control, squeezing labels down to two or three words a line. The new
+  `SettingRow` stacks the explanation under the label, so both get the row's
+  full width.
 
 The reason that option exists: **the Windows 11 snap-layouts flyout cannot work
 under an app-drawn bar here**, and this was measured rather than assumed. The
