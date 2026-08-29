@@ -4,7 +4,7 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
-## [Unreleased]
+## [0.3.3] - 2026-08-29
 
 <!-- release-notes -->
 Fixes the note in the Hotkeys settings that was drawn outside its own box.
