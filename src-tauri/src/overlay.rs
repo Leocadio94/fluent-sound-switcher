@@ -67,9 +67,13 @@ pub fn current_state(app: &AppHandle) -> OverlayState {
     }
 }
 
-/// Monotonic counter so only the newest volume OSD's timer takes effect: a
-/// burst of volume-up presses must not have the first one hide the overlay
-/// while the last is still on screen.
+/// Monotonic counter identifying the newest state pushed at the overlay.
+///
+/// Two things depend on it. A burst of volume-up presses must not have the
+/// first one's timer hide the overlay while the last is still on screen; and
+/// the re-emit retries below must not keep republishing a payload that has
+/// since been superseded — cycling devices quickly used to make the overlay
+/// flicker between old and new states until the last retry drained.
 fn generation() -> &'static AtomicU64 {
     static G: OnceLock<AtomicU64> = OnceLock::new();
     G.get_or_init(|| AtomicU64::new(0))
@@ -96,8 +100,6 @@ pub fn update_with(app: &AppHandle, muted: bool, cfg: &MuteIndicator) {
     let Some(window) = app.get_webview_window(OVERLAY_LABEL) else {
         return;
     };
-    // A mute change supersedes any volume OSD still counting down.
-    generation().fetch_add(1, Ordering::SeqCst);
 
     let visible = match cfg.mode.as_str() {
         "always" => true,
@@ -130,8 +132,10 @@ pub fn update_with(app: &AppHandle, muted: bool, cfg: &MuteIndicator) {
         emit_state(app, payload);
     } else {
         let _ = window.hide();
-        // Still push the state so the (hidden) webview stays in sync for the
-        // next time it is shown; no retries needed while hidden.
+        // Supersede anything still retrying, then push the state so the
+        // (hidden) webview stays in sync for the next time it is shown. No
+        // retries needed while hidden.
+        generation().fetch_add(1, Ordering::SeqCst);
         let _ = app.emit("overlay-state", payload);
     }
 }
@@ -159,9 +163,8 @@ pub fn show_volume(app: &AppHandle, level: f32) {
     let _ = window.show();
     let _ = window.set_ignore_cursor_events(true);
     let _ = window.set_always_on_top(true);
-    emit_state(app, payload);
+    let generation_id = emit_state(app, payload);
 
-    let generation_id = generation().fetch_add(1, Ordering::SeqCst) + 1;
     let app = app.clone();
     thread::spawn(move || {
         thread::sleep(Duration::from_millis(VOLUME_SHOW_MS));
@@ -174,13 +177,24 @@ pub fn show_volume(app: &AppHandle, level: f32) {
 
 /// Emits the overlay state immediately and re-emits it a few times, covering a
 /// just-shown webview whose renderer is still resuming (see `EMIT_RETRIES_MS`).
-fn emit_state(app: &AppHandle, payload: OverlayState) {
+///
+/// Returns the generation this emission belongs to. The retries stop as soon as
+/// a newer state supersedes it, so a quick burst of changes settles on the last
+/// one instead of flickering through the backlog of every earlier payload.
+fn emit_state(app: &AppHandle, payload: OverlayState) -> u64 {
+    let generation_id = generation().fetch_add(1, Ordering::SeqCst) + 1;
     let _ = app.emit("overlay-state", payload.clone());
+
     let app = app.clone();
     thread::spawn(move || {
         for delay in EMIT_RETRIES_MS {
             thread::sleep(Duration::from_millis(delay));
+            if generation().load(Ordering::SeqCst) != generation_id {
+                return;
+            }
             let _ = app.emit("overlay-state", payload.clone());
         }
     });
+
+    generation_id
 }

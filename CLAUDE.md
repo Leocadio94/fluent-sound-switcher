@@ -150,6 +150,12 @@ cargo test --manifest-path src-tauri/Cargo.toml
   exit code when a subcommand ran. `#![windows_subsystem = "windows"]` in release.
 - WebView2 auto-darkens controls in dark mode; `index.html` + the theme pin
   `color-scheme` to the resolved theme to stop it.
+- A `useTauriEvent` handler is registered once, so anything it reads from the
+  component closure is frozen at first render. Read changing state through a
+  ref (see `useVolume`) or pass it in the deps array.
+- The overlay and banner re-emit their payload a few times to cover a frozen
+  webview; those retries must check the generation counter, or a burst of
+  changes replays every stale state on the way to the last one.
 - Never call `save*()` from inside a `setState` updater: updaters must be pure,
   and React 19 runs them twice under StrictMode, which wrote the config (and
   fired the backend command) twice. Use `usePersistedConfig`, or derive the next
@@ -164,6 +170,13 @@ cargo test --manifest-path src-tauri/Cargo.toml
 - The `main` window is declared `decorations: false` and the app draws its own
   caption (`components/TitleBar.tsx`); `titleBarStyle` in the config switches
   back to the system one live via `set_decorations`.
+- Window controls called from the webview (`minimize`, `toggleMaximize`,
+  `close`, and `data-tauri-drag-region`) need explicit permissions —
+  `core:default` does not include them. They live in
+  `capabilities/main-window.json`, scoped to `main` alone.
+- WebView2 turns a drag region into a real window above the page
+  (`DRAG_BAR_WINDOW_CLASS`), so anything clickable inside the caption must
+  declare `WebkitAppRegion: "no-drag"` or the clicks never reach the DOM.
 - **Do not try to bring back the Windows 11 snap-layouts flyout.** It needs the
   top-level window to answer `WM_NCHITTEST` with `HTMAXBUTTON`, and WRY's child
   windows cover the whole client area and consume the pointer first — measured:

@@ -66,15 +66,22 @@ pub fn show(app: &AppHandle, name: &str, direction: &str) {
     let _ = window.set_always_on_top(true);
     let _ = window.emit("banner-show", payload.clone());
 
+    // One generation per banner, driving both the retries and the auto-hide.
+    let generation_id = generation().fetch_add(1, Ordering::SeqCst) + 1;
+
     let retry = window.clone();
     thread::spawn(move || {
         for delay in EMIT_RETRIES_MS {
             thread::sleep(Duration::from_millis(delay));
+            // Switching devices in quick succession used to have an earlier
+            // banner's retries redraw it over the newer one.
+            if generation().load(Ordering::SeqCst) != generation_id {
+                return;
+            }
             let _ = retry.emit("banner-show", payload.clone());
         }
     });
 
-    let generation_id = generation().fetch_add(1, Ordering::SeqCst) + 1;
     let app_handle = app.clone();
     thread::spawn(move || {
         thread::sleep(Duration::from_millis(SHOW_MS));

@@ -5,7 +5,10 @@ import { KeyboardRegular } from "@fluentui/react-icons";
 
 const useStyles = makeStyles({
   button: {
-    minWidth: "160px",
+    // Fixed, not a minimum: the accelerators vary in length ("Ctrl+Alt+M"
+    // against "Ctrl+Alt+PageDown"), and a button that grows to fit leaves the
+    // column with a ragged left edge down the list.
+    width: "200px",
     fontFamily: tokens.fontFamilyMonospace,
   },
   recording: {

@@ -42,6 +42,10 @@ const useStyles = makeStyles({
     minWidth: 0,
     height: "100%",
     paddingLeft: tokens.spacingHorizontalM,
+    // WebView2 backs a drag region with a real window that floats above the
+    // page. Declaring it here as well as via `data-tauri-drag-region` keeps
+    // dragging working; every interactive control then has to opt *out*.
+    WebkitAppRegion: "drag",
   },
   // The controls sit inside the caption but must not drag the window, so they
   // stay outside the drag region rather than opting out of it.
@@ -51,6 +55,9 @@ const useStyles = makeStyles({
     height: "100%",
     paddingRight: tokens.spacingHorizontalM,
     flexShrink: 0,
+    // Outside the drag region, and explicitly so: the drag window would
+    // otherwise swallow every click meant for these controls.
+    WebkitAppRegion: "no-drag",
   },
   icon: {
     width: "16px",
@@ -71,6 +78,7 @@ const useStyles = makeStyles({
     display: "flex",
     height: "100%",
     flexShrink: 0,
+    WebkitAppRegion: "no-drag",
   },
   button: {
     display: "flex",
@@ -129,9 +137,12 @@ export default function TitleBar({ children }: { children?: ReactNode }) {
     let disposed = false;
     let off: (() => void) | undefined;
 
-    void appWindow.isMaximized().then((value) => {
-      if (!disposed) setMaximized(value);
-    });
+    void appWindow
+      .isMaximized()
+      .then((value) => {
+        if (!disposed) setMaximized(value);
+      })
+      .catch((e) => console.error("could not read the window state", e));
     void appWindow
       .onResized(() => {
         void appWindow.isMaximized().then((value) => {
@@ -161,7 +172,11 @@ export default function TitleBar({ children }: { children?: ReactNode }) {
           type="button"
           className={styles.button}
           aria-label={t("titlebar.minimize")}
-          onClick={() => void appWindow.minimize()}
+          onClick={() =>
+            void appWindow.minimize().catch((e) =>
+              console.error("could not minimize the window", e),
+            )
+          }
         >
           {GLYPH.minimize}
         </button>
@@ -169,7 +184,11 @@ export default function TitleBar({ children }: { children?: ReactNode }) {
           type="button"
           className={styles.button}
           aria-label={maximized ? t("titlebar.restore") : t("titlebar.maximize")}
-          onClick={() => void appWindow.toggleMaximize()}
+          onClick={() =>
+            void appWindow.toggleMaximize().catch((e) =>
+              console.error("could not maximize the window", e),
+            )
+          }
         >
           {maximized ? GLYPH.restore : GLYPH.maximize}
         </button>
@@ -177,7 +196,11 @@ export default function TitleBar({ children }: { children?: ReactNode }) {
           type="button"
           className={mergeClasses(styles.button, styles.close)}
           aria-label={t("titlebar.close")}
-          onClick={() => void appWindow.close()}
+          onClick={() =>
+            void appWindow.close().catch((e) =>
+              console.error("could not close the window", e),
+            )
+          }
         >
           {GLYPH.close}
         </button>

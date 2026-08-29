@@ -31,7 +31,7 @@ export default function NotificationsTab({
   return (
     <>
       {toggles.map(({ key, labelKey }) => (
-        <SettingRow label={t(labelKey)}>
+        <SettingRow key={key} label={t(labelKey)}>
           <Switch
             checked={notifications[key] as boolean}
             onChange={(_, d) => onChange(key, d.checked as never)}

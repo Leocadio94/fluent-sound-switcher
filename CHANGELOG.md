@@ -4,6 +4,34 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Fixes
+
+- **The custom title bar's buttons did nothing, and the window would not drag.**
+  Two causes stacked. `core:default` does not grant `minimize`, `maximize`,
+  `close` or `start-dragging` — they are opt-in, and were missing from the
+  capabilities, so every call was denied. On top of that, WebView2 materialises
+  a drag region as a real window above the page (`DRAG_BAR_WINDOW_CLASS`), which
+  swallowed the clicks meant for the caption buttons; they now declare
+  `app-region: no-drag` explicitly. The reason this shipped at all: the calls
+  were written as `void appWindow.minimize()` with no `.catch()`, so a denied
+  permission looked exactly like nothing happening.
+- **Volume changed from Windows did not move the app's slider.** The
+  `volume-changed` listener is registered once, and it read the device list from
+  its closure — pinning it to the empty array of the first render, so the lookup
+  for the default device never matched. It reads through a ref now.
+- **Overlays flickered through stale states** when cycling devices or nudging
+  the volume quickly. Each push re-emits a few times to cover a webview whose
+  renderer is still resuming, but those retries did not check whether a newer
+  state had superseded them, so an earlier payload would redraw over a later
+  one. Retries now stop as soon as the state moves on — the same fix in the
+  banner, which had it too.
+- The Hotkeys tab looked ragged: accelerators vary in length, and a button
+  sized to its content left the column with an uneven edge. The hotkey button
+  is a fixed width now.
+- Added the `key` prop missing from two settings lists rendered with `.map()`.
+
 ## [0.3.1] - 2026-08-29
 
 <!-- release-notes -->

@@ -64,11 +64,20 @@ export function useVolume(devices: AudioDevice[]): UseVolume {
     };
   }, [devices]);
 
+  // The listener is registered once, so reading `devices` from the closure
+  // would pin it to the empty array of the first render and the lookup below
+  // would never match anything — which is exactly why volume changed from
+  // Windows was not showing up here. A ref always sees the current list.
+  const latestDevices = useRef(devices);
+  latestDevices.current = devices;
+
   // The backend watches the default output, so a change from the keyboard
   // wheel or the Windows mixer lands here.
   useTauriEvent<VolumeChanged>("volume-changed", (event) => {
     const { level, muted, direction } = event.payload;
-    const target = devices.find((d) => d.direction === direction && d.isDefault);
+    const target = latestDevices.current.find(
+      (d) => d.direction === direction && d.isDefault,
+    );
     if (!target) return;
     setVolumes((prev) => ({ ...prev, [target.id]: { level, muted } }));
   });

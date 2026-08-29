@@ -50,7 +50,7 @@ export default function HotkeysTab({
         <MessageBarBody>{t("hotkeys.mediaKeysHint")}</MessageBarBody>
       </MessageBar>
       {ACTIONS.map(({ key, labelKey }) => (
-        <SettingRow label={t(labelKey)}>
+        <SettingRow key={key} label={t(labelKey)}>
           <HotkeyInput
             value={hotkeys[key]}
             onChange={(accelerator) => onChange(key, accelerator)}
