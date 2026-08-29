@@ -28,9 +28,12 @@ pub fn cycle_default(
     direction: &str,
     cycle_ids: &[String],
 ) -> windows::core::Result<Option<AudioDevice>> {
+    // Unplugged and disabled endpoints are listed for the UI, but cannot be
+    // made the default, so they never take part in the cycle. A favorite that
+    // is currently asleep keeps its place in the order and is simply skipped.
     let mut devices: Vec<AudioDevice> = list_devices()?
         .into_iter()
-        .filter(|d| d.direction == direction)
+        .filter(|d| d.direction == direction && d.is_available())
         .collect();
 
     let pool: Vec<AudioDevice> = if cycle_ids.is_empty() {

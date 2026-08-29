@@ -4,6 +4,27 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Phase 21 — Disconnected devices keep their place
+
+A sleeping wireless headset used to vanish from the list *and* from the cycle
+order, so a favourite lost its turn until it woke up. `list_audio_devices`
+filtered on `DEVICE_STATE_ACTIVE`, which is exactly the set that excludes it.
+
+- Unplugged and disabled endpoints are enumerated too, each carrying its
+  `state`. `NOTPRESENT` stays out: that means the driver is gone, so it is not
+  something plugging anything back in would restore.
+- **The main list keeps them when they are favourites** — dimmed, labelled
+  "Disconnected", not selectable, but holding their place and their star, so you
+  can still unfavourite one without waking it. Every other endpoint Windows
+  merely remembers stays hidden, since that would be clutter.
+- **Cycling skips them** rather than stopping on a device it cannot select; the
+  favourite keeps its position in the order for when it comes back.
+- The tray flyout hides them outright: it is a quick-switch menu, and a row you
+  cannot pick is only in the way.
+- No volume is requested for an endpoint that cannot report one.
+
 ## [0.3.0] - 2026-08-29
 
 <!-- release-notes -->

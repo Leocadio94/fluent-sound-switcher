@@ -14,6 +14,7 @@ import {
   ChevronDownRegular,
   ChevronUpRegular,
   MicRegular,
+  PlugDisconnectedRegular,
   Speaker0Regular,
   Speaker2Regular,
   SpeakerMuteRegular,
@@ -140,6 +141,20 @@ const useStyles = makeStyles({
     },
   },
   starActive: { color: tokens.colorPaletteMarigoldForeground1 },
+  // A device that is present but cannot be selected right now: dimmed, and
+  // labelled, so it is clear why clicking does nothing.
+  unavailable: {
+    opacity: 0.55,
+  },
+  stateLabel: {
+    display: "flex",
+    alignItems: "center",
+    gap: tokens.spacingHorizontalXXS,
+    flexShrink: 0,
+    color: tokens.colorNeutralForeground3,
+    fontSize: tokens.fontSizeBase200,
+    paddingRight: tokens.spacingHorizontalXS,
+  },
   chevron: {
     display: "flex",
     alignItems: "center",
@@ -238,12 +253,15 @@ export default function DeviceRow({
   const { t } = useTranslation();
   const full = variant === "full";
   const Icon = device.direction === "output" ? Speaker2Regular : MicRegular;
+  const available = device.state === "active";
 
   // The volume worth reaching for is almost always the one on the device
   // actually in use, so that row keeps its slider open; the rest expand on
   // demand, which keeps the list compact.
   const [expanded, setExpanded] = useState(false);
-  const volumeAvailable = volume !== undefined && onVolumeChange !== undefined;
+  // An unplugged endpoint has no volume to show or set.
+  const volumeAvailable =
+    available && volume !== undefined && onVolumeChange !== undefined;
   const showVolume = volumeAvailable && (device.isDefault || expanded);
   const percent = Math.round((volume?.level ?? 0) * 100);
   const MuteIcon = volume?.muted
@@ -259,12 +277,13 @@ export default function DeviceRow({
         full && styles.frameFull,
         device.isDefault &&
           (full ? styles.frameFullActive : styles.frameCompactActive),
+        !available && styles.unavailable,
       )}
     >
       <div className={mergeClasses(styles.header, full && styles.headerFull)}>
         <button
           type="button"
-          disabled={busy}
+          disabled={busy || !available}
           // Communicates "this is the current default" to assistive tech, which
           // previously only had the colour and the badge to go on.
           aria-current={device.isDefault ? "true" : undefined}
@@ -292,7 +311,14 @@ export default function DeviceRow({
           )}
         </button>
 
-        {full && (busy || device.isDefault) && (
+        {full && !available && (
+          <span className={styles.stateLabel}>
+            <PlugDisconnectedRegular />
+            {t(`devices.states.${device.state}`)}
+          </span>
+        )}
+
+        {full && available && (busy || device.isDefault) && (
           <span className={styles.slot}>
             {busy ? (
               <Spinner size="tiny" />

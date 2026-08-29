@@ -121,9 +121,15 @@ export default function DeviceList({
   onToggleMute,
   showSliders,
 }: DeviceListProps) {
-  const visible = showOnlyFavorites
-    ? devices.filter((d) => isFavorite(d.direction, d.id))
-    : devices;
+  // Unavailable devices are kept only when they are favorites: that is the
+  // case worth showing, since a sleeping headset would otherwise drop out of
+  // the list and out of the cycle order. Every other disconnected endpoint
+  // Windows remembers would just be clutter.
+  const visible = devices.filter((device) => {
+    const favorite = isFavorite(device.direction, device.id);
+    if (showOnlyFavorites && !favorite) return false;
+    return device.state === "active" || favorite;
+  });
   const outputs = visible.filter((d) => d.direction === "output");
   const inputs = visible.filter((d) => d.direction === "input");
 

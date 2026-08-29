@@ -17,7 +17,12 @@
   "devices": {
     "onlyFavorites": "Favorites only",
     "addToCycle": "Add to cycle list",
-    "removeFromCycle": "Remove from cycle list"
+    "removeFromCycle": "Remove from cycle list",
+    "states": {
+      "active": "",
+      "unplugged": "Disconnected",
+      "disabled": "Disabled"
+    }
   },
   "flyout": {
     "empty": "Mark favorite devices (★) in the main window to quick-switch from here.",

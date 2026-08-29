@@ -174,6 +174,11 @@ cargo test --manifest-path src-tauri/Cargo.toml
   the desktop already uses. The accent proper is pinned to stop 80
   (`colorBrandBackground`), so buttons and the active row are exactly the colour
   the user picked. An unreadable shade falls back to the default palette.
+- `list_devices` returns unplugged and disabled endpoints as well as active
+  ones (`state` field), so a sleeping headset keeps its place in the list and
+  the cycle order. Anything that acts on a device — switching, cycling, volume —
+  must check `is_available()` first; the UI shows an unavailable device only
+  when it is a favourite.
 - Device volume is fetched per device on demand (`useVolume`), never folded into
   `list_audio_devices`: that would activate an `IAudioEndpointVolume` interface
   per endpoint on every refresh, and the list refetches on each

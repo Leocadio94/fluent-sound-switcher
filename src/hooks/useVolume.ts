@@ -44,6 +44,8 @@ export function useVolume(devices: AudioDevice[]): UseVolume {
   useEffect(() => {
     let cancelled = false;
     for (const device of devices) {
+      // An unplugged or disabled endpoint has no volume to read.
+      if (device.state !== "active") continue;
       void Promise.all([
         getDeviceVolume(device.direction, device.id),
         getDeviceMuted(device.direction, device.id),

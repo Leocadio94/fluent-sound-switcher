@@ -17,7 +17,12 @@
   "devices": {
     "onlyFavorites": "Somente favoritos",
     "addToCycle": "Adicionar à lista de ciclo",
-    "removeFromCycle": "Remover da lista de ciclo"
+    "removeFromCycle": "Remover da lista de ciclo",
+    "states": {
+      "active": "",
+      "unplugged": "Desconectado",
+      "disabled": "Desativado"
+    }
   },
   "flyout": {
     "empty": "Marque dispositivos favoritos (★) na janela principal para trocar rápido por aqui.",

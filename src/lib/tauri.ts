@@ -4,11 +4,19 @@ import type { Hotkeys, MuteIndicator } from "./config";
 
 export type DeviceDirection = "output" | "input";
 
+/**
+ * `unplugged` is a device Windows still knows about but that is not connected
+ * (a sleeping wireless headset, a jack pulled out); `disabled` was switched off
+ * in the sound panel. Neither can be made the default or carry a volume.
+ */
+export type DeviceState = "active" | "unplugged" | "disabled";
+
 export interface AudioDevice {
   id: string;
   name: string;
   direction: DeviceDirection;
   isDefault: boolean;
+  state: DeviceState;
 }
 
 /** Lists active input/output devices with the current defaults flagged. */

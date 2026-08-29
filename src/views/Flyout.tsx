@@ -89,11 +89,19 @@ export default function Flyout() {
   const { osd } = useVolumeOsd();
   const cardRef = useRef<HTMLDivElement>(null);
 
+  // Unlike the main list, the flyout hides unavailable devices outright: it is
+  // a quick-switch menu, and a row you cannot pick is only in the way.
   const outputs = devices.filter(
-    (d) => d.direction === "output" && favorites.output.includes(d.id),
+    (d) =>
+      d.direction === "output" &&
+      d.state === "active" &&
+      favorites.output.includes(d.id),
   );
   const inputs = devices.filter(
-    (d) => d.direction === "input" && favorites.input.includes(d.id),
+    (d) =>
+      d.direction === "input" &&
+      d.state === "active" &&
+      favorites.input.includes(d.id),
   );
   const isEmpty = outputs.length === 0 && inputs.length === 0;
 
