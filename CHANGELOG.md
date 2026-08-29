@@ -4,7 +4,7 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
-## [Unreleased]
+## [0.3.0] - 2026-08-29
 
 <!-- release-notes -->
 This one is about the app looking like it belongs on your desktop.
