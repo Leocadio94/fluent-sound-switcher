@@ -213,6 +213,45 @@ cargo test --manifest-path src-tauri/Cargo.toml
 `AGENTS.md` is a thin pointer to this file, for agents that look for that name.
 Keep it in sync if the commands or ground rules change.
 
+## Task workflow
+
+Every new task follows this loop. Do not commit straight to `master`.
+
+1. **Branch off master.** `git checkout master && git pull && git checkout -b
+   <type>/<slug>` (`feat/`, `fix/`, `chore/`, `docs/`, `refactor/`). Branch
+   before the first edit, not after.
+2. **Develop, committing as you go.** Conventional Commits, one logical change
+   per commit. **No AI metadata in the message** — no `Co-Authored-By`, no
+   `Claude-Session`, no "Generated with" footer. The message ends on its last
+   line of real content.
+3. **Update `CHANGELOG.md`** under `## [Unreleased]` as part of the work, not as
+   an afterthought — `pnpm release` refuses to run on an empty section.
+4. **Local checks before pushing**: `pnpm lint`, `pnpm test`,
+   `cargo fmt … -- --check`, `cargo clippy … -D warnings`, `cargo test …`
+   (the same five `pnpm release` re-runs). Fix, don't push red.
+5. **Push and open the PR.** `git push -u origin <branch>` then
+   `gh pr create --base master --fill` (edit the body to say *what* and *why*;
+   again, no tool signatures). Let CI (`ci.yml`) run.
+6. **Review the diff for bugs before merging.** Run `/code-review` (or spawn
+   `cavecrew-reviewer`) against the branch and fix what it finds, pushing the
+   fixes to the same PR. Report the findings — including the ones you chose not
+   to fix and why. Do not merge while CI is red.
+7. **Merge.** `gh pr merge --squash --delete-branch` once CI is green and the
+   review is clean. Then `git checkout master && git pull`.
+8. **Cut the release** from `master`: `pnpm release <x.y.z>`. Pick the bump by
+   impact — **patch** for fixes and internals, **minor** for a new
+   user-visible feature, **major** for a breaking change or a config migration
+   users cannot roll back. Use `--dry-run` first when unsure. The script runs the
+   checks, bumps the three manifests, closes the CHANGELOG section, commits, tags
+   and pushes; the tag triggers the release workflow, which publishes to every
+   installed copy through the updater.
+
+Confirm with the user before step 7 and step 8 — a merge and a published release
+are both outward-facing and hard to undo. Steps 1–6 need no check-in.
+
+Small exception: a one-line typo or a docs-only touch may skip the PR, but still
+gets its own branch and commit.
+
 ## Working style
 
 - Phased iterations. One phase per iteration, commit at the end of each.
