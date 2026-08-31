@@ -45,3 +45,7 @@ Before finishing a change, run all of the above — they are exactly what
   `windows_subsystem = "windows"` and nothing reaches a console. Use `log::`.
 - Work in phases: one phase per iteration, update `CHANGELOG.md` and keep
   `CLAUDE.md` current.
+- Never commit straight to `master`: branch → commit → push → PR → review →
+  merge → `pnpm release <x.y.z>`. The full loop is in CLAUDE.md ("Task
+  workflow"). Commit messages carry no AI metadata (no `Co-Authored-By`, no
+  session links, no "Generated with" footer).
