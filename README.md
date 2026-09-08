@@ -29,21 +29,29 @@ SoundSwitch's long-standing annoyance where the on-screen popup hides **behind
 the taskbar in fullscreen apps** like Steam Big Picture — our overlay renders on
 top, every time.
 
-> ⚠️ **Early development (`0.2.x`).** Functional and in daily use, polishing
+> ⚠️ **Early development (`0.3.x`).** Functional and in daily use, polishing
 > toward a 1.0. Built in phased iterations.
 
 ## 📸 Screenshots
 
 <div align="center">
 
-![Main window — device list with favorites, active device, and header controls](docs/screenshots/main.png)
+![Main window — device list with favorites, per-device volume, disconnected devices, and the app-drawn title bar carrying the controls](docs/screenshots/main.png)
 
 </div>
 
 <div align="center">
 
-<img src="docs/screenshots/settings.png" width="49%" alt="Settings — General tab" />
+<img src="docs/screenshots/settings.png" width="49%" alt="Settings — General tab: language, theme, title bar, Windows accent colour, start with Windows" />
 <img src="docs/screenshots/hotkeys.png" width="49%" alt="Settings — Hotkeys tab" />
+
+</div>
+
+<div align="center">
+
+<img src="docs/screenshots/mini-menu.png" width="42%" alt="Tray quick-switch flyout — favorite outputs and inputs plus the mic mute toggle" />
+
+<sub>Tray quick-switch flyout (left-click on the tray icon).</sub>
 
 </div>
 
@@ -59,6 +67,9 @@ top, every time.
 - 🔔 **Switch notifications** — any mix of a native Windows toast, an on-screen banner, and a sound.
 - 🔌 **Auto-switch on connect** *(optional)* — plug in a TV/monitor with audio and it can grab the default output.
 - 🖼️ **Output-device tray icon** *(optional)* — a second tray icon mirroring the current output, using the icon Windows shows for it.
+- 🎨 **Your Windows accent colour** — the palette is built from the accent and the six shades Windows derives around it, live when you change it. Switchable back to the Fluent blue.
+- 🪟 **App-drawn title bar** carrying the app's own controls, or the system one if you prefer it (Settings → General, applied live).
+- 😴 **Sleeping favourites keep their place** — a wireless headset that dozes off stays in the list, dimmed and marked *Disconnected*, keeping its star and its position in the cycle order.
 - 🧰 **CLI** with the same actions as the GUI (`list`, `switch`, `cycle`, `mute`).
 - 🚀 **Start with Windows** (optionally minimized to tray).
 - 🌍 **Multi-language** — **pt-BR** (default) and **en**, tray and notifications included.
@@ -252,8 +263,9 @@ then update `plugins.updater.pubkey` in `tauri.conf.json` and re-set the secret.
 | ✅ | Logging, CI on every push/PR, and a release with checksums + notes |
 | ✅ | Multi-monitor placement for the floating windows |
 | ✅ | Per-device volume, output mute, volume hotkeys & OSD |
-| ⏳ | Custom title bar (Windows 11 snap layouts need care) |
-| ⏳ | Accent-colour theming (follow the Windows accent colour) |
+| ✅ | Accent-colour theming (follows the Windows accent colour, live) |
+| ✅ | Custom title bar, with the system one as an option (snap layouts) |
+| ✅ | Disconnected favourites keep their place in the list and the cycle |
 | ⏳ | Code signing (Authenticode cert — removes the SmartScreen warning) |
 | 🔮 | Per-app audio profiles *(experimental)* |
 
