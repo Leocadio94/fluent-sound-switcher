@@ -15,6 +15,12 @@ the project follows phased iterations (see `README.md`).
   accent-colour theming, the custom title bar and disconnected favourites
   keeping their place are done; code signing and per-app profiles remain. Same
   correction to the status paragraph in `CLAUDE.md`.
+- The app has a product site: the README links to
+  `leocadio.dev/fluent-sound-switcher/` and to the privacy policy published
+  alongside it, and a Privacy section summarises what leaves the machine — the
+  full text has a single source, in the portfolio repo, and is not copied here.
+  `CLAUDE.md` records where that site lives and what a release has to keep in
+  sync with it.
 
 ## [0.3.3] - 2026-08-29
 
