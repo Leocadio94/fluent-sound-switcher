@@ -4,6 +4,18 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Docs
+
+- Refreshed the README screenshots to the current UI (app-drawn title bar with
+  the controls in it, per-device volume, disconnected devices) and added one of
+  the tray quick-switch flyout.
+- The README's feature list and roadmap now reflect what shipped in `0.3.x`:
+  accent-colour theming, the custom title bar and disconnected favourites
+  keeping their place are done; code signing and per-app profiles remain. Same
+  correction to the status paragraph in `CLAUDE.md`.
+
 ## [0.3.3] - 2026-08-29
 
 <!-- release-notes -->
