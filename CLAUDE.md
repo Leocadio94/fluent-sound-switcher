@@ -36,6 +36,24 @@ option (Phase 20) and disconnected devices keeping their place (Phase 21), plus
 SmartScreen warning) and per-app profiles (Phase 9, experimental, deferred). The
 phase numbering in `CHANGELOG.md` is the source of truth.
 
+## Product site
+
+The landing page and the privacy policy live **outside this repo**, in the
+portfolio (`../portfolio-astro`, `src/data/products/fluent-sound-switcher.ts`),
+and are published at `leocadio.dev/fluent-sound-switcher/` (pt-BR) and
+`/en/fluent-sound-switcher/`.
+
+- **The privacy policy has one source, and it is that data file.** The README
+  links to the URL and must not grow a copy of the text — two versions of a
+  policy drift, and the published one is what people read.
+- Anything the site states about behaviour is a claim to keep true: no
+  telemetry, config in `%APPDATA%`, and exactly two network calls (the update
+  check and the update download you approve). Changing that in the app means
+  changing the policy in the same task.
+- The site quotes the version and the feature set by hand: after a release that
+  adds or removes a user-visible feature, `meta.version` and the landing copy
+  there need the same pass as `README.md` here.
+
 ## Commands
 
 ```bash

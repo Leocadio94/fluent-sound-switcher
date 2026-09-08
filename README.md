@@ -19,6 +19,8 @@
 
 <sub>Windows 10/11 · ~2 MB · no account needed</sub>
 
+<sub><a href="https://leocadio.dev/en/fluent-sound-switcher/">Website</a> · <a href="https://leocadio.dev/en/fluent-sound-switcher/privacy">Privacy policy</a></sub>
+
 </div>
 
 A modern, lightweight alternative to [SoundSwitch](https://github.com/belphemur/soundswitch)
@@ -266,8 +268,20 @@ then update `plugins.updater.pubkey` in `tauri.conf.json` and re-set the secret.
 | ✅ | Accent-colour theming (follows the Windows accent colour, live) |
 | ✅ | Custom title bar, with the system one as an option (snap layouts) |
 | ✅ | Disconnected favourites keep their place in the list and the cycle |
+| ✅ | Product site and privacy policy at [leocadio.dev](https://leocadio.dev/en/fluent-sound-switcher/) |
 | ⏳ | Code signing (Authenticode cert — removes the SmartScreen warning) |
 | 🔮 | Per-app audio profiles *(experimental)* |
+
+## 🔒 Privacy
+
+No account, no telemetry, no server. Your preferences live in
+`%APPDATA%/com.fluentsoundswitcher.app/config.json`, and the only network calls
+are the update check on GitHub Releases and the update download you approve.
+
+The full policy — the single source of truth, kept alongside the product site —
+is at **[leocadio.dev/en/fluent-sound-switcher/privacy](https://leocadio.dev/en/fluent-sound-switcher/privacy)**
+([pt-BR](https://leocadio.dev/fluent-sound-switcher/privacy)). Do not copy the
+text back into this repo: two versions of a privacy policy is one too many.
 
 ## 📄 License
 
