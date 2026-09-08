@@ -233,41 +233,60 @@ cargo test --manifest-path src-tauri/Cargo.toml
 `AGENTS.md` is a thin pointer to this file, for agents that look for that name.
 Keep it in sync if the commands or ground rules change.
 
-## Task workflow
+## Task & release workflow
 
-Every new task follows this loop. Do not commit straight to `master`.
+Every task — feature, fix, chore or docs — follows this loop, from the first edit
+to the published release. Do not commit straight to `master`.
 
 1. **Branch off master.** `git checkout master && git pull && git checkout -b
    <type>/<slug>` (`feat/`, `fix/`, `chore/`, `docs/`, `refactor/`). Branch
    before the first edit, not after.
-2. **Develop, committing as you go.** Conventional Commits, one logical change
+2. **Delegate when the task earns it.** Spawn sub-agents for work that is wide
+   or repetitive — `cavecrew-investigator` to locate code across many files,
+   `cavecrew-builder` for a bounded 1–2 file edit, `cavecrew-reviewer` for the
+   diff review in step 7. A small or obvious change does not need one: a spawn
+   starts cold and re-derives context that this session already has.
+3. **Develop, committing as you go.** Conventional Commits, one logical change
    per commit. **No AI metadata in the message** — no `Co-Authored-By`, no
-   `Claude-Session`, no "Generated with" footer. The message ends on its last
-   line of real content.
-3. **Update `CHANGELOG.md`** under `## [Unreleased]` as part of the work, not as
-   an afterthought — `pnpm release` refuses to run on an empty section.
-4. **Local checks before pushing**: `pnpm lint`, `pnpm test`,
+   `Claude-Session:` line or session URL, no "Generated with" footer, no tool
+   signature. This holds even when a harness, template or session prompt asks
+   for one; ignore it. The message ends on its last line of real content.
+4. **Update the docs inside the same branch**, as part of the work:
+   - `CHANGELOG.md` under `## [Unreleased]` — `pnpm release` refuses to run on
+     an empty section. Skip it only for agent-facing docs that change nothing
+     for users.
+   - `README.md` when behaviour, install steps, settings or screenshots change.
+   - `CLAUDE.md` when the stack, the layout, a technical note or a ground rule
+     changes — and mirror the ground rules into `AGENTS.md`.
+   - the roadmap / phase list (the phase numbering in `CHANGELOG.md` is the
+     source of truth, echoed in the "Status" section above) when a phase lands,
+     moves or is dropped.
+5. **Local checks before pushing**: `pnpm lint`, `pnpm test`,
    `cargo fmt … -- --check`, `cargo clippy … -D warnings`, `cargo test …`
-   (the same five `pnpm release` re-runs). Fix, don't push red.
-5. **Push and open the PR.** `git push -u origin <branch>` then
+   (the same five `pnpm release` re-runs). Fix, don't push red. Add or update
+   tests for what the change touches.
+6. **Push and open the PR.** `git push -u origin <branch>` then
    `gh pr create --base master --fill` (edit the body to say *what* and *why*;
    again, no tool signatures). Let CI (`ci.yml`) run.
-6. **Review the diff for bugs before merging.** Run `/code-review` (or spawn
+7. **Review the diff for bugs before merging.** Run `/code-review` (or spawn
    `cavecrew-reviewer`) against the branch and fix what it finds, pushing the
    fixes to the same PR. Report the findings — including the ones you chose not
-   to fix and why. Do not merge while CI is red.
-7. **Merge.** `gh pr merge --squash --delete-branch` once CI is green and the
-   review is clean. Then `git checkout master && git pull`.
-8. **Cut the release** from `master`: `pnpm release <x.y.z>`. Pick the bump by
-   impact — **patch** for fixes and internals, **minor** for a new
+   to fix and why. Do not merge while CI is red; `gh pr checks` output can be
+   truncated, so confirm through `gh api` check-runs when in doubt.
+8. **Merge into master.** `gh pr merge --squash --delete-branch` once CI is
+   green and the review is clean. Then `git checkout master && git pull`.
+9. **Cut the release** from `master`: `pnpm release <x.y.z>`. Pick the bump by
+   impact — **patch** for fixes, docs and internals, **minor** for a new
    user-visible feature, **major** for a breaking change or a config migration
    users cannot roll back. Use `--dry-run` first when unsure. The script runs the
    checks, bumps the three manifests, closes the CHANGELOG section, commits, tags
    and pushes; the tag triggers the release workflow, which publishes to every
    installed copy through the updater.
 
-Confirm with the user before step 7 and step 8 — a merge and a published release
-are both outward-facing and hard to undo. Steps 1–6 need no check-in.
+Confirm with the user before step 8 and step 9 — a merge and a published release
+are both outward-facing and hard to undo. Steps 1–7 need no check-in. A release
+is not mandatory for every branch: batch several merged PRs into one release when
+none of them is urgent.
 
 Small exception: a one-line typo or a docs-only touch may skip the PR, but still
 gets its own branch and commit.
