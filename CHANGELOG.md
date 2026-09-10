@@ -6,6 +6,10 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Features
+
+- Settings: nova aba "Suporte" com botão para abrir a página de issues do GitHub.
+
 ### Docs
 
 - Refreshed the README screenshots to the current UI (app-drawn title bar with

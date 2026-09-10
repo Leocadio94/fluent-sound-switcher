@@ -81,7 +81,8 @@
       "hotkeys": "Atalhos",
       "volume": "Volume",
       "mute": "Indicador",
-      "notifications": "Notificações"
+      "notifications": "Notificações",
+      "support": "Suporte"
     },
     "autostart": "Iniciar com o Windows",
     "startMinimized": "Iniciar minimizado (na bandeja)",
@@ -114,6 +115,12 @@
       "primary": "Monitor principal",
       "foreground": "Monitor da janela em foco"
     }
+  },
+  "support": {
+    "intro": "Encontrou um bug? Tem uma sugestão? Abra uma issue no GitHub.",
+    "reportBug": "Reportar problema",
+    "reportBugHint": "Relate bugs, sugira funcionalidades ou tire dúvidas sobre o app.",
+    "openIssues": "Abrir página de issues"
   },
   "errors": {
     "list": "Não foi possível listar os dispositivos de áudio.",

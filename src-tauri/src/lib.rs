@@ -123,6 +123,7 @@ pub fn run() {
             commands::main_window_ready,
             commands::install_update,
             commands::open_log_folder,
+            commands::open_url,
             commands::get_overlay_state,
             commands::get_accent_palette,
             commands::set_title_bar_style,

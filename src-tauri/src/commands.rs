@@ -246,6 +246,18 @@ pub fn open_log_folder(app: tauri::AppHandle) -> Result<(), String> {
     crate::logging::open_log_dir(&app)
 }
 
+/// Opens a URL in the user's default browser. Used by the support tab in
+/// settings to link to the GitHub issues page.
+#[tauri::command]
+pub fn open_url(url: String) -> Result<(), String> {
+    // Windows-native: `cmd /c start <url>` opens the default browser.
+    std::process::Command::new("cmd")
+        .args(["/c", "start", &url])
+        .spawn()
+        .map_err(|e| format!("Falha ao abrir URL: {e}"))?;
+    Ok(())
+}
+
 /// Switches the language of the backend-owned strings (tray menu, notification
 /// titles, updater messages) and rebuilds the tray so the change is visible at
 /// once. The value is passed directly rather than re-read, to avoid racing the

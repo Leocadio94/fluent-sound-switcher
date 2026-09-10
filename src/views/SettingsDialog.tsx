@@ -19,6 +19,7 @@ import GeneralTab from "./settings/GeneralTab";
 import HotkeysTab from "./settings/HotkeysTab";
 import MuteTab from "./settings/MuteTab";
 import NotificationsTab from "./settings/NotificationsTab";
+import SupportTab from "./settings/SupportTab";
 import VolumeTab from "./settings/VolumeTab";
 import type { ThemePreference } from "../theme/useSystemTheme";
 import type { HotkeyFailure } from "../lib/tauri";
@@ -48,7 +49,7 @@ const useStyles = makeStyles({
   },
 });
 
-type TabValue = "general" | "hotkeys" | "volume" | "mute" | "notifications";
+type TabValue = "general" | "hotkeys" | "volume" | "mute" | "notifications" | "support";
 
 const TABS: TabValue[] = [
   "general",
@@ -56,6 +57,7 @@ const TABS: TabValue[] = [
   "volume",
   "mute",
   "notifications",
+  "support",
 ];
 
 interface SettingsDialogProps {
@@ -161,6 +163,7 @@ export default function SettingsDialog(props: SettingsDialogProps) {
                 onPreview={props.onPreviewNotification}
               />
             )}
+            {tab === "support" && <SupportTab />}
           </DialogContent>
 
           <DialogActions>

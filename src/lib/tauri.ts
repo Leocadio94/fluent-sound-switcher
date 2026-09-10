@@ -206,6 +206,13 @@ export function installUpdate(): Promise<void> {
 }
 
 /**
+ * Opens a URL in the user's default browser. Used by the support tab.
+ */
+export function openUrl(url: string): Promise<void> {
+  return invoke<void>("open_url", { url });
+}
+
+/**
  * Switches the language of the strings the backend owns (tray menu,
  * notification titles, updater messages) and rebuilds the tray.
  */
