@@ -81,7 +81,8 @@
       "hotkeys": "Shortcuts",
       "volume": "Volume",
       "mute": "Indicator",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "support": "Support"
     },
     "autostart": "Start with Windows",
     "startMinimized": "Start minimized (to tray)",
@@ -114,6 +115,12 @@
       "primary": "Primary monitor",
       "foreground": "Monitor of the focused window"
     }
+  },
+  "support": {
+    "intro": "Found a bug? Have a suggestion? Open an issue on GitHub.",
+    "reportBug": "Report a problem",
+    "reportBugHint": "Report bugs, suggest features, or ask questions about the app.",
+    "openIssues": "Open issues page"
   },
   "errors": {
     "list": "Could not list the audio devices.",
