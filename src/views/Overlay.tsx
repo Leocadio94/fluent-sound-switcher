@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import {
   MicProhibitedFilled,
   MicFilled,
@@ -111,13 +112,20 @@ export default function Overlay() {
   // This window is created hidden, so its renderer is frozen and can drop every
   // `overlay-state` event pushed at it. When that happened the component kept
   // its initial guess and drew the wrong face - the text label inside a window
-  // sized for the icon-only style, clipped. Ask for the real state on mount.
+  // sized for the icon-only style, clipped. Ask for the real state on mount,
+  // and also ask the backend to re-assert visibility (the first `window.show()`
+  // may have missed a still-loading WebView2).
   useEffect(() => {
     void getOverlayState()
       .then((current) => {
         // A real event outranks this: it may describe a volume OSD that the
         // backend is showing right now, which the fetched state does not.
-        if (!gotEvent.current) setState(current);
+        if (!gotEvent.current) {
+          setState(current);
+          void invoke("ensure_overlay_visible").catch((e) =>
+            console.error("could not ensure overlay visibility", e),
+          );
+        }
       })
       .catch((e) => console.error("could not read the overlay state", e));
   }, []);

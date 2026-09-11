@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Fixes
+
+- Overlay de microfone às vezes não aparecia no startup — race do WebView2
+  congelado perdia `window.show()` e eventos. Re-exibe a janela nas retentativas
+  e reforça no fallback do frontend.
+
 ## [0.4.0] - 2026-09-10
 
 ### Features
