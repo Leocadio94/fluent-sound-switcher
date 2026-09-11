@@ -9,6 +9,7 @@ import {
   type Favorites,
 } from "../lib/config";
 import type { DeviceDirection } from "../lib/tauri";
+import { useTauriEvent } from "./useTauriEvent";
 
 interface UseFavorites {
   favorites: Favorites;
@@ -27,13 +28,24 @@ export function useFavorites(): UseFavorites {
   const [showOnlyFavorites, setShowOnlyFavoritesState] = useState(false);
   const latest = useRef(favorites);
 
-  useEffect(() => {
+  // Only reads refs/stable functions, so it is safe to reuse across mounts and
+  // events — see the "frozen closure" note in CLAUDE.md.
+  const reload = useCallback(() => {
     void loadFavorites().then((loaded) => {
       latest.current = loaded;
       setFavorites(loaded);
     });
     void loadShowOnlyFavorites().then(setShowOnlyFavoritesState);
   }, []);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  // The flyout window is created once and lives suspended while hidden, so
+  // favorite edits made in the main window never reach it; the backend pushes
+  // "favorites-changed" on every flyout open.
+  useTauriEvent("favorites-changed", reload, [reload]);
 
   const isFavorite = useCallback(
     (direction: DeviceDirection, id: string) =>
