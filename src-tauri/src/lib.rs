@@ -114,6 +114,7 @@ pub fn run() {
             commands::get_mic_muted,
             commands::update_hotkeys,
             commands::refresh_mute_indicator,
+            commands::ensure_overlay_visible,
             commands::set_flyout_size,
             commands::close_flyout,
             commands::preview_notification,

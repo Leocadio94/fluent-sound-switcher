@@ -17,7 +17,7 @@ use std::thread;
 use std::time::Duration;
 
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, LogicalSize, Manager};
+use tauri::{AppHandle, Emitter, LogicalSize, Manager, WebviewWindow};
 
 use crate::auxwin;
 use crate::config::{self, MuteIndicator};
@@ -129,7 +129,7 @@ pub fn update_with(app: &AppHandle, muted: bool, cfg: &MuteIndicator) {
         // Re-assert in case the OS reset it while the window was hidden.
         let _ = window.set_ignore_cursor_events(true);
         let _ = window.set_always_on_top(true);
-        emit_state(app, payload);
+        emit_state(app, &window, payload);
     } else {
         let _ = window.hide();
         // Supersede anything still retrying, then push the state so the
@@ -163,7 +163,7 @@ pub fn show_volume(app: &AppHandle, level: f32) {
     let _ = window.show();
     let _ = window.set_ignore_cursor_events(true);
     let _ = window.set_always_on_top(true);
-    let generation_id = emit_state(app, payload);
+    let generation_id = emit_state(app, &window, payload);
 
     let app = app.clone();
     thread::spawn(move || {
@@ -181,11 +181,17 @@ pub fn show_volume(app: &AppHandle, level: f32) {
 /// Returns the generation this emission belongs to. The retries stop as soon as
 /// a newer state supersedes it, so a quick burst of changes settles on the last
 /// one instead of flickering through the backlog of every earlier payload.
-fn emit_state(app: &AppHandle, payload: OverlayState) -> u64 {
+///
+/// Each retry also re-shows the window and re-asserts its click-through + topmost
+/// styles. The first `window.show()` can land while the WebView2 is still loading
+/// `index.html` and fail to take effect; re-showing on every retry covers that
+/// gap without adding a separate watch for the webview's ready event.
+fn emit_state(app: &AppHandle, window: &WebviewWindow, payload: OverlayState) -> u64 {
     let generation_id = generation().fetch_add(1, Ordering::SeqCst) + 1;
     let _ = app.emit("overlay-state", payload.clone());
 
     let app = app.clone();
+    let window = window.clone();
     thread::spawn(move || {
         for delay in EMIT_RETRIES_MS {
             thread::sleep(Duration::from_millis(delay));
@@ -193,6 +199,10 @@ fn emit_state(app: &AppHandle, payload: OverlayState) -> u64 {
                 return;
             }
             let _ = app.emit("overlay-state", payload.clone());
+            // Re-show: the webview may still be loading on the first call.
+            let _ = window.show();
+            let _ = window.set_ignore_cursor_events(true);
+            let _ = window.set_always_on_top(true);
         }
     });
 

@@ -104,6 +104,16 @@ pub fn refresh_mute_indicator(
     Ok(())
 }
 
+/// Re-reads the mute indicator config and re-applies the overlay. Called from
+/// the overlay window's mount fallback, covering the race where the WebView2
+/// was still loading and missed both the `window.show()` and every re-emission.
+#[tauri::command]
+pub fn ensure_overlay_visible(app: tauri::AppHandle) -> Result<(), String> {
+    let cfg = crate::config::mute_indicator(&app);
+    crate::overlay::update_with(&app, crate::mute::current(&app), &cfg);
+    Ok(())
+}
+
 /// Resizes the quick-switch flyout to fit its content (logical px height).
 #[tauri::command]
 pub fn set_flyout_size(app: tauri::AppHandle, height: f64) {
