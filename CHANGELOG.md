@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Fixes
+
+- O flyout do tray não refletia favoritos alterados na janela principal: a
+  webview, criada uma única vez e suspensa enquanto oculta, nunca relia o
+  store. O backend agora re-emite os favoritos a cada abertura do flyout.
+
 ## [0.4.1] - 2026-09-11
 
 ### Fixes
