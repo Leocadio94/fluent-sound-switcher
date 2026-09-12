@@ -79,6 +79,11 @@ pub fn show(app: &AppHandle, name: &str, direction: &str) {
                 return;
             }
             let _ = retry.emit("banner-show", payload.clone());
+            // Re-show: the first `window.show()` can land while the WebView2
+            // is still loading `index.html` and silently fail to take effect.
+            let _ = retry.show();
+            let _ = retry.set_ignore_cursor_events(true);
+            let _ = retry.set_always_on_top(true);
         }
     });
 

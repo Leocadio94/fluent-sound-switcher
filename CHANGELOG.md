@@ -4,6 +4,16 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Fixes
+
+- Banner de notificação de troca de dispositivo às vezes não aparecia: o
+  primeiro `window.show()` podia cair enquanto o WebView2 ainda carregava
+  `index.html` e falhar silenciosamente, e as retentativas só re-emetiam o
+  evento, nunca voltavam a mostrar a janela. Re-exibe a janela em cada
+  retentativa (mesma correção que o overlay recebiu).
+
 ## [0.4.2] - 2026-09-11
 
 ### Fixes
