@@ -60,6 +60,19 @@ pub fn hide(app: &AppHandle) {
     }
 }
 
+/// Re-asserts the flyout after the system wakes from sleep or a session unlock:
+/// it is dismissed and its styles re-applied, so the next open takes the normal
+/// (working) show path instead of rendering into a suspended webview.
+pub fn recover(app: &AppHandle) {
+    let Some(window) = app.get_webview_window(FLYOUT_LABEL) else {
+        return;
+    };
+    let _ = window.hide();
+    auxwin::apply_overlay_exstyle(&window);
+    let _ = window.set_always_on_top(true);
+    let _ = window.set_skip_taskbar(true);
+}
+
 /// Resizes the flyout to its content height (logical px) and repositions it.
 pub fn set_size(app: &AppHandle, height: f64) {
     let Some(window) = app.get_webview_window(FLYOUT_LABEL) else {

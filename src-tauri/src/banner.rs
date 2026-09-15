@@ -46,6 +46,21 @@ pub fn configure(app: &AppHandle) {
     }
 }
 
+/// Re-asserts the banner after the system wakes from sleep or a session unlock.
+///
+/// It is transient, so any banner still up when the machine slept is hidden (its
+/// auto-hide timer was frozen too) and its styles are re-applied for the next
+/// show, which then takes the normal, working path.
+pub fn recover(app: &AppHandle) {
+    let Some(window) = app.get_webview_window(BANNER_LABEL) else {
+        return;
+    };
+    let _ = window.hide();
+    auxwin::apply_overlay_exstyle(&window);
+    let _ = window.set_ignore_cursor_events(true);
+    let _ = window.set_always_on_top(true);
+}
+
 /// Shows the banner for `name`/`direction`, auto-hiding after a short delay.
 pub fn show(app: &AppHandle, name: &str, direction: &str) {
     let Some(window) = app.get_webview_window(BANNER_LABEL) else {
@@ -81,9 +96,10 @@ pub fn show(app: &AppHandle, name: &str, direction: &str) {
             let _ = retry.emit("banner-show", payload.clone());
             // Re-show: the first `window.show()` can land while the WebView2
             // is still loading `index.html` and silently fail to take effect.
+            // The click-through style is not re-toggled here on purpose: every
+            // call flips `WS_EX_LAYERED` and a burst of them races DWM's
+            // composition tree (tauri-apps/tauri#15947).
             let _ = retry.show();
-            let _ = retry.set_ignore_cursor_events(true);
-            let _ = retry.set_always_on_top(true);
         }
     });
 

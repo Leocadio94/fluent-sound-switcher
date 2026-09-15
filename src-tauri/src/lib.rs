@@ -15,6 +15,7 @@ mod logging;
 mod mute;
 mod notify;
 mod overlay;
+mod power;
 mod tray;
 mod updater;
 
@@ -66,6 +67,10 @@ pub fn run() {
             overlay::configure(handle);
             flyout::configure(handle);
             banner::configure(handle);
+            // Re-assert the aux windows when the system resumes from sleep or
+            // the session is unlocked — WebView2 suspends its renderer while
+            // the machine sleeps and needs a visible transition to come back.
+            power::watch(handle);
             // The main window is created hidden (`visible: false` in
             // tauri.conf.json) so a login auto-start never flashes a window on
             // screen. It is revealed by the `main_window_ready` command once

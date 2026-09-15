@@ -140,6 +140,25 @@ pub fn update_with(app: &AppHandle, muted: bool, cfg: &MuteIndicator) {
     }
 }
 
+/// Re-asserts the overlay after the system wakes from sleep or a session
+/// unlock.
+///
+/// The window is almost always still shown when this runs, so `show()` alone is
+/// a no-op and the suspended WebView2 renderer never gets the invisible→visible
+/// transition it resumes on — the window stays on screen but paints nothing.
+/// Hiding first supplies that transition; `update` then re-applies size,
+/// position, styles and state.
+pub fn recover(app: &AppHandle) {
+    let Some(window) = app.get_webview_window(OVERLAY_LABEL) else {
+        return;
+    };
+    let _ = window.hide();
+    auxwin::apply_overlay_exstyle(&window);
+    let _ = window.set_ignore_cursor_events(true);
+    let _ = window.set_always_on_top(true);
+    update(app, crate::mute::current(app));
+}
+
 /// Flashes the volume OSD at `level` (0.0–1.0), then restores the mute
 /// indicator. Does nothing when the user turned the OSD off.
 pub fn show_volume(app: &AppHandle, level: f32) {
@@ -182,10 +201,15 @@ pub fn show_volume(app: &AppHandle, level: f32) {
 /// a newer state supersedes it, so a quick burst of changes settles on the last
 /// one instead of flickering through the backlog of every earlier payload.
 ///
-/// Each retry also re-shows the window and re-asserts its click-through + topmost
-/// styles. The first `window.show()` can land while the WebView2 is still loading
-/// `index.html` and fail to take effect; re-showing on every retry covers that
-/// gap without adding a separate watch for the webview's ready event.
+/// Each retry also re-shows the window. The first `window.show()` can land while
+/// the WebView2 is still loading `index.html` and fail to take effect; re-showing
+/// on every retry covers that gap without adding a separate watch for the
+/// webview's ready event.
+///
+/// The click-through style is deliberately *not* re-asserted here: every
+/// `set_ignore_cursor_events` toggles `WS_EX_LAYERED`, and doing that in a burst
+/// races the DWM composition tree on Windows 10 (tauri-apps/tauri#15947). It is
+/// applied once where the window is shown instead.
 fn emit_state(app: &AppHandle, window: &WebviewWindow, payload: OverlayState) -> u64 {
     let generation_id = generation().fetch_add(1, Ordering::SeqCst) + 1;
     let _ = app.emit("overlay-state", payload.clone());
@@ -201,8 +225,6 @@ fn emit_state(app: &AppHandle, window: &WebviewWindow, payload: OverlayState) ->
             let _ = app.emit("overlay-state", payload.clone());
             // Re-show: the webview may still be loading on the first call.
             let _ = window.show();
-            let _ = window.set_ignore_cursor_events(true);
-            let _ = window.set_always_on_top(true);
         }
     });
 

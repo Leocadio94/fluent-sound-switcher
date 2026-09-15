@@ -39,6 +39,8 @@ windows = { version = "0.58", features = [
   "Win32_UI_Shell",
   "Win32_UI_Shell_PropertiesSystem",
   "Win32_UI_WindowsAndMessaging",
+  # Resume/lock notifications for the overlay recovery (`power.rs`).
+  "Win32_System_RemoteDesktop",
   "Win32_Devices_FunctionDiscovery",
   # WinRT, for the Windows accent colour (UISettings).
   "UI",
