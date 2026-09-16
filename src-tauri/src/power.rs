@@ -10,6 +10,9 @@
 //!
 //! This subclasses the main window (top-level, alive for the whole process, so
 //! it receives the broadcast resume message) and asks to be told about unlocks.
+//! It also re-anchors the windows on `WM_DISPLAYCHANGE`, since waking often
+//! restores a different resolution or monitor layout than the windows were
+//! placed on.
 
 #[cfg(windows)]
 mod imp {
@@ -24,8 +27,8 @@ mod imp {
     };
     use windows::Win32::UI::Shell::{DefSubclassProc, SetWindowSubclass};
     use windows::Win32::UI::WindowsAndMessaging::{
-        PBT_APMRESUMEAUTOMATIC, PBT_APMRESUMESUSPEND, WM_POWERBROADCAST, WM_WTSSESSION_CHANGE,
-        WTS_SESSION_UNLOCK,
+        PBT_APMRESUMEAUTOMATIC, PBT_APMRESUMESUSPEND, WM_DISPLAYCHANGE, WM_POWERBROADCAST,
+        WM_WTSSESSION_CHANGE, WTS_SESSION_UNLOCK,
     };
 
     /// The app's main window is top-level and never destroyed (closing it hides
@@ -33,10 +36,14 @@ mod imp {
     const TARGET_LABEL: &str = "main";
     const SUBCLASS_ID: usize = 0xF501;
 
-    /// Delays before each recovery pass, in ms. The first wakes the WebView2
-    /// renderer as soon as possible; the second runs once the display layout
-    /// has stabilised, so a window lands on the right monitor.
-    const RECOVER_DELAYS_MS: [u64; 2] = [400, 2000];
+    /// Delays before each resume-recovery pass, in ms. The first wakes the
+    /// WebView2 renderer as soon as possible; the second runs once the display
+    /// layout has stabilised, so a window lands on the right monitor.
+    const RESUME_DELAYS_MS: [u64; 2] = [400, 2000];
+
+    /// Delay before the display-change recovery pass, in ms. Shorter than the
+    /// resume passes because a mode change is signalled *after* it has applied.
+    const REANCHOR_DELAYS_MS: [u64; 1] = [150];
 
     pub fn watch(app: &AppHandle) {
         use tauri::Manager;
@@ -81,9 +88,15 @@ mod imp {
         _id: usize,
         data: usize,
     ) -> LRESULT {
+        // SAFETY: `watch` leaked a live `Box<AppHandle>` into `data`.
+        let app = &*(data as *const AppHandle);
         if is_resume_message(msg, wparam.0) {
-            // SAFETY: `watch` leaked a live `Box<AppHandle>` into `data`.
-            schedule(&*(data as *const AppHandle));
+            schedule(app, true);
+        } else if msg == WM_DISPLAYCHANGE {
+            // Resolution or monitor topology changed — the aux windows may now
+            // sit on the wrong screen. Re-anchor them, but do not force the
+            // WebView2 transition: the renderer is not suspended here.
+            schedule(app, false);
         }
         DefSubclassProc(hwnd, msg, wparam, lparam)
     }
@@ -98,32 +111,46 @@ mod imp {
         }
     }
 
-    /// Identifies the newest recovery, so a burst of resume/unlock messages
-    /// collapses into one run. On a user-triggered wake Windows sends both
-    /// `PBT_APMRESUMEAUTOMATIC` and `PBT_APMRESUMESUSPEND`, and an unlock adds a
-    /// third — without this, up to six passes would flicker the windows.
-    fn generation() -> &'static AtomicU64 {
-        static G: OnceLock<AtomicU64> = OnceLock::new();
-        G.get_or_init(|| AtomicU64::new(0))
+    /// Per-trigger newest-recovery id, so a burst of the same kind collapses.
+    /// Resume and display-change use *separate* counters: a mode change that
+    /// lands during a resume must not cancel the resume's pending repaint pass.
+    fn generation(is_resume: bool) -> &'static AtomicU64 {
+        static RESUME: OnceLock<AtomicU64> = OnceLock::new();
+        static DISPLAY: OnceLock<AtomicU64> = OnceLock::new();
+        if is_resume {
+            RESUME.get_or_init(|| AtomicU64::new(0))
+        } else {
+            DISPLAY.get_or_init(|| AtomicU64::new(0))
+        }
     }
 
     /// Queues the recovery runs without blocking the window proc. Touching the
     /// windows from inside it would run re-entrantly in the message dispatch;
     /// `run_on_main_thread` hands the work to the event loop instead.
-    fn schedule(app: &AppHandle) {
-        let generation_id = generation().fetch_add(1, Ordering::SeqCst) + 1;
-        log::info!("system resume/unlock detected; scheduling overlay recovery");
-        for (index, delay) in RECOVER_DELAYS_MS.into_iter().enumerate() {
+    ///
+    /// On a user-triggered wake Windows sends both `PBT_APMRESUMEAUTOMATIC` and
+    /// `PBT_APMRESUMESUSPEND`, and an unlock adds a third; the generation check
+    /// keeps that burst to one run.
+    fn schedule(app: &AppHandle, is_resume: bool) {
+        let generation = generation(is_resume);
+        let generation_id = generation.fetch_add(1, Ordering::SeqCst) + 1;
+        log::info!("system event detected; scheduling overlay recovery");
+        let delays: &[u64] = if is_resume {
+            &RESUME_DELAYS_MS
+        } else {
+            &REANCHOR_DELAYS_MS
+        };
+        for (index, delay) in delays.iter().copied().enumerate() {
             let app = app.clone();
             std::thread::spawn(move || {
                 std::thread::sleep(Duration::from_millis(delay));
-                if generation().load(Ordering::SeqCst) != generation_id {
+                if generation.load(Ordering::SeqCst) != generation_id {
                     return;
                 }
-                // Only the first pass forces the WebView2 transition; the later
-                // one just re-anchors once the display has settled, so the
-                // overlay does not blink twice.
-                let force_repaint = index == 0;
+                // Only the first resume pass forces the WebView2 transition; the
+                // later ones re-anchor once the display has settled, so the
+                // overlay does not blink twice. Display changes never repaint.
+                let force_repaint = is_resume && index == 0;
                 let dispatcher = app.clone();
                 if let Err(e) = app.run_on_main_thread(move || recover(&dispatcher, force_repaint))
                 {
@@ -183,6 +210,9 @@ mod imp {
         #[test]
         fn ignores_unrelated_messages() {
             assert!(!is_resume_message(0xFFFF, 0));
+            // A display change is recovered, but as a re-anchor, not a resume —
+            // so it must not be mistaken for one.
+            assert!(!is_resume_message(WM_DISPLAYCHANGE, 0));
         }
     }
 }

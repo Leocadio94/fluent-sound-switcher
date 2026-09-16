@@ -17,7 +17,7 @@ const DEFAULT_HEIGHT: f64 = 220.0;
 /// dismiss it when it loses focus.
 pub fn configure(app: &AppHandle) {
     if let Some(window) = app.get_webview_window(FLYOUT_LABEL) {
-        let _ = window.set_always_on_top(true);
+        auxwin::reassert_topmost(&window);
         let _ = window.set_skip_taskbar(true);
         auxwin::apply_overlay_exstyle(&window);
 
@@ -43,6 +43,10 @@ pub fn toggle(app: &AppHandle) {
         reposition(app, &window, height);
         let _ = window.show();
         let _ = window.set_focus();
+        // Re-assert the band on every open: a session unlock can have dropped the
+        // window out of it while it sat hidden, and a focused-but-not-topmost
+        // window would sit below a fullscreen borderless game.
+        auxwin::reassert_topmost(&window);
         // The webview is suspended while hidden and may have missed live
         // events, so re-push the current device + mute state on open.
         let _ = window.emit("device-changed", ());
@@ -71,7 +75,7 @@ pub fn recover(app: &AppHandle) {
         return;
     };
     auxwin::apply_overlay_exstyle(&window);
-    let _ = window.set_always_on_top(true);
+    auxwin::reassert_topmost(&window);
     let _ = window.set_skip_taskbar(true);
 }
 

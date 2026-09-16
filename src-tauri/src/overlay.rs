@@ -84,7 +84,7 @@ fn generation() -> &'static AtomicU64 {
 pub fn configure(app: &AppHandle) {
     if let Some(window) = app.get_webview_window(OVERLAY_LABEL) {
         let _ = window.set_ignore_cursor_events(true);
-        let _ = window.set_always_on_top(true);
+        auxwin::reassert_topmost(&window);
         auxwin::apply_overlay_exstyle(&window);
     }
 }
@@ -126,9 +126,13 @@ pub fn update_with(app: &AppHandle, muted: bool, cfg: &MuteIndicator) {
         // Show first so the frozen webview starts resuming, then push the state
         // (and re-push it) so the resumed renderer paints the correct pill.
         let _ = window.show();
-        // Re-assert in case the OS reset it while the window was hidden.
+        // Re-assert click-through and the topmost band. `show()` can re-order the
+        // window, and the OS may have reset either while the window was hidden or
+        // during a session unlock; `reassert_topmost` writes the band directly
+        // because tao's flag-based `set_always_on_top` is a no-op once the flag
+        // is already set (see its docs).
         let _ = window.set_ignore_cursor_events(true);
-        let _ = window.set_always_on_top(true);
+        auxwin::reassert_topmost(&window);
         emit_state(app, &window, payload);
     } else {
         let _ = window.hide();
@@ -184,7 +188,7 @@ pub fn show_volume(app: &AppHandle, level: f32) {
     auxwin::anchor(app, &window, &cfg.position, VOLUME_WIDTH, HEIGHT, MARGIN);
     let _ = window.show();
     let _ = window.set_ignore_cursor_events(true);
-    let _ = window.set_always_on_top(true);
+    auxwin::reassert_topmost(&window);
     let generation_id = emit_state(app, &window, payload);
 
     let app = app.clone();
@@ -204,15 +208,18 @@ pub fn show_volume(app: &AppHandle, level: f32) {
 /// a newer state supersedes it, so a quick burst of changes settles on the last
 /// one instead of flickering through the backlog of every earlier payload.
 ///
-/// Each retry also re-shows the window. The first `window.show()` can land while
-/// the WebView2 is still loading `index.html` and fail to take effect; re-showing
-/// on every retry covers that gap without adding a separate watch for the
-/// webview's ready event.
+/// Each retry also re-shows the window and re-asserts the topmost band. The
+/// first `window.show()` can land while the WebView2 is still loading
+/// `index.html` and fail to take effect; re-showing on every retry covers that
+/// gap, and the re-topmost keeps the window above everything because a real
+/// re-show re-orders it back into the non-topmost z-order.
 ///
 /// The click-through style is deliberately *not* re-asserted here: every
 /// `set_ignore_cursor_events` toggles `WS_EX_LAYERED`, and doing that in a burst
 /// races the DWM composition tree on Windows 10 (tauri-apps/tauri#15947). It is
-/// applied once where the window is shown instead.
+/// applied once where the window is shown instead. The topmost call is not part
+/// of that problem: `reassert_topmost` uses `SetWindowPos`, which does not touch
+/// the layered/composition style.
 fn emit_state(app: &AppHandle, window: &WebviewWindow, payload: OverlayState) -> u64 {
     let generation_id = generation().fetch_add(1, Ordering::SeqCst) + 1;
     let _ = app.emit("overlay-state", payload.clone());
@@ -226,8 +233,10 @@ fn emit_state(app: &AppHandle, window: &WebviewWindow, payload: OverlayState) ->
                 return;
             }
             let _ = app.emit("overlay-state", payload.clone());
-            // Re-show: the webview may still be loading on the first call.
+            // Re-show: the webview may still be loading on the first call. A real
+            // re-show re-orders the window, so re-assert the topmost band with it.
             let _ = window.show();
+            auxwin::reassert_topmost(&window);
         }
     });
 

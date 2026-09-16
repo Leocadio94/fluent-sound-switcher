@@ -144,6 +144,13 @@ cargo test --manifest-path src-tauri/Cargo.toml
   WS_EX_TOOLWINDOW`, `set_ignore_cursor_events`, `always_on_top`) so they render
   over fullscreen games — the SoundSwitch fix. Pattern from sibling
   `ponto-app/src-tauri/src/overlay.rs`.
+- **To re-assert topmost after the OS dropped it, call `SetWindowPos(HWND_TOPMOST)`
+  directly (`auxwin::reassert_topmost`) — never `set_always_on_top(true)`.** tao's
+  `set_always_on_top` only calls `SetWindowPos` when its internal `ALWAYS_ON_TOP`
+  flag *flips* (`WindowFlags::apply_diff`); because these windows declare
+  `alwaysOnTop` at creation the flag is already true, so a later call is a silent
+  no-op — exactly when a session unlock has already pulled the window out of the
+  topmost band. Use it on every show, retry and recover pass.
 - Position them through `auxwin::anchor` / `auxwin::work_area`, never from
   `primary_monitor()`: a secondary monitor can sit at negative coordinates, so
   primary-relative maths puts the window on the wrong screen. The target monitor
@@ -156,8 +163,9 @@ cargo test --manifest-path src-tauri/Cargo.toml
   (`SetWindowSubclass`; `WM_POWERBROADCAST` is a broadcast, `WM_WTSSESSION_CHANGE`
   needs `WTSRegisterSessionNotification`) and, after a settle delay, hides and
   re-shows the overlay, re-applies the styles on all three and re-runs
-  `mute::refresh` + `volume_events::rearm`. Don't re-assert
-  `set_ignore_cursor_events` in a retry loop: each call flips `WS_EX_LAYERED` and
+  `mute::refresh` + `volume_events::rearm`. `WM_DISPLAYCHANGE` re-anchors them for
+  the dock/resolution case. Don't re-assert `set_ignore_cursor_events` in a retry
+  loop: each call flips `WS_EX_LAYERED` and
   a burst races DWM's composition tree (tauri-apps/tauri#15947).
 - HWND version mismatch: `window.hwnd()` returns a `windows` 0.61 HWND; rebuild as
   our 0.58 HWND with `HWND(raw.0)` (0.58 HWND is `*mut c_void`).

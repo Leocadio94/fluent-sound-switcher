@@ -41,7 +41,7 @@ fn generation() -> &'static AtomicU64 {
 pub fn configure(app: &AppHandle) {
     if let Some(window) = app.get_webview_window(BANNER_LABEL) {
         let _ = window.set_ignore_cursor_events(true);
-        let _ = window.set_always_on_top(true);
+        auxwin::reassert_topmost(&window);
         auxwin::apply_overlay_exstyle(&window);
     }
 }
@@ -58,7 +58,7 @@ pub fn recover(app: &AppHandle) {
         return;
     };
     auxwin::apply_overlay_exstyle(&window);
-    let _ = window.set_always_on_top(true);
+    auxwin::reassert_topmost(&window);
 }
 
 /// Shows the banner for `name`/`direction`, auto-hiding after a short delay.
@@ -78,7 +78,7 @@ pub fn show(app: &AppHandle, name: &str, direction: &str) {
     // Show first so the suspended webview resumes, then push (and re-push) data.
     let _ = window.show();
     let _ = window.set_ignore_cursor_events(true);
-    let _ = window.set_always_on_top(true);
+    auxwin::reassert_topmost(&window);
     let _ = window.emit("banner-show", payload.clone());
 
     // One generation per banner, driving both the retries and the auto-hide.
@@ -98,8 +98,10 @@ pub fn show(app: &AppHandle, name: &str, direction: &str) {
             // is still loading `index.html` and silently fail to take effect.
             // The click-through style is not re-toggled here on purpose: every
             // call flips `WS_EX_LAYERED` and a burst of them races DWM's
-            // composition tree (tauri-apps/tauri#15947).
+            // composition tree (tauri-apps/tauri#15947). The re-show re-orders the
+            // window, so re-assert the topmost band (which does not touch it).
             let _ = retry.show();
+            auxwin::reassert_topmost(&retry);
         }
     });
 
