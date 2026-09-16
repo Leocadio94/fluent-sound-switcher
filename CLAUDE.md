@@ -95,7 +95,8 @@ cargo test --manifest-path src-tauri/Cargo.toml
   - Windows: `overlay.rs` (mute indicator), `banner.rs` (switch banner),
     `flyout.rs` (tray quick-switch) — all transparent/topmost/click-through;
     `auxwin.rs` holds what the three share (monitor resolution, anchoring, the
-    click-through extended style).
+    click-through extended style); `power.rs` catches resume/session-unlock and
+    re-asserts them.
   - `i18n.rs` — the strings the backend owns (tray menu, notification titles,
     updater messages), keyed off the frontend's `language`.
   - `accent.rs` — the Windows accent colour and the six shades Windows derives
@@ -148,6 +149,16 @@ cargo test --manifest-path src-tauri/Cargo.toml
   primary-relative maths puts the window on the wrong screen. The target monitor
   follows the `overlayMonitor` setting (cursor / primary / foreground) and the
   scale factor comes from *that* monitor, not the window.
+- **Resume/session-unlock** (`power.rs`): WebView2 suspends its renderer while
+  the machine sleeps and only resumes on an invisible→visible transition, but the
+  aux windows are usually still shown when it sleeps — so a plain `show()` is a
+  no-op and they come back invisible. `power.rs` subclasses the `main` window
+  (`SetWindowSubclass`; `WM_POWERBROADCAST` is a broadcast, `WM_WTSSESSION_CHANGE`
+  needs `WTSRegisterSessionNotification`) and, after a settle delay, hides and
+  re-shows the overlay, re-applies the styles on all three and re-runs
+  `mute::refresh` + `volume_events::rearm`. Don't re-assert
+  `set_ignore_cursor_events` in a retry loop: each call flips `WS_EX_LAYERED` and
+  a burst races DWM's composition tree (tauri-apps/tauri#15947).
 - HWND version mismatch: `window.hwnd()` returns a `windows` 0.61 HWND; rebuild as
   our 0.58 HWND with `HWND(raw.0)` (0.58 HWND is `*mut c_void`).
 - The `main` window is created with `visible: false` and revealed by the
