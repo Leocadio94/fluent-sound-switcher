@@ -12,10 +12,10 @@ the project follows phased iterations (see `README.md`).
   ou do lock: o WebView2 suspende o renderer enquanto a máquina dorme e só o
   retoma numa transição invisível→visível, mas a janela já estava visível, então
   nada disparava a retomada. O backend agora escuta resume/session-unlock
-  (`power.rs`), esconde e reexibe as janelas auxiliares, reaplica os estilos e
-  relê o estado de mute e do device padrão. Também para de alternar
-  `set_ignore_cursor_events` a cada retentativa, que raceava a composição do DWM
-  no Windows 10 (tauri-apps/tauri#15947).
+  (`power.rs`), esconde e reexibe o overlay (e reaplica os estilos das três
+  janelas auxiliares) e relê o estado de mute e do device padrão. Também para de
+  alternar `set_ignore_cursor_events` a cada retentativa, que raceava a
+  composição do DWM no Windows 10 (tauri-apps/tauri#15947).
 
 ## [0.4.3] - 2026-09-12
 

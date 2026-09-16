@@ -147,15 +147,18 @@ pub fn update_with(app: &AppHandle, muted: bool, cfg: &MuteIndicator) {
 /// a no-op and the suspended WebView2 renderer never gets the invisible→visible
 /// transition it resumes on — the window stays on screen but paints nothing.
 /// Hiding first supplies that transition; `update` then re-applies size,
-/// position, styles and state.
+/// position, styles and state. The generation is bumped first so a retry from an
+/// earlier emission cannot re-show the window between the hide and the show.
 pub fn recover(app: &AppHandle) {
     let Some(window) = app.get_webview_window(OVERLAY_LABEL) else {
         return;
     };
+    generation().fetch_add(1, Ordering::SeqCst);
     let _ = window.hide();
+    // `update` only re-asserts cursor-events/topmost when it shows; the
+    // no-activate/toolwindow pair is set once at startup and is not touched by
+    // it, so it is re-applied here after the resume may have reset it.
     auxwin::apply_overlay_exstyle(&window);
-    let _ = window.set_ignore_cursor_events(true);
-    let _ = window.set_always_on_top(true);
     update(app, crate::mute::current(app));
 }
 

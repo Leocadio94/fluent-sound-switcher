@@ -46,18 +46,18 @@ pub fn configure(app: &AppHandle) {
     }
 }
 
-/// Re-asserts the banner after the system wakes from sleep or a session unlock.
+/// Re-asserts the banner's window styles after the system wakes from sleep or a
+/// session unlock.
 ///
-/// It is transient, so any banner still up when the machine slept is hidden (its
-/// auto-hide timer was frozen too) and its styles are re-applied for the next
-/// show, which then takes the normal, working path.
+/// The banner is deliberately *not* hidden: it is transient and a device change
+/// on resume can legitimately raise a new one, which a later recovery pass would
+/// then kill. Only the styles that `configure` sets once — and that a session
+/// change can reset — are re-applied; the next `show` takes the normal path.
 pub fn recover(app: &AppHandle) {
     let Some(window) = app.get_webview_window(BANNER_LABEL) else {
         return;
     };
-    let _ = window.hide();
     auxwin::apply_overlay_exstyle(&window);
-    let _ = window.set_ignore_cursor_events(true);
     let _ = window.set_always_on_top(true);
 }
 

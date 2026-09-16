@@ -155,10 +155,10 @@ cargo test --manifest-path src-tauri/Cargo.toml
   no-op and they come back invisible. `power.rs` subclasses the `main` window
   (`SetWindowSubclass`; `WM_POWERBROADCAST` is a broadcast, `WM_WTSSESSION_CHANGE`
   needs `WTSRegisterSessionNotification`) and, after a settle delay, hides and
-  re-shows them, re-applies the styles and re-runs `mute::refresh` +
-  `volume_events::rearm`. Don't re-assert `set_ignore_cursor_events` in a retry
-  loop: each call flips `WS_EX_LAYERED` and a burst races DWM's composition tree
-  (tauri-apps/tauri#15947).
+  re-shows the overlay, re-applies the styles on all three and re-runs
+  `mute::refresh` + `volume_events::rearm`. Don't re-assert
+  `set_ignore_cursor_events` in a retry loop: each call flips `WS_EX_LAYERED` and
+  a burst races DWM's composition tree (tauri-apps/tauri#15947).
 - HWND version mismatch: `window.hwnd()` returns a `windows` 0.61 HWND; rebuild as
   our 0.58 HWND with `HWND(raw.0)` (0.58 HWND is `*mut c_void`).
 - The `main` window is created with `visible: false` and revealed by the

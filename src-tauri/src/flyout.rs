@@ -60,14 +60,16 @@ pub fn hide(app: &AppHandle) {
     }
 }
 
-/// Re-asserts the flyout after the system wakes from sleep or a session unlock:
-/// it is dismissed and its styles re-applied, so the next open takes the normal
-/// (working) show path instead of rendering into a suspended webview.
+/// Re-asserts the flyout's window styles after the system wakes from sleep or a
+/// session unlock.
+///
+/// It is deliberately not hidden: the user may have opened it right after the
+/// resume, and a recovery pass must not dismiss it. Only the styles `configure`
+/// sets once are re-applied.
 pub fn recover(app: &AppHandle) {
     let Some(window) = app.get_webview_window(FLYOUT_LABEL) else {
         return;
     };
-    let _ = window.hide();
     auxwin::apply_overlay_exstyle(&window);
     let _ = window.set_always_on_top(true);
     let _ = window.set_skip_taskbar(true);

@@ -13,6 +13,8 @@
 
 #[cfg(windows)]
 mod imp {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::OnceLock;
     use std::time::Duration;
 
     use tauri::AppHandle;
@@ -58,10 +60,13 @@ mod imp {
         unsafe {
             if !SetWindowSubclass(hwnd, Some(subclass_proc), SUBCLASS_ID, data).as_bool() {
                 log::warn!("could not subclass the main window for power events");
+                drop(Box::from_raw(data as *mut AppHandle));
                 return;
             }
             // `WM_WTSSESSION_CHANGE` is not a broadcast, so it has to be asked
-            // for; resume messages are delivered without this.
+            // for; resume messages are delivered without this. Both registrations
+            // last for the process — the main window is never destroyed, so there
+            // is nothing to tear down on exit.
             if let Err(e) = WTSRegisterSessionNotification(hwnd, NOTIFY_FOR_THIS_SESSION) {
                 log::warn!("could not register for session unlock notifications: {e}");
             }
@@ -93,28 +98,48 @@ mod imp {
         }
     }
 
+    /// Identifies the newest recovery, so a burst of resume/unlock messages
+    /// collapses into one run. On a user-triggered wake Windows sends both
+    /// `PBT_APMRESUMEAUTOMATIC` and `PBT_APMRESUMESUSPEND`, and an unlock adds a
+    /// third — without this, up to six passes would flicker the windows.
+    fn generation() -> &'static AtomicU64 {
+        static G: OnceLock<AtomicU64> = OnceLock::new();
+        G.get_or_init(|| AtomicU64::new(0))
+    }
+
     /// Queues the recovery runs without blocking the window proc. Touching the
     /// windows from inside it would run re-entrantly in the message dispatch;
     /// `run_on_main_thread` hands the work to the event loop instead.
     fn schedule(app: &AppHandle) {
-        log::info!("system resumed; scheduling overlay recovery");
-        for delay in RECOVER_DELAYS_MS {
+        let generation_id = generation().fetch_add(1, Ordering::SeqCst) + 1;
+        log::info!("system resume/unlock detected; scheduling overlay recovery");
+        for (index, delay) in RECOVER_DELAYS_MS.into_iter().enumerate() {
             let app = app.clone();
             std::thread::spawn(move || {
                 std::thread::sleep(Duration::from_millis(delay));
+                if generation().load(Ordering::SeqCst) != generation_id {
+                    return;
+                }
+                // Only the first pass forces the WebView2 transition; the later
+                // one just re-anchors once the display has settled, so the
+                // overlay does not blink twice.
+                let force_repaint = index == 0;
                 let dispatcher = app.clone();
-                if let Err(e) = app.run_on_main_thread(move || recover(&dispatcher)) {
+                if let Err(e) = app.run_on_main_thread(move || recover(&dispatcher, force_repaint))
+                {
                     log::warn!("could not schedule overlay recovery: {e}");
                 }
             });
         }
     }
 
-    fn recover(app: &AppHandle) {
+    fn recover(app: &AppHandle, force_repaint: bool) {
         // The default output or its mute state can change while the machine
         // sleeps, so read them before restoring the windows.
         crate::mute::refresh(app);
-        crate::overlay::recover(app);
+        if force_repaint {
+            crate::overlay::recover(app);
+        }
         crate::banner::recover(app);
         crate::flyout::recover(app);
         // A headset that re-enumerated on resume is a new default endpoint, and
