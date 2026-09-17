@@ -4,6 +4,16 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Fixes
+
+- O indicador de mudo desaparecia ao clicar em "Mostrar área de trabalho" (ou
+  Win+D): o shell minimiza a janela e não avisa o app, e o overlay ficava
+  escondido até o próximo toggle de mudo. Um `SetWinEventHook`
+  (`EVENT_SYSTEM_MINIMIZEEND`) restaura a janela assim que o shell a minimiza
+  (`shell.rs`).
+
 ## [0.4.5] - 2026-09-17
 
 ### Fixes

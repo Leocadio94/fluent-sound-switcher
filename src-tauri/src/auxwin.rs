@@ -194,16 +194,22 @@ pub fn apply_overlay_exstyle(_window: &WebviewWindow) {}
 /// idempotent, so it always re-asserts.
 #[cfg(windows)]
 pub fn reassert_topmost(window: &WebviewWindow) {
-    use windows::Win32::Foundation::HWND;
-    use windows::Win32::UI::WindowsAndMessaging::{
-        SetWindowPos, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE,
-    };
     let Ok(raw) = window.hwnd() else {
         log::warn!("no HWND for the aux window; cannot re-assert topmost");
         return;
     };
     // `hwnd()` hands back a `windows` 0.61 HWND; rebuild it as our 0.58 one.
-    let hwnd = HWND(raw.0);
+    reassert_topmost_hwnd(windows::Win32::Foundation::HWND(raw.0));
+}
+
+/// The same band re-assertion for a caller that already holds a raw HWND — the
+/// show-desktop guard (`shell.rs`) reaches the overlay through a WinEvent
+/// callback, which only carries the handle.
+#[cfg(windows)]
+pub fn reassert_topmost_hwnd(hwnd: windows::Win32::Foundation::HWND) {
+    use windows::Win32::UI::WindowsAndMessaging::{
+        SetWindowPos, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE,
+    };
     unsafe {
         let _ = SetWindowPos(
             hwnd,

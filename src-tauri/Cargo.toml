@@ -41,6 +41,9 @@ windows = { version = "0.58", features = [
   "Win32_UI_WindowsAndMessaging",
   # Resume/lock notifications for the overlay recovery (`power.rs`).
   "Win32_System_RemoteDesktop",
+  # WinEvent hook that keeps the mute overlay above "Show desktop" (`shell.rs`).
+  "Win32_System_Threading",
+  "Win32_UI_Accessibility",
   "Win32_Devices_FunctionDiscovery",
   # WinRT, for the Windows accent colour (UISettings).
   "UI",

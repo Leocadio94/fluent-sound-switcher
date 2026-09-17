@@ -16,6 +16,7 @@ mod mute;
 mod notify;
 mod overlay;
 mod power;
+mod shell;
 mod tray;
 mod updater;
 
@@ -71,6 +72,9 @@ pub fn run() {
             // the session is unlocked — WebView2 suspends its renderer while
             // the machine sleeps and needs a visible transition to come back.
             power::watch(handle);
+            // "Show desktop" (Win+D) minimizes the mute indicator too and never
+            // says so; a WinEvent hook puts it straight back.
+            shell::watch(handle);
             // The main window is created hidden (`visible: false` in
             // tauri.conf.json) so a login auto-start never flashes a window on
             // screen. It is revealed by the `main_window_ready` command once
