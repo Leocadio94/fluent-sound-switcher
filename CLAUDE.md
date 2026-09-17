@@ -95,8 +95,9 @@ cargo test --manifest-path src-tauri/Cargo.toml
   - Windows: `overlay.rs` (mute indicator), `banner.rs` (switch banner),
     `flyout.rs` (tray quick-switch) — all transparent/topmost/click-through;
     `auxwin.rs` holds what the three share (monitor resolution, anchoring, the
-    click-through extended style); `power.rs` catches resume/session-unlock and
-    re-asserts them.
+    click-through extended style, the direct `SetWindowPos(HWND_TOPMOST)` band
+    re-assert); `power.rs` catches resume/session-unlock and re-asserts them;
+    `shell.rs` keeps the mute overlay immune to "Show desktop" (Win+D).
   - `i18n.rs` — the strings the backend owns (tray menu, notification titles,
     updater messages), keyed off the frontend's `language`.
   - `accent.rs` — the Windows accent colour and the six shades Windows derives
@@ -167,6 +168,15 @@ cargo test --manifest-path src-tauri/Cargo.toml
   the dock/resolution case. Don't re-assert `set_ignore_cursor_events` in a retry
   loop: each call flips `WS_EX_LAYERED` and
   a burst races DWM's composition tree (tauri-apps/tauri#15947).
+- **"Show desktop" / Win+D** (`shell.rs`): the shell *minimizes* the overlay and
+  sends the app no message, so the persistent indicator just vanishes.
+  `shell::watch` installs an out-of-context `SetWinEventHook` on
+  `EVENT_SYSTEM_MINIMIZEEND` for our own process; when the minimized window is
+  the overlay's HWND it calls `ShowWindow(SW_RESTORE)` + `reassert_topmost_hwnd`.
+  The hook must be installed on the main thread (that thread's message loop runs
+  the callback) and must use raw Win32 — **never** `WebviewWindow::unminimize()`,
+  which blocks on a channel the loop only drains after the callback returns, so
+  it deadlocks.
 - HWND version mismatch: `window.hwnd()` returns a `windows` 0.61 HWND; rebuild as
   our 0.58 HWND with `HWND(raw.0)` (0.58 HWND is `*mut c_void`).
 - The `main` window is created with `visible: false` and revealed by the
