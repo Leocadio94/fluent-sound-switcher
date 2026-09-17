@@ -181,6 +181,45 @@ pub fn apply_overlay_exstyle(window: &WebviewWindow) {
 #[cfg(not(windows))]
 pub fn apply_overlay_exstyle(_window: &WebviewWindow) {}
 
+/// Re-inserts a window into the topmost band by calling `SetWindowPos(HWND_TOPMOST)`
+/// on its real HWND.
+///
+/// Do **not** use `WebviewWindow::set_always_on_top(true)` to recover the topmost
+/// state after a session unlock: tao only calls `SetWindowPos` when its internal
+/// `ALWAYS_ON_TOP` flag *flips* (see `tao`'s `WindowFlags::apply_diff`), so with
+/// the flag already true — every aux window sets it at startup — a second call
+/// is a silent no-op. When the OS pulls the window out of the topmost band on
+/// resume it leaves the flag untouched, and the flag-based call "succeeds" while
+/// the window is still below everything. This writes the band directly and is
+/// idempotent, so it always re-asserts.
+#[cfg(windows)]
+pub fn reassert_topmost(window: &WebviewWindow) {
+    use windows::Win32::Foundation::HWND;
+    use windows::Win32::UI::WindowsAndMessaging::{
+        SetWindowPos, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE,
+    };
+    let Ok(raw) = window.hwnd() else {
+        log::warn!("no HWND for the aux window; cannot re-assert topmost");
+        return;
+    };
+    // `hwnd()` hands back a `windows` 0.61 HWND; rebuild it as our 0.58 one.
+    let hwnd = HWND(raw.0);
+    unsafe {
+        let _ = SetWindowPos(
+            hwnd,
+            HWND_TOPMOST,
+            0,
+            0,
+            0,
+            0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
+        );
+    }
+}
+
+#[cfg(not(windows))]
+pub fn reassert_topmost(_window: &WebviewWindow) {}
+
 #[cfg(test)]
 mod tests {
     use super::anchor_point;

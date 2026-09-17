@@ -4,6 +4,21 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Fixes
+
+- Overlay voltava *abaixo* das janelas depois de acordar do lock: o
+  `set_always_on_top` do tao só chama `SetWindowPos` quando sua flag interna
+  **muda**, e como as janelas já nascem `alwaysOnTop` a flag nunca muda — o
+  re-afirmar era um no-op enquanto o Windows tinha tirado a janela do *topmost
+  band* sem avisar. As janelas auxiliares agora re-afirmam o topo com
+  `SetWindowPos(HWND_TOPMOST)` direto (`auxwin::reassert_topmost`), em cada show
+  e retentativa.
+- `power.rs` também trata `WM_DISPLAYCHANGE`: quando a resolução/topologia muda
+  (comum ao acordar numa doca), as janelas auxiliares se re-posicionam para o
+  monitor correto.
+
 ## [0.4.4] - 2026-09-16
 
 ### Fixes
