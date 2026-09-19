@@ -4,6 +4,20 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Added
+
+- Controle manual de dispositivos Bluetooth de áudio pareados: eles agora aparecem
+  marcados com um ícone de Bluetooth na lista (principal e flyout), com botão de
+  conectar/desconectar na linha (liga/desliga os perfis A2DP/hands-free via
+  `BluetoothSetServiceState`) e um menu de dispositivos Bluetooth na barra de
+  controles da title bar. A correlação endpoint ↔ aparelho pareado é feita pelo
+  nome entre parênteses do endpoint (`PKEY_Device_EnumeratorName == BTHENUM`);
+  o property store do endpoint não expõe a MAC do pareamento. Parear novos
+  aparelhos continua no fluxo nativo do Windows. O auto-desconectar ao trocar de
+  dispositivo padrão fica para uma fase seguinte.
+
 ## [0.4.6] - 2026-09-17
 
 ### Fixes

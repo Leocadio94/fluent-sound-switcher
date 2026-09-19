@@ -9,7 +9,7 @@ import { MicRegular, Speaker2Regular } from "@fluentui/react-icons";
 
 import DeviceRow from "../components/DeviceRow";
 import type { DeviceVolume } from "../hooks/useVolume";
-import type { AudioDevice, DeviceDirection } from "../lib/tauri";
+import type { AudioDevice, BtDevice, DeviceDirection } from "../lib/tauri";
 
 const useStyles = makeStyles({
   section: {
@@ -49,6 +49,9 @@ interface DeviceSectionProps extends VolumeProps {
   onSwitch: (device: AudioDevice) => void;
   isFavorite: (direction: DeviceDirection, id: string) => boolean;
   onToggleFavorite: (direction: DeviceDirection, id: string) => void;
+  btDevices: BtDevice[];
+  btBusyMac: string | null;
+  onBluetoothToggle: (device: AudioDevice) => void;
 }
 
 function DeviceSection({
@@ -58,6 +61,9 @@ function DeviceSection({
   onSwitch,
   isFavorite,
   onToggleFavorite,
+  btDevices,
+  btBusyMac,
+  onBluetoothToggle,
   volumes,
   onVolumeChange,
   onToggleMute,
@@ -92,6 +98,13 @@ function DeviceSection({
               volume={showSliders ? volumes[device.id] : undefined}
               onVolumeChange={showSliders ? onVolumeChange : undefined}
               onToggleMute={showSliders ? onToggleMute : undefined}
+              btConnected={
+                device.btMac
+                  ? btDevices.find((b) => b.mac === device.btMac)?.connected
+                  : undefined
+              }
+              btBusy={device.btMac === btBusyMac}
+              onToggleBluetooth={onBluetoothToggle}
             />
           </div>
         ))}
@@ -107,6 +120,9 @@ interface DeviceListProps extends VolumeProps {
   isFavorite: (direction: DeviceDirection, id: string) => boolean;
   onToggleFavorite: (direction: DeviceDirection, id: string) => void;
   showOnlyFavorites: boolean;
+  btDevices: BtDevice[];
+  btBusyMac: string | null;
+  onBluetoothToggle: (device: AudioDevice) => void;
 }
 
 export default function DeviceList({
@@ -116,6 +132,9 @@ export default function DeviceList({
   isFavorite,
   onToggleFavorite,
   showOnlyFavorites,
+  btDevices,
+  btBusyMac,
+  onBluetoothToggle,
   volumes,
   onVolumeChange,
   onToggleMute,
@@ -138,6 +157,9 @@ export default function DeviceList({
     onSwitch,
     isFavorite,
     onToggleFavorite,
+    btDevices,
+    btBusyMac,
+    onBluetoothToggle,
     volumes,
     onVolumeChange,
     onToggleMute,
