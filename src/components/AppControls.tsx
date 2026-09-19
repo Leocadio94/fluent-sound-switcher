@@ -106,45 +106,46 @@ export default function AppControls({
           onClick={onToggleMute}
         />
       </Tooltip>
-      <Menu positioning="below-end" hasIcons>
-        <MenuTrigger disableButtonEnhancement>
-          <Tooltip content={t("bluetooth.menu")} relationship="label">
-            <Button
-              size="small"
-              icon={<BtIcon />}
-              appearance="subtle"
-              aria-label={t("bluetooth.menu")}
-              disabled={!bluetooth}
-            />
-          </Tooltip>
-        </MenuTrigger>
-        <MenuPopover>
-          <MenuList>
-            {bluetooth && bluetooth.devices.length === 0 && (
-              <div className={styles.empty}>{t("bluetooth.noDevices")}</div>
-            )}
-            {bluetooth?.devices.map((device) => (
-              <MenuItem
-                key={device.mac}
-                icon={
-                  device.mac === bluetooth.busyMac ? (
-                    <Spinner size="tiny" />
-                  ) : device.connected ? (
-                    <BluetoothConnectedRegular />
-                  ) : (
-                    <BluetoothDisabledRegular />
-                  )
-                }
-                onClick={() =>
-                  void bluetooth.setConnect(device.mac, !device.connected)
-                }
-              >
-                {device.name}
-              </MenuItem>
-            ))}
-          </MenuList>
-        </MenuPopover>
-      </Menu>
+      {bluetooth && (
+        <Menu positioning="below-end" hasIcons>
+          <MenuTrigger disableButtonEnhancement>
+            <Tooltip content={t("bluetooth.menu")} relationship="label">
+              <Button
+                size="small"
+                icon={<BtIcon />}
+                appearance="subtle"
+                aria-label={t("bluetooth.menu")}
+              />
+            </Tooltip>
+          </MenuTrigger>
+          <MenuPopover>
+            <MenuList>
+              {bluetooth.devices.length === 0 && (
+                <div className={styles.empty}>{t("bluetooth.noDevices")}</div>
+              )}
+              {bluetooth.devices.map((device) => (
+                <MenuItem
+                  key={device.mac}
+                  icon={
+                    device.mac === bluetooth.busyMac ? (
+                      <Spinner size="tiny" />
+                    ) : device.connected ? (
+                      <BluetoothConnectedRegular />
+                    ) : (
+                      <BluetoothDisabledRegular />
+                    )
+                  }
+                  onClick={() =>
+                    void bluetooth.setConnect(device.mac, !device.connected)
+                  }
+                >
+                  {device.name}
+                </MenuItem>
+              ))}
+            </MenuList>
+          </MenuPopover>
+        </Menu>
+      )}
       <Tooltip content={t("settings.title")} relationship="label">
         <Button
           size="small"

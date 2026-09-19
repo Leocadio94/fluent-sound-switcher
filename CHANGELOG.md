@@ -18,6 +18,22 @@ the project follows phased iterations (see `README.md`).
   aparelhos continua no fluxo nativo do Windows. O auto-desconectar ao trocar de
   dispositivo padrão fica para uma fase seguinte.
 
+### Fixes
+
+- Conectar/desconectar foi refeito pelo caminho nativo do Windows (propriedade
+  one-shot `KSPROPSETID_BtAudio` no filtro de áudio do driver, via topologia do
+  endpoint — abordagem do ToothTray). O `BluetoothSetServiceState` inicial
+  *desinstalava* o serviço A2DP ao desconectar: o aparelho sumia do menu
+  Bluetooth e dos endpoints de áudio (com os favoritos), e reconectar parava de
+  funcionar. Agora a desconexão mantém os serviços instalados, o aparelho
+  permanece listado (e na lista de favoritos) e reconectar funciona.
+- A listagem de aparelhos passou a filtrar pela **classe do dispositivo**
+  (áudio/vídeo) em vez dos serviços instalados, então nenhum aparelho pareado
+  de áudio some da lista ao ser desconectado.
+- Sem rádio Bluetooth (ou desativado no sistema), a UI esconde todo o recurso:
+  o botão Bluetooth não aparece e o erro "no Bluetooth radio available" deixou
+  de ser exibido.
+
 ## [0.4.6] - 2026-09-17
 
 ### Fixes

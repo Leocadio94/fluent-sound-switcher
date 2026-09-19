@@ -37,14 +37,15 @@ pub fn list_audio_devices() -> Result<Vec<AudioDevice>, String> {
     audio::list_devices().map_err(|e| e.to_string())
 }
 
-/// Lists every paired Bluetooth device that exposes an audio service, with its
-/// current connection state. Runs on a blocking thread: walking the paired
-/// device list can take a moment.
+/// Reports Bluetooth state in one shot: `available` is false when the machine
+/// has no radio (the UI hides the feature entirely) and `devices` lists the
+/// paired audio devices with their connection state. Runs on a blocking
+/// thread: walking the paired device list can take a moment.
 #[tauri::command]
-pub async fn list_bluetooth_devices() -> Result<Vec<audio::bluetooth::BtDevice>, String> {
+pub async fn list_bluetooth_devices() -> Result<audio::bluetooth::BtSnapshot, String> {
     tauri::async_runtime::spawn_blocking(audio::bluetooth::list_devices)
         .await
-        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())
 }
 
 /// Connects or disconnects the audio profiles of a paired Bluetooth device

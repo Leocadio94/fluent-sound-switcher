@@ -51,7 +51,7 @@ interface DeviceSectionProps extends VolumeProps {
   onToggleFavorite: (direction: DeviceDirection, id: string) => void;
   btDevices: BtDevice[];
   btBusyMac: string | null;
-  onBluetoothToggle: (device: AudioDevice) => void;
+  onBluetoothToggle?: (device: AudioDevice) => void;
 }
 
 function DeviceSection({
@@ -122,7 +122,7 @@ interface DeviceListProps extends VolumeProps {
   showOnlyFavorites: boolean;
   btDevices: BtDevice[];
   btBusyMac: string | null;
-  onBluetoothToggle: (device: AudioDevice) => void;
+  onBluetoothToggle?: (device: AudioDevice) => void;
 }
 
 export default function DeviceList({

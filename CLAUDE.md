@@ -92,8 +92,8 @@ cargo test --manifest-path src-tauri/Cargo.toml
     and mute, any device / either direction), `events.rs`
     (`IMMNotificationClient`), `volume_events.rs`
     (`IAudioEndpointVolumeCallback` on the default output), `bluetooth.rs`
-    (paired BT audio devices via `BluetoothAPIs`: list + connect/disconnect by
-    toggling the A2DP/hands-free/headset services), `mod.rs`
+    (paired BT audio devices: list via `BluetoothAPIs`, connect/disconnect via
+    the driver's `KSPROPSETID_BtAudio` one-shot property), `mod.rs`
     (`ensure_com`, `cycle_default`). `sessions.rs` (per-app) not built yet.
   - Windows: `overlay.rs` (mute indicator), `banner.rs` (switch banner),
     `flyout.rs` (tray quick-switch) — all transparent/topmost/click-through;
@@ -120,17 +120,26 @@ cargo test --manifest-path src-tauri/Cargo.toml
   `IPolicyConfig` (CLSID `{870af99c-171d-4f9e-af0d-e63df40c2bc9}`, IID
   `f8679f50-850a-41cf-9c72-430f290290c8`), declared via `#[interface]` — sets all
   three roles. Validated in Phase 1.
-- **Bluetooth (`audio/bluetooth.rs`)**: connect/disconnect toggles the
-  A2DP/hands-free/headset services via `BluetoothSetServiceState` — only for
-  devices already paired by Windows; pairing stays in Windows Settings.
-  `BLUETOOTH_ADDRESS.rgBytes` is little-endian (`rgBytes[0]` is the *last* pair
-  of the displayed MAC) — `mac_bytes` reverses it, validated against the
-  `BTHENUM\DEV_<mac>` instance ids. The audio endpoint's property store does
-  **not** expose the pairing MAC (`PKEY_Device_InstanceId` is empty for
-  endpoints), so endpoint ↔ paired device correlation matches the name inside
-  parentheses of the friendly name. Disconnecting is reliable; connecting can
-  be ignored by some headsets. The two commands run on `spawn_blocking` —
-  establishing/tearing a profile takes seconds.
+- **Bluetooth (`audio/bluetooth.rs`)**: connect/disconnect sends the
+  `KSPROPSETID_BtAudio` one-shot property (`KSPROPERTY_ONESHOT_RECONNECT` /
+  `ONESHOT_DISCONNECT`) to the device's audio filter via the endpoint's
+  `IDeviceTopology` → `IConnector` → `IPart` → `IKsControl` walk (the
+  ToothTray approach — Windows' own connect mechanism, and it keeps the
+  paired services installed). `BluetoothSetServiceState` is only a fallback:
+  its DISABLE *uninstalls* the service, which drops the device out of the
+  paired-services list and made reconnection impossible — never make it the
+  primary path. Only devices already paired by Windows are managed; pairing
+  stays in Windows Settings. Listing filters by **class of device** (audio
+  major class/service bits), not by installed services, so a disconnected
+  device never vanishes from the list. The connect only works when the device
+  is connectable (out of its charging case); a failed connect is silent —
+  there is no error the API can report. `BLUETOOTH_ADDRESS.rgBytes` is
+  little-endian (`rgBytes[0]` is the *last* pair of the displayed MAC) —
+  `mac_bytes` reverses it, validated against the `BTHENUM\DEV_<mac>` instance
+  ids. The audio endpoint's property store does **not** expose the pairing
+  MAC (`PKEY_Device_InstanceId` is empty for endpoints), so endpoint ↔ paired
+  device correlation matches the name inside parentheses of the friendly
+  name. The two commands run on `spawn_blocking`.
 - `#[interface]`/`#[implement]` macros need `windows-core` as a **direct** dep so
   generated `::windows_core` paths resolve.
 - Device monitoring: `IMMNotificationClient` (`audio/events.rs`) registered for

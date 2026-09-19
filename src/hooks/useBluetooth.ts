@@ -8,6 +8,11 @@ import {
 import { useTauriEvent } from "./useTauriEvent";
 
 interface UseBluetooth {
+  /**
+   * False when the machine has no Bluetooth radio: the whole feature should
+   * be hidden, and no error shown (there is nothing the user can do here).
+   */
+  available: boolean;
   /** Paired Bluetooth audio devices, with the current connection state. */
   devices: BtDevice[];
   /** MAC of the device with a connect/disconnect request in flight. */
@@ -25,13 +30,16 @@ interface UseBluetooth {
  * focus, and after every toggle.
  */
 export function useBluetooth(): UseBluetooth {
+  const [available, setAvailable] = useState(false);
   const [devices, setDevices] = useState<BtDevice[]>([]);
   const [busyMac, setBusyMac] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
-      setDevices(await listBluetoothDevices());
+      const snapshot = await listBluetoothDevices();
+      setDevices(snapshot.devices);
+      setAvailable(snapshot.available);
       setError(null);
     } catch (e) {
       setError(String(e));
@@ -67,5 +75,5 @@ export function useBluetooth(): UseBluetooth {
     return () => window.removeEventListener("focus", onFocus);
   }, [load]);
 
-  return { devices, busyMac, error, refresh: load, setConnect };
+  return { available, devices, busyMac, error, refresh: load, setConnect };
 }

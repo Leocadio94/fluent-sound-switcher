@@ -52,7 +52,7 @@ impl AudioDevice {
 /// `NOTPRESENT` is deliberately left out — that means the driver is gone, so
 /// the endpoint is not something the user can pick again by plugging anything
 /// back in.
-const LISTED_STATES: u32 =
+pub(crate) const LISTED_STATES: u32 =
     DEVICE_STATE_ACTIVE.0 | DEVICE_STATE_UNPLUGGED.0 | DEVICE_STATE_DISABLED.0;
 
 /// Lists output and input endpoints — active, unplugged and disabled — marking
@@ -77,7 +77,7 @@ fn correlate_bluetooth(devices: &mut [AudioDevice]) {
     if !devices.iter().any(|d| d.is_bluetooth) {
         return;
     }
-    let paired = super::bluetooth::list_devices().unwrap_or_default();
+    let paired = super::bluetooth::list_devices().devices;
     for device in devices.iter_mut().filter(|d| d.is_bluetooth) {
         let Some(close) = device.name.rfind('(') else {
             continue;
@@ -176,7 +176,7 @@ unsafe fn take_pwstr(p: PWSTR) -> Option<String> {
     s
 }
 
-unsafe fn propvariant_to_string(prop: &PROPVARIANT) -> Option<String> {
+pub(crate) unsafe fn propvariant_to_string(prop: &PROPVARIANT) -> Option<String> {
     PropVariantToStringAlloc(prop)
         .ok()
         .and_then(|p| take_pwstr(p))

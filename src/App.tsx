@@ -145,11 +145,14 @@ export default function App({
     onOpenSettings: () => setSettingsOpen(true),
     onRefresh: () => void refresh(),
     refreshing: loading,
-    bluetooth: {
-      devices: bluetooth.devices,
-      busyMac: bluetooth.busyMac,
-      setConnect: bluetooth.setConnect,
-    },
+    // No radio (or the feature is off): the Bluetooth menu button is hidden.
+    bluetooth: bluetooth.available
+      ? {
+          devices: bluetooth.devices,
+          busyMac: bluetooth.busyMac,
+          setConnect: bluetooth.setConnect,
+        }
+      : undefined,
   };
 
   const toggleBluetooth = (device: (typeof devices)[number]) => {
@@ -274,7 +277,7 @@ export default function App({
               showOnlyFavorites={showOnlyFavorites}
               btDevices={bluetooth.devices}
               btBusyMac={bluetooth.busyMac}
-              onBluetoothToggle={toggleBluetooth}
+              onBluetoothToggle={bluetooth.available ? toggleBluetooth : undefined}
               volumes={volumes}
               onVolumeChange={setLevel}
               onToggleMute={toggleDeviceMute}

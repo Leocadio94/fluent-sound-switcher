@@ -31,9 +31,15 @@ export interface BtDevice {
   hasMicrophone: boolean;
 }
 
+/** Bluetooth state in one shot: no radio means the UI hides the feature. */
+export interface BluetoothSnapshot {
+  available: boolean;
+  devices: BtDevice[];
+}
+
 /** Lists every paired Bluetooth audio device with its connection state. */
-export function listBluetoothDevices(): Promise<BtDevice[]> {
-  return invoke<BtDevice[]>("list_bluetooth_devices");
+export function listBluetoothDevices(): Promise<BluetoothSnapshot> {
+  return invoke<BluetoothSnapshot>("list_bluetooth_devices");
 }
 
 /**
