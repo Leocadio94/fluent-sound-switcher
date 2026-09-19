@@ -30,6 +30,19 @@ use windows::Win32::UI::Shell::PropertiesSystem::PROPERTYKEY;
 /// several keys), so collapse them into a single GUI refresh.
 const RENAME_DEBOUNCE: Duration = Duration::from_millis(400);
 
+/// Id of the current default output, remembered so the device that *stopped*
+/// being the default can be auto-disconnected when it was Bluetooth.
+static LAST_DEFAULT_OUTPUT: OnceLock<Mutex<Option<String>>> = OnceLock::new();
+
+/// Swaps the remembered default-output id, returning the previous one.
+fn remember_default_output(new_id: Option<String>) -> Option<String> {
+    let cell = LAST_DEFAULT_OUTPUT.get_or_init(|| Mutex::new(None));
+    match cell.lock() {
+        Ok(mut guard) => std::mem::replace(&mut *guard, new_id),
+        Err(_) => None,
+    }
+}
+
 /// COM callback object. Holds an `AppHandle` so the audio thread can dispatch
 /// work and notify the frontend.
 #[implement(IMMNotificationClient)]
@@ -54,19 +67,23 @@ fn refresh_gui(app: &AppHandle) {
 }
 
 impl IMMNotificationClient_Impl for Notifier_Impl {
-    fn OnDefaultDeviceChanged(&self, flow: EDataFlow, role: ERole, _id: &PCWSTR) -> Result<()> {
+    fn OnDefaultDeviceChanged(&self, flow: EDataFlow, role: ERole, id: &PCWSTR) -> Result<()> {
         // Console role only, so one change does not fire three times.
         if role != eConsole {
             return Ok(());
         }
         let is_render = flow == eRender;
         let is_capture = flow == eCapture;
+        let new_id = unsafe { id.to_string() }.ok().filter(|id| !id.is_empty());
         dispatch(&self.app, move |app| {
             refresh_gui(&app);
             if is_render {
-                // The output default moved — refresh the device tray icon, move
-                // the volume callback to the new endpoint (it is bound to one
-                // device) and re-read that device's mute state.
+                // The output default moved — disconnect the previous device if
+                // the user left it behind on Bluetooth, refresh the device
+                // tray icon, move the volume callback to the new endpoint (it
+                // is bound to one device) and re-read that device's mute
+                // state.
+                handle_default_output_change(&app, new_id);
                 crate::tray::refresh_device_icon(&app);
                 crate::audio::volume_events::rearm(&app);
                 crate::mute::refresh_output(&app);
@@ -137,6 +154,43 @@ fn schedule_arrival(app: &AppHandle, id: &PCWSTR) {
     dispatch(app, move |app| on_arrival(&app, &device_id));
 }
 
+/// Handles a default-output change: remembers the new id and, when the user
+/// enabled it and the device that *stopped* being the default is Bluetooth,
+/// disconnects it — speakers left connected (and blinking) behind after a
+/// switch are the whole reason the setting exists.
+///
+/// Covers every switch path (app, hotkey, CLI, sound panel, auto-switch),
+/// because they all land in `OnDefaultDeviceChanged`. Runs in a blocking
+/// task, never in the COM callback itself.
+fn handle_default_output_change(app: &AppHandle, new_id: Option<String>) {
+    let previous = remember_default_output(new_id);
+    let Some(old_id) = previous else {
+        return;
+    };
+    if !crate::config::bluetooth_auto_disconnect(app) {
+        return;
+    }
+    let Ok(devices) = crate::audio::list_devices() else {
+        return;
+    };
+    let Some(device) = devices.iter().find(|d| d.id == old_id && d.is_bluetooth) else {
+        return;
+    };
+    let Some(mac) = device.bt_mac.clone() else {
+        return;
+    };
+    match crate::audio::bluetooth::set_connect(&mac, false) {
+        Ok(()) => {
+            log::info!(
+                "auto-disconnected the previous Bluetooth output {}",
+                device.name
+            );
+            crate::notify::device_disconnected(app, &device.name);
+        }
+        Err(e) => log::warn!("auto-disconnect of {} failed: {e}", device.name),
+    }
+}
+
 /// Handles a device becoming available: always refresh the GUI, and, when the
 /// user enabled auto-switch and the rule allows it, make the device the default
 /// output. Setting the default re-enters `OnDefaultDeviceChanged` (which only
@@ -196,6 +250,12 @@ fn on_arrival(app: &AppHandle, device_id: &str) {
 /// which also sidesteps the COM objects' non-`Send`/`Sync` nature.
 pub fn start(app: &AppHandle) {
     crate::audio::ensure_com();
+    // Seed the remembered default so the first switch after launch does not
+    // fire with an empty history. The enumeration may legitimately fail (no
+    // output device) — an empty history just skips the first auto-disconnect.
+    if let Ok(default) = crate::audio::default_output() {
+        remember_default_output(default.map(|d| d.id));
+    }
     unsafe {
         let enumerator: IMMDeviceEnumerator =
             match CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL) {

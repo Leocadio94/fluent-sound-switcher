@@ -34,6 +34,25 @@ pub fn device_changed(app: &AppHandle, name: &str, direction: &str) {
     }
 }
 
+/// Toasts that a device was auto-disconnected. No banner and no sound: this is
+/// housekeeping, not a switch — reserving the usual switch cues keeps it quiet.
+pub fn device_disconnected(app: &AppHandle, name: &str) {
+    let cfg = config::notifications(app);
+    if !cfg.native {
+        return;
+    }
+    let title = i18n::fmt1(app, Msg::DeviceDisconnected, name);
+    if let Err(e) = app
+        .notification()
+        .builder()
+        .title(title)
+        .body(i18n::t(app, Msg::DeviceDisconnectedBody))
+        .show()
+    {
+        log::warn!("native toast failed: {e}");
+    }
+}
+
 #[cfg(windows)]
 fn play_sound() {
     use windows::core::PCWSTR;

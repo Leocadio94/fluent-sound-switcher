@@ -4,6 +4,19 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Added
+
+- **Desconectar Bluetooth ao trocar** *(opcional, Settings → Geral)*: quando o
+  dispositivo padrão de saída muda, o aparelho Bluetooth que deixou de ser o
+  padrão é desconectado automaticamente — cobre qualquer caminho de troca
+  (janela principal, atalho global, CLI, painel de som, auto-switch). Dispara
+  o mesmo mecanismo nativo do botão manual (`KSPROPERTY_ONESHOT_DISCONNECT`
+  via topologia do driver, sem desinstalar serviços) e, com notificações
+  nativas ligadas, mostra um toast discreto de confirmação. Desativado por
+  padrão.
+
 ## [0.4.7] - 2026-09-19
 
 ### Added

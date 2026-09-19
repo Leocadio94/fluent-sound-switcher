@@ -140,6 +140,14 @@ cargo test --manifest-path src-tauri/Cargo.toml
   MAC (`PKEY_Device_InstanceId` is empty for endpoints), so endpoint ↔ paired
   device correlation matches the name inside parentheses of the friendly
   name. The two commands run on `spawn_blocking`.
+- **BT auto-disconnect** (`events.rs::handle_default_output_change`): when the
+  default output changes, the *previous* device is disconnected if it was
+  Bluetooth and the opt-in `bluetoothAutoDisconnect` config is on. Triggered
+  from `OnDefaultDeviceChanged`'s dispatched task, so it covers every switch
+  path. The remembered default-output id (`LAST_DEFAULT_OUTPUT`) is seeded at
+  startup in `events::start` — without the seed the first switch skips the
+  disconnect. Confirmed via the same notify as the switch, but a dedicated
+  native-only toast (`notify::device_disconnected`), never the banner/sound.
 - `#[interface]`/`#[implement]` macros need `windows-core` as a **direct** dep so
   generated `::windows_core` paths resolve.
 - Device monitoring: `IMMNotificationClient` (`audio/events.rs`) registered for

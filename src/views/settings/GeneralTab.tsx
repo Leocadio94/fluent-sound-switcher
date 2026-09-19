@@ -134,6 +134,16 @@ export default function GeneralTab({
         />
       </SettingRow>
 
+      <SettingRow
+        label={t("settings.btAutoDisconnect")}
+        hint={t("settings.btAutoDisconnectHint")}
+      >
+        <Switch
+          checked={general.bluetoothAutoDisconnect}
+          onChange={(_, d) => general.setBtAutoDisconnect(d.checked)}
+        />
+      </SettingRow>
+
       <SettingRow label={t("autoSwitch.enabled")} hint={t("autoSwitch.hint")}>
         <Switch
           checked={autoSwitch.enabled}

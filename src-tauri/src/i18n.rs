@@ -65,6 +65,9 @@ pub enum Msg {
     UpdateCheckFailed,
     /// Takes the error.
     UpdateFailed,
+    /// Takes the device name.
+    DeviceDisconnected,
+    DeviceDisconnectedBody,
 }
 
 /// Resolves a message in the user's configured language.
@@ -106,6 +109,8 @@ fn pt_br(msg: Msg) -> &'static str {
         Msg::UpdaterUnavailable => "Updater indisponível: {}",
         Msg::UpdateCheckFailed => "Erro ao verificar atualizações: {}",
         Msg::UpdateFailed => "Falha ao atualizar: {}",
+        Msg::DeviceDisconnected => "Desconectado",
+        Msg::DeviceDisconnectedBody => "O aparelho Bluetooth ficou sem uso após a troca.",
     }
 }
 
@@ -128,6 +133,8 @@ fn en(msg: Msg) -> &'static str {
         Msg::UpdaterUnavailable => "Updater unavailable: {}",
         Msg::UpdateCheckFailed => "Could not check for updates: {}",
         Msg::UpdateFailed => "Update failed: {}",
+        Msg::DeviceDisconnected => "Disconnected",
+        Msg::DeviceDisconnectedBody => "The Bluetooth device went idle after the switch.",
     }
 }
 

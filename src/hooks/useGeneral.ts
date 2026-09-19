@@ -2,9 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 
 import {
   DEFAULT_MONITOR_PREFERENCE,
+  loadBtAutoDisconnect,
   loadMonitorPreference,
   loadShowDeviceIcon,
   loadStartMinimized,
+  saveBtAutoDisconnect,
   saveMonitorPreference,
   saveShowDeviceIcon,
   saveStartMinimized,
@@ -25,6 +27,8 @@ interface UseGeneral {
   setShowDeviceIcon: (value: boolean) => void;
   monitor: MonitorPreference;
   setMonitor: (value: MonitorPreference) => void;
+  bluetoothAutoDisconnect: boolean;
+  setBtAutoDisconnect: (value: boolean) => void;
 }
 
 /**
@@ -38,6 +42,7 @@ export function useGeneral(): UseGeneral {
   const [monitor, setMonitorState] = useState<MonitorPreference>(
     DEFAULT_MONITOR_PREFERENCE,
   );
+  const [bluetoothAutoDisconnect, setBtAutoDisconnectState] = useState(false);
 
   useEffect(() => {
     void getAutostart()
@@ -46,6 +51,7 @@ export function useGeneral(): UseGeneral {
     void loadStartMinimized().then(setStartMinimizedState);
     void loadShowDeviceIcon().then(setShowDeviceIconState);
     void loadMonitorPreference().then(setMonitorState);
+    void loadBtAutoDisconnect().then(setBtAutoDisconnectState);
   }, []);
 
   const setAutostart = useCallback((value: boolean) => {
@@ -78,6 +84,13 @@ export function useGeneral(): UseGeneral {
     void saveMonitorPreference(value);
   }, []);
 
+  // The backend re-reads the file on every default-output change, so saving is
+  // all it takes to apply.
+  const setBtAutoDisconnect = useCallback((value: boolean) => {
+    setBtAutoDisconnectState(value);
+    void saveBtAutoDisconnect(value);
+  }, []);
+
   return {
     autostart,
     setAutostart,
@@ -87,5 +100,7 @@ export function useGeneral(): UseGeneral {
     setShowDeviceIcon,
     monitor,
     setMonitor,
+    bluetoothAutoDisconnect,
+    setBtAutoDisconnect,
   };
 }

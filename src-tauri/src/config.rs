@@ -268,6 +268,16 @@ pub fn start_minimized(app: &AppHandle) -> bool {
         .unwrap_or(false)
 }
 
+/// Whether the Bluetooth device that stops being the default output should be
+/// disconnected when the default output changes. Opt-in: it only makes sense
+/// for devices whose firmware keeps them connected (and blinking) afterwards.
+pub fn bluetooth_auto_disconnect(app: &AppHandle) -> bool {
+    read(app)
+        .get("bluetoothAutoDisconnect")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
+}
+
 /// Whether to show the second tray icon reflecting the current output device.
 pub fn show_device_icon(app: &AppHandle) -> bool {
     read(app)
