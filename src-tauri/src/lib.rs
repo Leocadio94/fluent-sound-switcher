@@ -118,6 +118,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             ping,
             commands::list_audio_devices,
+            commands::list_bluetooth_devices,
+            commands::set_bluetooth_connect,
             commands::set_default_audio_device,
             commands::toggle_mic_mute,
             commands::get_mic_muted,

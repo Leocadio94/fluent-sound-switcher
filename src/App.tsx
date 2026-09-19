@@ -23,6 +23,7 @@ import { useMute } from "./hooks/useMute";
 import { useMuteIndicator } from "./hooks/useMuteIndicator";
 import { useNotifications } from "./hooks/useNotifications";
 import { useAutoSwitch } from "./hooks/useAutoSwitch";
+import { useBluetooth } from "./hooks/useBluetooth";
 import { useVolume } from "./hooks/useVolume";
 import { useVolumeOsd } from "./hooks/useVolumeOsd";
 import { useTauriEvent } from "./hooks/useTauriEvent";
@@ -106,6 +107,7 @@ export default function App({
   const { indicator, setField: setIndicatorField } = useMuteIndicator();
   const { notifications, setField: setNotificationField } = useNotifications();
   const { autoSwitch, setField: setAutoSwitchField } = useAutoSwitch();
+  const bluetooth = useBluetooth();
   const { muted, toggle: toggleMute } = useMute();
   const { volumes, setLevel, toggleMute: toggleDeviceMute } = useVolume(devices);
   const { osd, setField: setOsdField } = useVolumeOsd();
@@ -143,6 +145,19 @@ export default function App({
     onOpenSettings: () => setSettingsOpen(true),
     onRefresh: () => void refresh(),
     refreshing: loading,
+    bluetooth: {
+      devices: bluetooth.devices,
+      busyMac: bluetooth.busyMac,
+      setConnect: bluetooth.setConnect,
+    },
+  };
+
+  const toggleBluetooth = (device: (typeof devices)[number]) => {
+    if (!device.btMac) return;
+    const connected = bluetooth.devices.some(
+      (b) => b.mac === device.btMac && b.connected,
+    );
+    void bluetooth.setConnect(device.btMac, !connected);
   };
 
   return (
@@ -228,6 +243,22 @@ export default function App({
           </MessageBar>
         )}
 
+        {bluetooth.error && (
+          <MessageBar intent="error" layout="multiline">
+            <MessageBarBody>
+              {t("bluetooth.error")}
+              <Caption1 className={styles.errorDetail}>
+                {bluetooth.error}
+              </Caption1>
+            </MessageBarBody>
+            <MessageBarActions>
+              <Button size="small" onClick={() => void bluetooth.refresh()}>
+                {t("errors.retry")}
+              </Button>
+            </MessageBarActions>
+          </MessageBar>
+        )}
+
         {loading ? (
           <div className={styles.centered}>
             <Spinner label={t("common.loading")} />
@@ -241,6 +272,9 @@ export default function App({
               isFavorite={isFavorite}
               onToggleFavorite={toggleFavorite}
               showOnlyFavorites={showOnlyFavorites}
+              btDevices={bluetooth.devices}
+              btBusyMac={bluetooth.busyMac}
+              onBluetoothToggle={toggleBluetooth}
               volumes={volumes}
               onVolumeChange={setLevel}
               onToggleMute={toggleDeviceMute}

@@ -24,6 +24,14 @@
       "disabled": "Disabled"
     }
   },
+  "bluetooth": {
+    "device": "Bluetooth device",
+    "connect": "Connect Bluetooth device",
+    "disconnect": "Disconnect Bluetooth device",
+    "menu": "Bluetooth audio devices",
+    "noDevices": "No paired Bluetooth devices",
+    "error": "Could not connect or disconnect the Bluetooth device"
+  },
   "flyout": {
     "empty": "Mark favorite devices (★) in the main window to quick-switch from here.",
     "mute": "Mute microphone",

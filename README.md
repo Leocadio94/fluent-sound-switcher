@@ -69,6 +69,7 @@ top, every time.
 - 🔔 **Switch notifications** — any mix of a native Windows toast, an on-screen banner, and a sound.
 - 🔌 **Auto-switch on connect** *(optional)* — plug in a TV/monitor with audio and it can grab the default output.
 - 🖼️ **Output-device tray icon** *(optional)* — a second tray icon mirroring the current output, using the icon Windows shows for it.
+- 🎧 **Bluetooth connect/disconnect** — paired Bluetooth audio devices show a Bluetooth badge in the list and can be connected or disconnected right from the app (main list and the title-bar menu).
 - 🎨 **Your Windows accent colour** — the palette is built from the accent and the six shades Windows derives around it, live when you change it. Switchable back to the Fluent blue.
 - 🪟 **App-drawn title bar** carrying the app's own controls, or the system one if you prefer it (Settings → General, applied live).
 - 😴 **Sleeping favourites keep their place** — a wireless headset that dozes off stays in the list, dimmed and marked *Disconnected*, keeping its star and its position in the cycle order.
@@ -268,9 +269,11 @@ then update `plugins.updater.pubkey` in `tauri.conf.json` and re-set the secret.
 | ✅ | Accent-colour theming (follows the Windows accent colour, live) |
 | ✅ | Custom title bar, with the system one as an option (snap layouts) |
 | ✅ | Disconnected favourites keep their place in the list and the cycle |
+| ✅ | Bluetooth audio devices: list paired devices, connect/disconnect from the app |
 | ✅ | Product site and privacy policy at [leocadio.dev](https://leocadio.dev/en/fluent-sound-switcher/) |
 | ⏳ | Code signing (Authenticode cert — removes the SmartScreen warning) |
 | 🔮 | Per-app audio profiles *(experimental)* |
+| 🔮 | Auto-disconnect Bluetooth when the default device switches away *(next)* |
 
 ## 🔒 Privacy
 

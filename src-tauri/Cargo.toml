@@ -45,6 +45,8 @@ windows = { version = "0.58", features = [
   "Win32_System_Threading",
   "Win32_UI_Accessibility",
   "Win32_Devices_FunctionDiscovery",
+  # Bluetooth radios and paired-device connect/disconnect (`audio/bluetooth.rs`).
+  "Win32_Devices_Bluetooth",
   # WinRT, for the Windows accent colour (UISettings).
   "UI",
   "UI_ViewManagement",

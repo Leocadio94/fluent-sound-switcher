@@ -4,6 +4,7 @@
 //! audio stack over COM. `enumerator` lists devices; `policy` switches the
 //! default device through the undocumented `IPolicyConfig` interface.
 
+pub mod bluetooth;
 mod enumerator;
 pub mod events;
 mod policy;

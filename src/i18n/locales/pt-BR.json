@@ -24,6 +24,14 @@
       "disabled": "Desativado"
     }
   },
+  "bluetooth": {
+    "device": "Dispositivo Bluetooth",
+    "connect": "Conectar dispositivo Bluetooth",
+    "disconnect": "Desconectar dispositivo Bluetooth",
+    "menu": "Dispositivos Bluetooth de áudio",
+    "noDevices": "Nenhum aparelho Bluetooth pareado",
+    "error": "Não foi possível conectar ou desconectar o dispositivo Bluetooth"
+  },
   "flyout": {
     "empty": "Marque dispositivos favoritos (★) na janela principal para trocar rápido por aqui.",
     "mute": "Mutar microfone",
