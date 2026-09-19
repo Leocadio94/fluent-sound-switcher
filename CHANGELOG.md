@@ -33,6 +33,12 @@ the project follows phased iterations (see `README.md`).
 - Sem rádio Bluetooth (ou desativado no sistema), a UI esconde todo o recurso:
   o botão Bluetooth não aparece e o erro "no Bluetooth radio available" deixou
   de ser exibido.
+- Nota: **desligar o aparelho remotamente não é possível** — nenhuma API do
+  Windows (Win32, WinRT ou o filtro de áudio) expõe "power off" de um
+  dispositivo Bluetooth remoto. Após desconectar, ele fica em modo conectável
+  (piscando) até o próprio firmware desligar (muitos o fazem após alguns
+  minutos ou ao ser guardado). Uma conexão reconecta e uma desconexão derruba
+  o perfil de áudio; o resto é com o aparelho.
 
 ## [0.4.6] - 2026-09-17
 
