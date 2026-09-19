@@ -10,6 +10,9 @@ import {
   tokens,
 } from "@fluentui/react-components";
 import {
+  BluetoothConnectedRegular,
+  BluetoothDisabledRegular,
+  BluetoothRegular,
   CheckmarkCircleFilled,
   ChevronDownRegular,
   ChevronUpRegular,
@@ -98,6 +101,13 @@ const useStyles = makeStyles({
   },
   iconFull: { fontSize: "20px" },
   iconCompact: { fontSize: "18px" },
+  // Small transport badge beside the name: the speaker/mic icon says the
+  // direction, this says where the audio comes from.
+  btBadge: {
+    color: tokens.colorNeutralForeground3,
+    flexShrink: 0,
+    fontSize: "14px",
+  },
   name: {
     flexGrow: 1,
     overflow: "hidden",
@@ -236,6 +246,12 @@ interface DeviceRowProps {
   volume?: DeviceVolume;
   onVolumeChange?: (device: AudioDevice, level: number) => void;
   onToggleMute?: (device: AudioDevice) => void;
+  /** Connection state of the paired Bluetooth device behind this endpoint. */
+  btConnected?: boolean;
+  /** True while the Bluetooth connect/disconnect request is in flight. */
+  btBusy?: boolean;
+  /** Omit to hide the Bluetooth toggle (the flyout has no BT control). */
+  onToggleBluetooth?: (device: AudioDevice) => void;
 }
 
 export default function DeviceRow({
@@ -248,6 +264,9 @@ export default function DeviceRow({
   volume,
   onVolumeChange,
   onToggleMute,
+  btConnected,
+  btBusy = false,
+  onToggleBluetooth,
 }: DeviceRowProps) {
   const styles = useStyles();
   const { t } = useTranslation();
@@ -299,6 +318,7 @@ export default function DeviceRow({
               full ? styles.iconFull : styles.iconCompact,
             )}
           />
+          {device.isBluetooth && <BluetoothRegular className={styles.btBadge} />}
           {full ? (
             <Body1 className={styles.name}>{device.name}</Body1>
           ) : (
@@ -349,6 +369,35 @@ export default function DeviceRow({
             </button>
           </Tooltip>
         )}
+
+        {full &&
+          device.isBluetooth &&
+          onToggleBluetooth &&
+          device.btMac && (
+            <Tooltip
+              content={
+                btConnected
+                  ? t("bluetooth.disconnect")
+                  : t("bluetooth.connect")
+              }
+              relationship="label"
+            >
+              <button
+                type="button"
+                aria-pressed={btConnected}
+                className={styles.star}
+                onClick={() => onToggleBluetooth(device)}
+              >
+                {btBusy ? (
+                  <Spinner size="tiny" />
+                ) : btConnected ? (
+                  <BluetoothConnectedRegular />
+                ) : (
+                  <BluetoothDisabledRegular />
+                )}
+              </button>
+            </Tooltip>
+          )}
 
         {full && favorite !== undefined && onToggleFavorite && (
           <Tooltip

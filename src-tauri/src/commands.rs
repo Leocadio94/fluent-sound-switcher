@@ -37,6 +37,27 @@ pub fn list_audio_devices() -> Result<Vec<AudioDevice>, String> {
     audio::list_devices().map_err(|e| e.to_string())
 }
 
+/// Reports Bluetooth state in one shot: `available` is false when the machine
+/// has no radio (the UI hides the feature entirely) and `devices` lists the
+/// paired audio devices with their connection state. Runs on a blocking
+/// thread: walking the paired device list can take a moment.
+#[tauri::command]
+pub async fn list_bluetooth_devices() -> Result<audio::bluetooth::BtSnapshot, String> {
+    tauri::async_runtime::spawn_blocking(audio::bluetooth::list_devices)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Connects or disconnects the audio profiles of a paired Bluetooth device
+/// (identified by MAC address). Runs on a blocking thread: establishing or
+/// tearing down a profile can take seconds.
+#[tauri::command]
+pub async fn set_bluetooth_connect(mac: String, enabled: bool) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || audio::bluetooth::set_connect(&mac, enabled))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
 /// Switches the system default device to `device_id` (all roles). When `notify`
 /// is set (hotkey/flyout switches), fires a device-change notification.
 #[tauri::command]

@@ -17,6 +17,37 @@ export interface AudioDevice {
   direction: DeviceDirection;
   isDefault: boolean;
   state: DeviceState;
+  /** Whether the endpoint is fed by a paired Bluetooth device. */
+  isBluetooth: boolean;
+  /** The paired Bluetooth device's MAC ("AA:BB:CC:DD:EE:FF"), when Bluetooth. */
+  btMac: string | null;
+}
+
+/** A paired Bluetooth device that exposes an audio service. */
+export interface BtDevice {
+  name: string;
+  mac: string;
+  connected: boolean;
+  hasMicrophone: boolean;
+}
+
+/** Bluetooth state in one shot: no radio means the UI hides the feature. */
+export interface BluetoothSnapshot {
+  available: boolean;
+  devices: BtDevice[];
+}
+
+/** Lists every paired Bluetooth audio device with its connection state. */
+export function listBluetoothDevices(): Promise<BluetoothSnapshot> {
+  return invoke<BluetoothSnapshot>("list_bluetooth_devices");
+}
+
+/**
+ * Connects/disconnects the audio profiles of a paired Bluetooth device (by
+ * MAC). Some devices ignore the connect request — disconnect is reliable.
+ */
+export function setBluetoothConnect(mac: string, enabled: boolean): Promise<void> {
+  return invoke<void>("set_bluetooth_connect", { mac, enabled });
 }
 
 /** Lists active input/output devices with the current defaults flagged. */

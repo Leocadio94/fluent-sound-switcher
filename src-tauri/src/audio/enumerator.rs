@@ -8,7 +8,9 @@ use std::ffi::c_void;
 
 use serde::Serialize;
 use windows::core::{PROPVARIANT, PWSTR};
-use windows::Win32::Devices::FunctionDiscovery::PKEY_Device_FriendlyName;
+use windows::Win32::Devices::FunctionDiscovery::{
+    PKEY_Device_EnumeratorName, PKEY_Device_FriendlyName,
+};
 use windows::Win32::Media::Audio::{
     eCapture, eConsole, eRender, EDataFlow, IMMDeviceEnumerator, MMDeviceEnumerator,
     DEVICE_STATE_ACTIVE, DEVICE_STATE_DISABLED, DEVICE_STATE_UNPLUGGED,
@@ -31,6 +33,12 @@ pub struct AudioDevice {
     /// `"active"`, `"unplugged"` or `"disabled"`. Only an active endpoint can
     /// be made the default or carry a volume level.
     pub state: &'static str,
+    /// Whether the endpoint is fed by a Bluetooth device (`BTHENUM` enumerator).
+    pub is_bluetooth: bool,
+    /// The paired Bluetooth device this endpoint belongs to (`AA:BB:CC:DD:EE:FF`),
+    /// used to correlate with [`super::bluetooth::BtDevice`]. `None` when not
+    /// Bluetooth or when the MAC cannot be read.
+    pub bt_mac: Option<String>,
 }
 
 impl AudioDevice {
@@ -44,7 +52,7 @@ impl AudioDevice {
 /// `NOTPRESENT` is deliberately left out — that means the driver is gone, so
 /// the endpoint is not something the user can pick again by plugging anything
 /// back in.
-const LISTED_STATES: u32 =
+pub(crate) const LISTED_STATES: u32 =
     DEVICE_STATE_ACTIVE.0 | DEVICE_STATE_UNPLUGGED.0 | DEVICE_STATE_DISABLED.0;
 
 /// Lists output and input endpoints — active, unplugged and disabled — marking
@@ -57,7 +65,29 @@ pub fn list_devices() -> windows::core::Result<Vec<AudioDevice>> {
         let mut devices = Vec::new();
         collect(&enumerator, eRender, "output", &mut devices)?;
         collect(&enumerator, eCapture, "input", &mut devices)?;
+        correlate_bluetooth(&mut devices);
         Ok(devices)
+    }
+}
+
+/// Fills `bt_mac` on the Bluetooth endpoints by matching the paired device's
+/// name against the part in parentheses of the endpoint friendly name — the
+/// property store does not expose the pairing MAC directly.
+fn correlate_bluetooth(devices: &mut [AudioDevice]) {
+    if !devices.iter().any(|d| d.is_bluetooth) {
+        return;
+    }
+    let paired = super::bluetooth::list_devices().devices;
+    for device in devices.iter_mut().filter(|d| d.is_bluetooth) {
+        let Some(close) = device.name.rfind('(') else {
+            continue;
+        };
+        let Some(bt_name) = device.name.get(close + 1..device.name.len() - 1) else {
+            continue;
+        };
+        if let Some(matched) = paired.iter().find(|b| b.name == bt_name) {
+            device.bt_mac = Some(matched.mac.clone());
+        }
     }
 }
 
@@ -109,6 +139,16 @@ unsafe fn collect(
             .and_then(|prop| propvariant_to_string(&prop))
             .unwrap_or_else(|| "Unknown device".to_string());
 
+        // BTHENUM marks Bluetooth-fed endpoints. The endpoint property store
+        // does not expose the paired device's MAC (PKEY_Device_InstanceId is
+        // empty here), so correlation happens in `list_devices` by name.
+        let is_bluetooth = device
+            .OpenPropertyStore(STGM_READ)
+            .ok()
+            .and_then(|store| store.GetValue(&PKEY_Device_EnumeratorName).ok())
+            .and_then(|prop| propvariant_to_string(&prop))
+            .is_some_and(|v| v == "BTHENUM");
+
         // An endpoint that reports no state is treated as active: better to
         // offer it and have the switch fail than to hide a working device.
         let state = device.GetState().map(state_name).unwrap_or("active");
@@ -119,6 +159,8 @@ unsafe fn collect(
             name,
             direction,
             state,
+            is_bluetooth,
+            bt_mac: None,
         });
     }
     Ok(())
@@ -134,7 +176,7 @@ unsafe fn take_pwstr(p: PWSTR) -> Option<String> {
     s
 }
 
-unsafe fn propvariant_to_string(prop: &PROPVARIANT) -> Option<String> {
+pub(crate) unsafe fn propvariant_to_string(prop: &PROPVARIANT) -> Option<String> {
     PropVariantToStringAlloc(prop)
         .ok()
         .and_then(|p| take_pwstr(p))
@@ -161,5 +203,17 @@ mod tests {
         // that works.
         assert_eq!(state_name(DEVICE_STATE_NOTPRESENT), "active");
         assert_eq!(state_name(DEVICE_STATE(0)), "active");
+    }
+
+    /// Live check that Bluetooth endpoints get flagged and correlated with
+    /// their paired device: run with `cargo test -- --ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn marks_bluetooth_endpoints() {
+        for device in super::list_devices().unwrap().into_iter() {
+            if device.is_bluetooth {
+                println!("{} -> {:?}", device.name, device.bt_mac);
+            }
+        }
     }
 }

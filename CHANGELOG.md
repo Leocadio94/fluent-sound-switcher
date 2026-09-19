@@ -4,6 +4,42 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Added
+
+- Controle manual de dispositivos Bluetooth de áudio pareados: eles agora aparecem
+  marcados com um ícone de Bluetooth na lista (principal e flyout), com botão de
+  conectar/desconectar na linha (liga/desliga os perfis A2DP/hands-free via
+  `BluetoothSetServiceState`) e um menu de dispositivos Bluetooth na barra de
+  controles da title bar. A correlação endpoint ↔ aparelho pareado é feita pelo
+  nome entre parênteses do endpoint (`PKEY_Device_EnumeratorName == BTHENUM`);
+  o property store do endpoint não expõe a MAC do pareamento. Parear novos
+  aparelhos continua no fluxo nativo do Windows. O auto-desconectar ao trocar de
+  dispositivo padrão fica para uma fase seguinte.
+
+### Fixes
+
+- Conectar/desconectar foi refeito pelo caminho nativo do Windows (propriedade
+  one-shot `KSPROPSETID_BtAudio` no filtro de áudio do driver, via topologia do
+  endpoint — abordagem do ToothTray). O `BluetoothSetServiceState` inicial
+  *desinstalava* o serviço A2DP ao desconectar: o aparelho sumia do menu
+  Bluetooth e dos endpoints de áudio (com os favoritos), e reconectar parava de
+  funcionar. Agora a desconexão mantém os serviços instalados, o aparelho
+  permanece listado (e na lista de favoritos) e reconectar funciona.
+- A listagem de aparelhos passou a filtrar pela **classe do dispositivo**
+  (áudio/vídeo) em vez dos serviços instalados, então nenhum aparelho pareado
+  de áudio some da lista ao ser desconectado.
+- Sem rádio Bluetooth (ou desativado no sistema), a UI esconde todo o recurso:
+  o botão Bluetooth não aparece e o erro "no Bluetooth radio available" deixou
+  de ser exibido.
+- Nota: **desligar o aparelho remotamente não é possível** — nenhuma API do
+  Windows (Win32, WinRT ou o filtro de áudio) expõe "power off" de um
+  dispositivo Bluetooth remoto. Após desconectar, ele fica em modo conectável
+  (piscando) até o próprio firmware desligar (muitos o fazem após alguns
+  minutos ou ao ser guardado). Uma conexão reconecta e uma desconexão derruba
+  o perfil de áudio; o resto é com o aparelho.
+
 ## [0.4.6] - 2026-09-17
 
 ### Fixes
