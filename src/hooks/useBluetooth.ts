@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   listBluetoothDevices,
@@ -66,7 +66,18 @@ export function useBluetooth(): UseBluetooth {
     void load();
   }, [load]);
 
-  const onDeviceChanged = useCallback(() => void load(), [load]);
+  // A connect/desconnect bursts several `device-changed` events (one endpoint
+  // at a time); coalescing them into one refetch keeps the list from
+  // flickering through the handshake's intermediate states.
+  const debounceRef = useRef<number | undefined>(undefined);
+  useEffect(
+    () => () => window.clearTimeout(debounceRef.current),
+    [],
+  );
+  const onDeviceChanged = useCallback(() => {
+    window.clearTimeout(debounceRef.current);
+    debounceRef.current = window.setTimeout(() => void load(), 300);
+  }, [load]);
   useTauriEvent("device-changed", onDeviceChanged, [onDeviceChanged]);
 
   useEffect(() => {

@@ -17,6 +17,20 @@ the project follows phased iterations (see `README.md`).
   nativas ligadas, mostra um toast discreto de confirmação. Desativado por
   padrão.
 
+### Fixes
+
+- Reconectar logo depois de desconectar às vezes era ignorado pelo aparelho
+  (parecia "rejeitar": a interface oscilava conectado/desconectado e nada
+  conectava — a segunda tentativa ia). Agora o connect espera a conexão
+  estabilizar (duas leituras consecutivas) e, se não assentar, repete o
+  one-shot automaticamente uma vez antes de falhar; o controle mostra o
+  spinner durante esse período.
+- A lista Bluetooth do app reagia a cada evento intermediário do handshake e
+  piscava os estados; os refetch disparados por `device-changed` agora são
+  agrupados (300 ms).
+- No menu Bluetooth da barra de controles, aparelhos conectados vão para o
+  topo com o ícone em cor de destaque.
+
 ## [0.4.7] - 2026-09-19
 
 ### Added

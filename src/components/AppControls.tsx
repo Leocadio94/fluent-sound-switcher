@@ -40,6 +40,9 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground3,
     padding: tokens.spacingVerticalSNudge,
   },
+  connectedIcon: {
+    color: tokens.colorBrandForeground1,
+  },
 });
 
 /** The part of the Bluetooth hook the menu needs. */
@@ -123,25 +126,29 @@ export default function AppControls({
               {bluetooth.devices.length === 0 && (
                 <div className={styles.empty}>{t("bluetooth.noDevices")}</div>
               )}
-              {bluetooth.devices.map((device) => (
-                <MenuItem
-                  key={device.mac}
-                  icon={
-                    device.mac === bluetooth.busyMac ? (
-                      <Spinner size="tiny" />
-                    ) : device.connected ? (
-                      <BluetoothConnectedRegular />
-                    ) : (
-                      <BluetoothDisabledRegular />
-                    )
-                  }
-                  onClick={() =>
-                    void bluetooth.setConnect(device.mac, !device.connected)
-                  }
-                >
-                  {device.name}
-                </MenuItem>
-              ))}
+              {/* Connected devices first, in brand colour: the menu is a
+                  control panel, and what is live should lead it. */}
+              {[...bluetooth.devices]
+                .sort((a, b) => Number(b.connected) - Number(a.connected))
+                .map((device) => (
+                  <MenuItem
+                    key={device.mac}
+                    icon={
+                      device.mac === bluetooth.busyMac ? (
+                        <Spinner size="tiny" />
+                      ) : device.connected ? (
+                        <BluetoothConnectedRegular className={styles.connectedIcon} />
+                      ) : (
+                        <BluetoothDisabledRegular />
+                      )
+                    }
+                    onClick={() =>
+                      void bluetooth.setConnect(device.mac, !device.connected)
+                    }
+                  >
+                    {device.name}
+                  </MenuItem>
+                ))}
             </MenuList>
           </MenuPopover>
         </Menu>

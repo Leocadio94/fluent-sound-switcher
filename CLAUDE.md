@@ -139,7 +139,12 @@ cargo test --manifest-path src-tauri/Cargo.toml
   ids. The audio endpoint's property store does **not** expose the pairing
   MAC (`PKEY_Device_InstanceId` is empty for endpoints), so endpoint ↔ paired
   device correlation matches the name inside parentheses of the friendly
-  name. The two commands run on `spawn_blocking`.
+  name. The two commands run on `spawn_blocking`. The connect polls the flag
+  until it settles (two consecutive reads) and retries the one-shot once —
+  devices fresh off a disconnect often swallow the first attempt, which
+  looked like "rejection" with a flapping UI. Controls are deduped before
+  sending: a headset's render and capture endpoints can resolve to the same
+  filter.
 - **BT auto-disconnect** (`events.rs::handle_default_output_change`): when the
   default output changes, the *previous* device is disconnected if it was
   Bluetooth and the opt-in `bluetoothAutoDisconnect` config is on. Triggered
