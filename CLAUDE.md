@@ -145,7 +145,7 @@ cargo test --manifest-path src-tauri/Cargo.toml
   looked like "rejection" with a flapping UI. Controls are deduped before
   sending: a headset's render and capture endpoints can resolve to the same
   filter.
-- **BT auto-disconnect** (`events.rs::handle_default_output_change`): when the
+- **BT auto-disconnect** (`events.rs::schedule_auto_disconnect`): when the
   default output changes, the *previous* device is disconnected if it was
   Bluetooth and the opt-in `bluetoothAutoDisconnect` config is on. Triggered
   from `OnDefaultDeviceChanged`'s dispatched task, so it covers every switch
@@ -153,6 +153,14 @@ cargo test --manifest-path src-tauri/Cargo.toml
   startup in `events::start` — without the seed the first switch skips the
   disconnect. Confirmed via the same notify as the switch, but a dedicated
   native-only toast (`notify::device_disconnected`), never the banner/sound.
+- **Settle windows** (learned from a recorded flap): both auto-switch
+  (`ARRIVAL_SETTLE`, 2 s — re-verify the device is still active before
+  grabbing the default) and the auto-disconnect (`DISCONNECT_SETTLE`, 3 s —
+  skip if the default flipped back) wait and re-verify. Without them a
+  connect handshake turns into switch→revert→disconnect, the app flaps, and
+  Windows briefly activates unrelated endpoints (e.g. HDMI) as it reassigns
+  the default. The disconnect runs in its *own* dispatched task so the settle
+  sleep never delays the tray/volume/mute refreshes.
 - `#[interface]`/`#[implement]` macros need `windows-core` as a **direct** dep so
   generated `::windows_core` paths resolve.
 - Device monitoring: `IMMNotificationClient` (`audio/events.rs`) registered for

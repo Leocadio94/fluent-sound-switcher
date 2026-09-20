@@ -19,6 +19,15 @@ the project follows phased iterations (see `README.md`).
 
 ### Fixes
 
+- **Cascata de reconexão** (vídeo do usuário, frames a 10 fps): conectar o
+  fone → auto-switch assumia o default *no meio do handshake* → o aparelho
+  oscilava e o Windows revertia o default → o auto-desconectar então cortava
+  a conexão do aparelho que tinha acabado de conectar, e o Windows exibia por
+  um instante dispositivos como o LG ULTRAGEAR ao reatribuir o default. Agora
+  há uma janela de assentamento nos dois ganchos: o auto-switch espera ~2 s e
+  reconfirma que o aparelho continua ativo antes de assumir, e o
+  auto-desconectar espera ~3 s e desiste se o default oscilar de volta para o
+  aparelho. Os demais refreshes (tray, volume, mute) não esperam mais junto.
 - Reconectar logo depois de desconectar às vezes era ignorado pelo aparelho
   (parecia "rejeitar": a interface oscilava conectado/desconectado e nada
   conectava — a segunda tentativa ia). Agora o connect espera a conexão

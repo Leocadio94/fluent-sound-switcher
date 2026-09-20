@@ -30,6 +30,16 @@ use windows::Win32::UI::Shell::PropertiesSystem::PROPERTYKEY;
 /// several keys), so collapse them into a single GUI refresh.
 const RENAME_DEBOUNCE: Duration = Duration::from_millis(400);
 
+/// How long to wait after a device arrives before auto-switching to it: a
+/// Bluetooth endpoint goes ACTIVE mid-handshake and often drops again right
+/// after, so grabbing the default immediately starts a switch/revert flap.
+const ARRIVAL_SETTLE: Duration = Duration::from_millis(2000);
+
+/// How long to wait before acting on a default change: while the new device
+/// settles, Windows can flip the default back, and disconnecting a device the
+/// system handed back to would cut a connection the user kept.
+const DISCONNECT_SETTLE: Duration = Duration::from_millis(3000);
+
 /// Id of the current default output, remembered so the device that *stopped*
 /// being the default can be auto-disconnected when it was Bluetooth.
 static LAST_DEFAULT_OUTPUT: OnceLock<Mutex<Option<String>>> = OnceLock::new();
@@ -78,12 +88,12 @@ impl IMMNotificationClient_Impl for Notifier_Impl {
         dispatch(&self.app, move |app| {
             refresh_gui(&app);
             if is_render {
-                // The output default moved — disconnect the previous device if
-                // the user left it behind on Bluetooth, refresh the device
-                // tray icon, move the volume callback to the new endpoint (it
-                // is bound to one device) and re-read that device's mute
-                // state.
-                handle_default_output_change(&app, new_id);
+                // The output default moved — schedule the previous device's
+                // auto-disconnect if the user left it behind on Bluetooth
+                // (after a settle window), refresh the device tray icon, move
+                // the volume callback to the new endpoint (it is bound to one
+                // device) and re-read that device's mute state.
+                schedule_auto_disconnect(&app, handle_default_output_change(new_id));
                 crate::tray::refresh_device_icon(&app);
                 crate::audio::volume_events::rearm(&app);
                 crate::mute::refresh_output(&app);
@@ -162,9 +172,23 @@ fn schedule_arrival(app: &AppHandle, id: &PCWSTR) {
 /// Covers every switch path (app, hotkey, CLI, sound panel, auto-switch),
 /// because they all land in `OnDefaultDeviceChanged`. Runs in a blocking
 /// task, never in the COM callback itself.
-fn handle_default_output_change(app: &AppHandle, new_id: Option<String>) {
-    let previous = remember_default_output(new_id);
-    let Some(old_id) = previous else {
+///
+/// Returns the remembered previous id (the caller hands it to
+/// [`schedule_auto_disconnect`]) so the switch bookkeeping happens here while
+/// the wait-and-disconnect runs in its own task — otherwise the settle sleep
+/// would delay the tray/volume refreshes that follow.
+fn handle_default_output_change(new_id: Option<String>) -> Option<String> {
+    remember_default_output(new_id)
+}
+
+/// Schedules the previous default output's disconnect when it was Bluetooth
+/// and the user enabled the option. The disconnect itself runs after
+/// [`DISCONNECT_SETTLE`] and is skipped if the default flipped back to the
+/// device meanwhile: during a connect's handshake Windows can revert the
+/// default for a moment, and cutting the connection then is exactly the
+/// "reconnect rejects itself" flap.
+fn schedule_auto_disconnect(app: &AppHandle, old_id: Option<String>) {
+    let Some(old_id) = old_id else {
         return;
     };
     if !crate::config::bluetooth_auto_disconnect(app) {
@@ -179,16 +203,30 @@ fn handle_default_output_change(app: &AppHandle, new_id: Option<String>) {
     let Some(mac) = device.bt_mac.clone() else {
         return;
     };
-    match crate::audio::bluetooth::set_connect(&mac, false) {
-        Ok(()) => {
-            log::info!(
-                "auto-disconnected the previous Bluetooth output {}",
-                device.name
-            );
-            crate::notify::device_disconnected(app, &device.name);
+    let name = device.name.clone();
+    dispatch(app, move |app| {
+        std::thread::sleep(DISCONNECT_SETTLE);
+        let switched_away = crate::audio::list_devices()
+            .ok()
+            .and_then(|devices| {
+                devices
+                    .iter()
+                    .find(|d| d.is_default)
+                    .map(|d| d.id != old_id)
+            })
+            .unwrap_or(false);
+        if !switched_away {
+            log::info!("default flipped back to {name}; skipping the auto-disconnect");
+            return;
         }
-        Err(e) => log::warn!("auto-disconnect of {} failed: {e}", device.name),
-    }
+        match crate::audio::bluetooth::set_connect(&mac, false) {
+            Ok(()) => {
+                log::info!("auto-disconnected the previous Bluetooth output {name}");
+                crate::notify::device_disconnected(&app, &name);
+            }
+            Err(e) => log::warn!("auto-disconnect of {name} failed: {e}"),
+        }
+    });
 }
 
 /// Handles a device becoming available: always refresh the GUI, and, when the
@@ -230,6 +268,26 @@ fn on_arrival(app: &AppHandle, device_id: &str) {
         _ => crate::config::favorites(app, "output").contains(&device.id),
     };
     if !allowed {
+        refresh_gui(app);
+        return;
+    }
+
+    // A Bluetooth endpoint goes ACTIVE mid-handshake and often drops again a
+    // moment later; taking the default immediately starts a switch/revert
+    // flap (and the auto-disconnect then acts on the revert). Give it the
+    // settle window and re-verify it is still available before taking over.
+    std::thread::sleep(ARRIVAL_SETTLE);
+    let Ok(devices) = crate::audio::list_devices() else {
+        refresh_gui(app);
+        return;
+    };
+    let Some(device) = devices.iter().find(|d| d.id == device_id) else {
+        // Gone again — this was a handshake blip, not a real arrival.
+        log::info!("device {device_id} dropped during the settle window; not auto-switching");
+        refresh_gui(app);
+        return;
+    };
+    if device.direction != "output" || !device.is_available() || device.is_default {
         refresh_gui(app);
         return;
     }
