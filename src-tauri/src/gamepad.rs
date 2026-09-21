@@ -75,8 +75,6 @@ impl GamepadState {
 struct PollState {
     buttons: XINPUT_GAMEPAD_BUTTON_FLAGS,
     chord_since: Option<Instant>,
-    /// Actions fired since the chord armed; cleared when the chord releases.
-    fired: Vec<Action>,
 }
 
 impl PollState {
@@ -84,7 +82,6 @@ impl PollState {
         Self {
             buttons: XINPUT_GAMEPAD_BUTTON_FLAGS(0),
             chord_since: None,
-            fired: Vec::new(),
         }
     }
 }
@@ -104,10 +101,7 @@ fn poll_once(app: &tauri::AppHandle, state: &mut PollState) {
     match (state.chord_since, chord_held) {
         (None, true) => state.chord_since = Some(Instant::now()),
         // Chord released (or lost a button): reset so nothing half-armed fires.
-        (Some(_), false) => {
-            state.chord_since = None;
-            state.fired.clear();
-        }
+        (Some(_), false) => state.chord_since = None,
         _ => {}
     }
 
@@ -120,10 +114,11 @@ fn poll_once(app: &tauri::AppHandle, state: &mut PollState) {
         return;
     }
 
+    // Press edges only: firing again requires releasing and pressing again, so
+    // holding the button never machine-guns the action — but tapping it does.
     let pressed = buttons & !state.buttons;
     for (flag, action) in ACTION_BUTTONS {
-        if (pressed & *flag) == *flag && !state.fired.contains(action) {
-            state.fired.push(*action);
+        if (pressed & *flag) == *flag {
             crate::hotkeys::perform(app.clone(), *action);
         }
     }
