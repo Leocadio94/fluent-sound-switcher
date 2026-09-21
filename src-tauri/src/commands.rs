@@ -31,6 +31,20 @@ pub fn install_update(app: tauri::AppHandle) {
     crate::updater::install(&app);
 }
 
+/// The app's own version, straight from `tauri.conf.json` (single source of
+/// truth — no duplication with package.json for the UI to get stale).
+#[tauri::command]
+pub fn get_app_version(app: tauri::AppHandle) -> String {
+    app.package_info().version.to_string()
+}
+
+/// Explicit "check for updates" from the settings; non-silent, so a result —
+/// including "you're up to date" — is reported.
+#[tauri::command]
+pub fn check_updates(app: tauri::AppHandle) {
+    crate::updater::check(&app, false);
+}
+
 /// Returns all active input/output devices with the current defaults marked.
 #[tauri::command]
 pub fn list_audio_devices() -> Result<Vec<AudioDevice>, String> {

@@ -134,6 +134,8 @@ pub fn run() {
             commands::set_device_icon,
             commands::main_window_ready,
             commands::install_update,
+            commands::get_app_version,
+            commands::check_updates,
             commands::open_log_folder,
             commands::open_url,
             commands::get_overlay_state,

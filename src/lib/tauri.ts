@@ -236,6 +236,16 @@ export function installUpdate(): Promise<void> {
   return invoke<void>("install_update");
 }
 
+/** The app's own version, from the backend's package info. */
+export function getAppVersion(): Promise<string> {
+  return invoke<string>("get_app_version");
+}
+
+/** Explicit update check; results (including "up to date") arrive as toasts. */
+export function checkUpdates(): Promise<void> {
+  return invoke<void>("check_updates");
+}
+
 /**
  * Opens a URL in the user's default browser. Used by the support tab.
  */
