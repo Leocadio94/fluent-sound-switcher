@@ -288,6 +288,10 @@ cargo test --manifest-path src-tauri/Cargo.toml
   the cycle order. Anything that acts on a device — switching, cycling, volume —
   must check `is_available()` first; the UI shows an unavailable device only
   when it is a favourite.
+- A failing `GetState()` maps to `unplugged`, **never** to `active`: during
+  topology churn (Bluetooth handshakes) stale COM objects fail that call, and
+  treating the failure as active rendered ghost rows — a disabled HDMI output
+  flashing into the list as available for the length of the handshake.
 - Device volume is fetched per device on demand (`useVolume`), never folded into
   `list_audio_devices`: that would activate an `IAudioEndpointVolume` interface
   per endpoint on every refresh, and the list refetches on each

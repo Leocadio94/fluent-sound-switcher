@@ -19,6 +19,16 @@ the project follows phased iterations (see `README.md`).
 
 ### Fixes
 
+- **Linha-fantasma durante o handshake Bluetooth** (o LG ULTRAGEAR desativado
+  aparecendo "ativo" por alguns segundos): quando o Windows reconstrói a
+  topologia de endpoints no meio de uma conexão, objetos COM stale fazem
+  `GetState()` falhar — e o enumerator tratava falha como `active` ("melhor
+  oferecer do que esconder"). Falha agora vira `unplugged` (dimmed, e oculto
+  se não for favorito), que é o que um endpoint em teardown realmente é.
+- A lista principal atualizava a cada evento `device-changed` do burst de
+  handshake (scrollbar e linhas pulando); o refetch agora é trailing
+  (600 ms), então um burst inteiro resulta em um único refresh com o estado
+  final. Trocas pela própria UI continuam imediatas.
 - **Cascata de reconexão** (vídeo do usuário, frames a 10 fps): conectar o
   fone → auto-switch assumia o default *no meio do handshake* → o aparelho
   oscilava e o Windows revertia o default → o auto-desconectar então cortava
