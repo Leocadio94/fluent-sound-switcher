@@ -232,6 +232,22 @@ pub fn notifications(app: &AppHandle) -> NotificationConfig {
         .unwrap_or_default()
 }
 
+/// Whether the gamepad shortcuts (XInput polling, `gamepad.rs`) are on. The
+/// button mapping is fixed, so this is the only knob the config carries.
+#[derive(Serialize, Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct GamepadHotkeysConfig {
+    pub enabled: bool,
+}
+
+/// Gamepad-shortcut preferences, falling back to off when unset.
+pub fn gamepad_hotkeys(app: &AppHandle) -> GamepadHotkeysConfig {
+    read(app)
+        .get("gamepadHotkeys")
+        .and_then(|v| serde_json::from_value(v.clone()).ok())
+        .unwrap_or_default()
+}
+
 /// Auto-switch-on-connect preferences. When a device connects (e.g. a TV or
 /// monitor with audio is plugged in) it can grab the default output.
 #[derive(Serialize, Deserialize, Clone)]

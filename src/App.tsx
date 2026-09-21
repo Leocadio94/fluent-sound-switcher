@@ -19,6 +19,7 @@ import SettingsDialog from "./views/SettingsDialog";
 import { useDevices } from "./hooks/useDevices";
 import { useFavorites } from "./hooks/useFavorites";
 import { useHotkeys } from "./hooks/useHotkeys";
+import { useGamepadHotkeys } from "./hooks/useGamepadHotkeys";
 import { useMute } from "./hooks/useMute";
 import { useMuteIndicator } from "./hooks/useMuteIndicator";
 import { useNotifications } from "./hooks/useNotifications";
@@ -104,6 +105,7 @@ export default function App({
     setShowOnlyFavorites,
   } = useFavorites();
   const { hotkeys, setBinding, failures: hotkeyFailures } = useHotkeys();
+  const { gamepad, setField: setGamepadField } = useGamepadHotkeys();
   const { indicator, setField: setIndicatorField } = useMuteIndicator();
   const { notifications, setField: setNotificationField } = useNotifications();
   const { autoSwitch, setField: setAutoSwitchField } = useAutoSwitch();
@@ -191,6 +193,8 @@ export default function App({
         hotkeys={hotkeys}
         onHotkeyChange={setBinding}
         hotkeyFailures={hotkeyFailures}
+        gamepad={gamepad}
+        onGamepadChange={(enabled) => setGamepadField("enabled", enabled)}
         indicator={indicator}
         onIndicatorChange={setIndicatorField}
         notifications={notifications}

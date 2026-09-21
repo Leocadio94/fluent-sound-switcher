@@ -38,6 +38,16 @@ export const DEFAULT_HOTKEYS: Hotkeys = {
   toggleOutputMute: "",
 };
 
+/**
+ * Gamepad (XInput) shortcut preferences. The chord (LB + RB) and the button
+ * mapping are fixed in the backend, so enabled is the only knob.
+ */
+export interface GamepadHotkeys {
+  enabled: boolean;
+}
+
+export const DEFAULT_GAMEPAD_HOTKEYS: GamepadHotkeys = { enabled: false };
+
 export const MUTE_INDICATOR_MODES = [
   "always",
   "mutedOnly",
@@ -135,6 +145,7 @@ const STORE_FILE = "config.json";
 const FAVORITES_KEY = "favorites";
 const ONLY_FAVORITES_KEY = "showOnlyFavorites";
 const HOTKEYS_KEY = "hotkeys";
+const GAMEPAD_HOTKEYS_KEY = "gamepadHotkeys";
 const MUTE_INDICATOR_KEY = "muteIndicator";
 const NOTIFICATIONS_KEY = "notifications";
 const AUTO_SWITCH_KEY = "autoSwitch";
@@ -173,6 +184,7 @@ function getStore(): Promise<Store> {
         [FAVORITES_KEY]: EMPTY_FAVORITES,
         [ONLY_FAVORITES_KEY]: false,
         [HOTKEYS_KEY]: DEFAULT_HOTKEYS,
+        [GAMEPAD_HOTKEYS_KEY]: DEFAULT_GAMEPAD_HOTKEYS,
         [MUTE_INDICATOR_KEY]: DEFAULT_MUTE_INDICATOR,
         [NOTIFICATIONS_KEY]: DEFAULT_NOTIFICATIONS,
         [AUTO_SWITCH_KEY]: DEFAULT_AUTO_SWITCH,
@@ -239,6 +251,19 @@ export async function loadHotkeys(): Promise<Hotkeys> {
 export async function saveHotkeys(hotkeys: Hotkeys): Promise<void> {
   const store = await getStore();
   await store.set(HOTKEYS_KEY, hotkeys);
+}
+
+export async function loadGamepadHotkeys(): Promise<GamepadHotkeys> {
+  const store = await getStore();
+  const stored = await store.get<Partial<GamepadHotkeys>>(GAMEPAD_HOTKEYS_KEY);
+  return {
+    enabled: boolOr(stored?.enabled, DEFAULT_GAMEPAD_HOTKEYS.enabled),
+  };
+}
+
+export async function saveGamepadHotkeys(value: GamepadHotkeys): Promise<void> {
+  const store = await getStore();
+  await store.set(GAMEPAD_HOTKEYS_KEY, value);
 }
 
 export async function loadMuteIndicator(): Promise<MuteIndicator> {

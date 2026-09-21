@@ -254,6 +254,23 @@ pub fn update_hotkeys(
     Ok(failures)
 }
 
+/// Applies the gamepad-shortcut toggle live. The enabled flag is handed over
+/// directly (rather than re-read) to avoid racing the store's async write; the
+/// same pattern as `update_hotkeys`.
+#[tauri::command]
+pub fn update_gamepad_hotkeys(app: tauri::AppHandle, gamepad: crate::config::GamepadHotkeysConfig) {
+    let state = app.state::<std::sync::Arc<crate::gamepad::GamepadState>>();
+    state.inner().set(gamepad.enabled);
+    log::info!(
+        "gamepad shortcuts {}",
+        if gamepad.enabled {
+            "enabled"
+        } else {
+            "disabled"
+        }
+    );
+}
+
 /// The state the mute overlay should currently be showing. Called by the
 /// overlay window when it mounts, so it never has to rely on having caught the
 /// events pushed at it while its renderer was frozen.

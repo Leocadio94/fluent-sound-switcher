@@ -25,6 +25,7 @@ import type { ThemePreference } from "../theme/useSystemTheme";
 import type { HotkeyFailure } from "../lib/tauri";
 import type {
   AutoSwitchConfig,
+  GamepadHotkeys,
   Hotkeys,
   MuteIndicator,
   NotificationConfig,
@@ -72,6 +73,8 @@ interface SettingsDialogProps {
   hotkeys: Hotkeys;
   onHotkeyChange: (action: keyof Hotkeys, accelerator: string) => void;
   hotkeyFailures: HotkeyFailure[];
+  gamepad: GamepadHotkeys;
+  onGamepadChange: (enabled: boolean) => void;
   indicator: MuteIndicator;
   onIndicatorChange: <K extends keyof MuteIndicator>(
     key: K,
@@ -142,6 +145,8 @@ export default function SettingsDialog(props: SettingsDialogProps) {
                 hotkeys={props.hotkeys}
                 onChange={props.onHotkeyChange}
                 failures={props.hotkeyFailures}
+                gamepad={props.gamepad}
+                onGamepadChange={props.onGamepadChange}
               />
             )}
             {tab === "volume" && (

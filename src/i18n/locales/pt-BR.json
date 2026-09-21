@@ -47,7 +47,21 @@
     "toggleOutputMute": "Mutar/desmutar saída",
     "volumeUp": "Aumentar volume",
     "volumeDown": "Diminuir volume",
-    "mediaKeysHint": "As teclas de mídia (volume, play) podem ser usadas direto, sem modificador — mas enquanto o app estiver aberto elas deixam de funcionar no Windows."
+    "mediaKeysHint": "As teclas de mídia (volume, play) podem ser usadas direto, sem modificador — mas enquanto o app estiver aberto elas deixam de funcionar no Windows.",
+    "keyboard": "Teclado",
+    "gamepad": "Controle",
+    "gamepadEnable": "Atalhos de controle",
+    "gamepadHint": "Enquanto o app estiver aberto, segurar LB + RB no controle (XInput) e apertar o botão dispara a ação. O jogo também recebe esses botões — o app não os consome.",
+    "gamepadNoHome": "O botão Home é reservado pelo sistema e não pode ser usado; o modificador é LB + RB.",
+    "gamepadChord": "LB + RB + {{button}}",
+    "gamepadButtons": {
+      "a": "A",
+      "b": "B",
+      "x": "X",
+      "y": "Y",
+      "dpadUp": "D-pad ↑",
+      "dpadDown": "D-pad ↓"
+    }
   },
   "muteIndicator": {
     "mode": "Quando mostrar",

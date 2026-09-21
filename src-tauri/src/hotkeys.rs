@@ -14,7 +14,7 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
 use crate::config::{self, HotkeyConfig};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum Action {
     CycleOutput,
     CycleInput,
@@ -81,7 +81,9 @@ pub fn handle_event(app: &AppHandle, shortcut: &Shortcut, state: ShortcutState) 
     }
 }
 
-fn perform(app: AppHandle, action: Action) {
+/// Runs an action off the UI thread. Shared by the global-shortcut handler and
+/// the gamepad poller.
+pub(crate) fn perform(app: AppHandle, action: Action) {
     // Run the COM work off the UI thread; emit results for the frontend.
     tauri::async_runtime::spawn(async move {
         match action {
