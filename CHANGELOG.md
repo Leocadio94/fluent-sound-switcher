@@ -4,6 +4,52 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Added
+
+- **Desconectar Bluetooth ao trocar** *(opcional, Settings → Geral)*: quando o
+  dispositivo padrão de saída muda, o aparelho Bluetooth que deixou de ser o
+  padrão é desconectado automaticamente — cobre qualquer caminho de troca
+  (janela principal, atalho global, CLI, painel de som, auto-switch). Dispara
+  o mesmo mecanismo nativo do botão manual (`KSPROPERTY_ONESHOT_DISCONNECT`
+  via topologia do driver, sem desinstalar serviços) e, com notificações
+  nativas ligadas, mostra um toast discreto de confirmação. Desativado por
+  padrão.
+
+### Fixes
+
+- **Linha-fantasma durante o handshake Bluetooth** (o LG ULTRAGEAR desativado
+  aparecendo "ativo" por alguns segundos): quando o Windows reconstrói a
+  topologia de endpoints no meio de uma conexão, objetos COM stale fazem
+  `GetState()` falhar — e o enumerator tratava falha como `active` ("melhor
+  oferecer do que esconder"). Falha agora vira `unplugged` (dimmed, e oculto
+  se não for favorito), que é o que um endpoint em teardown realmente é.
+- A lista principal atualizava a cada evento `device-changed` do burst de
+  handshake (scrollbar e linhas pulando); o refetch agora é trailing
+  (600 ms), então um burst inteiro resulta em um único refresh com o estado
+  final. Trocas pela própria UI continuam imediatas.
+- **Cascata de reconexão** (vídeo do usuário, frames a 10 fps): conectar o
+  fone → auto-switch assumia o default *no meio do handshake* → o aparelho
+  oscilava e o Windows revertia o default → o auto-desconectar então cortava
+  a conexão do aparelho que tinha acabado de conectar, e o Windows exibia por
+  um instante dispositivos como o LG ULTRAGEAR ao reatribuir o default. Agora
+  há uma janela de assentamento nos dois ganchos: o auto-switch espera ~2 s e
+  reconfirma que o aparelho continua ativo antes de assumir, e o
+  auto-desconectar espera ~3 s e desiste se o default oscilar de volta para o
+  aparelho. Os demais refreshes (tray, volume, mute) não esperam mais junto.
+- Reconectar logo depois de desconectar às vezes era ignorado pelo aparelho
+  (parecia "rejeitar": a interface oscilava conectado/desconectado e nada
+  conectava — a segunda tentativa ia). Agora o connect espera a conexão
+  estabilizar (duas leituras consecutivas) e, se não assentar, repete o
+  one-shot automaticamente uma vez antes de falhar; o controle mostra o
+  spinner durante esse período.
+- A lista Bluetooth do app reagia a cada evento intermediário do handshake e
+  piscava os estados; os refetch disparados por `device-changed` agora são
+  agrupados (300 ms).
+- No menu Bluetooth da barra de controles, aparelhos conectados vão para o
+  topo com o ícone em cor de destaque.
+
 ## [0.4.7] - 2026-09-19
 
 ### Added

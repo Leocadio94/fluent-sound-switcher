@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   listAudioDevices,
@@ -82,7 +82,19 @@ export function useDevices(): UseDevices {
 
   // A hotkey-, CLI- or sound-panel-driven switch makes the backend emit
   // "device-changed"; refresh quietly so the active badge follows along.
-  const onDeviceChanged = useCallback(() => void load(true), [load]);
+  // Trailing debounce: a Bluetooth handshake fires a burst of these while
+  // Windows rebuilds the endpoint topology, and refreshing on every one
+  // flickers half-built states (rows appearing, scrollbar jumping) into the
+  // list; one refresh after the burst settles shows the final state.
+  const debounceRef = useRef<number | undefined>(undefined);
+  useEffect(
+    () => () => window.clearTimeout(debounceRef.current),
+    [],
+  );
+  const onDeviceChanged = useCallback(() => {
+    window.clearTimeout(debounceRef.current);
+    debounceRef.current = window.setTimeout(() => void load(true), 600);
+  }, [load]);
   useTauriEvent("device-changed", onDeviceChanged, [onDeviceChanged]);
 
   return { devices, loading, error, refresh, switchTo, switching };

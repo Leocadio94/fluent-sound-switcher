@@ -96,6 +96,8 @@
     "startMinimized": "Iniciar minimizado (na bandeja)",
     "showDeviceIcon": "Ícone do dispositivo na bandeja",
     "showDeviceIconHint": "Segundo ícone mostrando a saída atual (o microfone continua sendo o principal).",
+    "btAutoDisconnect": "Desconectar Bluetooth ao trocar",
+    "btAutoDisconnectHint": "Ao trocar de saída, desconecta o aparelho Bluetooth que deixou de ser o padrão (vale para qualquer troca: app, atalho, painel de som).",
     "language": "Idioma",
     "theme": "Tema",
     "themes": {

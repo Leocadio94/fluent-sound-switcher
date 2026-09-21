@@ -146,6 +146,7 @@ const LANGUAGE_KEY = "language";
 const THEME_KEY = "theme";
 const SYSTEM_ACCENT_KEY = "useSystemAccent";
 const TITLE_BAR_KEY = "titleBarStyle";
+const BT_AUTO_DISCONNECT_KEY = "bluetoothAutoDisconnect";
 
 const SCHEMA_VERSION_KEY = "schemaVersion";
 
@@ -311,6 +312,21 @@ export async function loadShowDeviceIcon(): Promise<boolean> {
 export async function saveShowDeviceIcon(value: boolean): Promise<void> {
   const store = await getStore();
   await store.set(SHOW_DEVICE_ICON_KEY, value);
+}
+
+/**
+ * Whether the Bluetooth device that stops being the default output gets
+ * disconnected when the default changes. Read by the backend on every
+ * default-output change; no command needed to apply it live.
+ */
+export async function loadBtAutoDisconnect(): Promise<boolean> {
+  const store = await getStore();
+  return boolOr(await store.get(BT_AUTO_DISCONNECT_KEY), false);
+}
+
+export async function saveBtAutoDisconnect(value: boolean): Promise<void> {
+  const store = await getStore();
+  await store.set(BT_AUTO_DISCONNECT_KEY, value);
 }
 
 export async function loadVolumeOsd(): Promise<VolumeOsd> {

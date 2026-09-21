@@ -149,9 +149,14 @@ unsafe fn collect(
             .and_then(|prop| propvariant_to_string(&prop))
             .is_some_and(|v| v == "BTHENUM");
 
-        // An endpoint that reports no state is treated as active: better to
-        // offer it and have the switch fail than to hide a working device.
-        let state = device.GetState().map(state_name).unwrap_or("active");
+        // An endpoint whose state cannot be read is treated as unplugged: a
+        // failing `GetState` means the COM object is mid-teardown (topology
+        // churn while a Bluetooth device negotiates), and rendering it as
+        // *active* produced ghost rows — a disabled HDMI output flashing into
+        // the list for the length of the handshake. Dimmed-and-hidden beats a
+        // phantom device; a genuinely working endpoint essentially never
+        // fails this call.
+        let state = device.GetState().map(state_name).unwrap_or("unplugged");
 
         out.push(AudioDevice {
             is_default: default_id.as_deref() == Some(id.as_str()),

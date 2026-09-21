@@ -139,7 +139,28 @@ cargo test --manifest-path src-tauri/Cargo.toml
   ids. The audio endpoint's property store does **not** expose the pairing
   MAC (`PKEY_Device_InstanceId` is empty for endpoints), so endpoint ↔ paired
   device correlation matches the name inside parentheses of the friendly
-  name. The two commands run on `spawn_blocking`.
+  name. The two commands run on `spawn_blocking`. The connect polls the flag
+  until it settles (two consecutive reads) and retries the one-shot once —
+  devices fresh off a disconnect often swallow the first attempt, which
+  looked like "rejection" with a flapping UI. Controls are deduped before
+  sending: a headset's render and capture endpoints can resolve to the same
+  filter.
+- **BT auto-disconnect** (`events.rs::schedule_auto_disconnect`): when the
+  default output changes, the *previous* device is disconnected if it was
+  Bluetooth and the opt-in `bluetoothAutoDisconnect` config is on. Triggered
+  from `OnDefaultDeviceChanged`'s dispatched task, so it covers every switch
+  path. The remembered default-output id (`LAST_DEFAULT_OUTPUT`) is seeded at
+  startup in `events::start` — without the seed the first switch skips the
+  disconnect. Confirmed via the same notify as the switch, but a dedicated
+  native-only toast (`notify::device_disconnected`), never the banner/sound.
+- **Settle windows** (learned from a recorded flap): both auto-switch
+  (`ARRIVAL_SETTLE`, 2 s — re-verify the device is still active before
+  grabbing the default) and the auto-disconnect (`DISCONNECT_SETTLE`, 3 s —
+  skip if the default flipped back) wait and re-verify. Without them a
+  connect handshake turns into switch→revert→disconnect, the app flaps, and
+  Windows briefly activates unrelated endpoints (e.g. HDMI) as it reassigns
+  the default. The disconnect runs in its *own* dispatched task so the settle
+  sleep never delays the tray/volume/mute refreshes.
 - `#[interface]`/`#[implement]` macros need `windows-core` as a **direct** dep so
   generated `::windows_core` paths resolve.
 - Device monitoring: `IMMNotificationClient` (`audio/events.rs`) registered for
@@ -267,6 +288,10 @@ cargo test --manifest-path src-tauri/Cargo.toml
   the cycle order. Anything that acts on a device — switching, cycling, volume —
   must check `is_available()` first; the UI shows an unavailable device only
   when it is a favourite.
+- A failing `GetState()` maps to `unplugged`, **never** to `active`: during
+  topology churn (Bluetooth handshakes) stale COM objects fail that call, and
+  treating the failure as active rendered ghost rows — a disabled HDMI output
+  flashing into the list as available for the length of the handshake.
 - Device volume is fetched per device on demand (`useVolume`), never folded into
   `list_audio_devices`: that would activate an `IAudioEndpointVolume` interface
   per endpoint on every refresh, and the list refetches on each

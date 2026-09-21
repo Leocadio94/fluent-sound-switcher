@@ -118,6 +118,11 @@ fn is_audio_device(info: &BLUETOOTH_DEVICE_INFO) -> bool {
 /// endpoint driver — Windows' own connect mechanism, which leaves the paired
 /// services installed. Falls back to the `BluetoothSetServiceState` toggle
 /// when no endpoint topology is reachable.
+///
+/// Connecting is polled until the flag settles (two consecutive reads): the
+/// one-shot returns before the profile negotiation ends, and devices fresh
+/// off a disconnect often ignore the first attempt — so a connect that did
+/// not settle is retried once before failing.
 pub fn set_connect(mac: &str, enable: bool) -> Result<(), String> {
     let target = parse_mac(mac).ok_or_else(|| format!("invalid Bluetooth MAC: {mac}"))?;
     let paired = list_devices();
@@ -133,38 +138,89 @@ pub fn set_connect(mac: &str, enable: bool) -> Result<(), String> {
         log::warn!("no BT audio topology for {name}; using the service-state fallback");
         return set_connect_via_services(mac, enable);
     }
+    let controls = dedupe_controls(controls);
 
     let oneshot = if enable {
         KSPROPERTY_ONESHOT_RECONNECT
     } else {
         KSPROPERTY_ONESHOT_DISCONNECT
     };
-    let mut property = KSIDENTIFIER::default();
-    property.Anonymous.Anonymous.Set = KSPROPSETID_BtAudio;
-    property.Anonymous.Anonymous.Id = oneshot.0 as u32;
-    property.Anonymous.Anonymous.Flags = KSPROPERTY_TYPE_GET;
 
-    let mut failures = 0;
-    for control in &controls {
-        let mut returned = 0u32;
-        let result = unsafe {
-            control.KsProperty(
-                &property,
-                std::mem::size_of::<KSIDENTIFIER>() as u32,
-                std::ptr::null_mut(),
-                0,
-                &mut returned,
-            )
-        };
-        if let Err(e) = result {
-            log::warn!("KsProperty(oneshot) failed: {e}");
-            failures += 1;
+    let request = |controls: &[IKsControl]| -> bool {
+        let mut property = KSIDENTIFIER::default();
+        property.Anonymous.Anonymous.Set = KSPROPSETID_BtAudio;
+        property.Anonymous.Anonymous.Id = oneshot.0 as u32;
+        property.Anonymous.Anonymous.Flags = KSPROPERTY_TYPE_GET;
+
+        let mut failures = 0;
+        for control in controls {
+            let mut returned = 0u32;
+            let result = unsafe {
+                control.KsProperty(
+                    &property,
+                    std::mem::size_of::<KSIDENTIFIER>() as u32,
+                    std::ptr::null_mut(),
+                    0,
+                    &mut returned,
+                )
+            };
+            if let Err(e) = result {
+                log::warn!("KsProperty(oneshot) failed: {e}");
+                failures += 1;
+            }
         }
-    }
-    if failures == controls.len() {
+        failures < controls.len()
+    };
+
+    if !request(&controls) {
         return Err("the Bluetooth driver rejected the connect/disconnect request".to_string());
     }
-    Ok(())
+    if !enable {
+        return Ok(());
+    }
+    for _ in 0..2 {
+        if wait_until_connected(mac, true) {
+            return Ok(());
+        }
+        // The first attempt is sometimes swallowed right after a disconnect:
+        // retry the one-shot once before giving up.
+        log::warn!("connect to {name} did not settle; retrying once");
+        if !request(&controls) {
+            return Err("the Bluetooth driver rejected the connect/disconnect request".to_string());
+        }
+    }
+    Err(format!(
+        "{name} did not connect (it may be off, in its case, or connected elsewhere)"
+    ))
+}
+
+/// Drops controls reached through more than one endpoint (a headset's render
+/// and capture endpoints can lead to the same filter).
+fn dedupe_controls(controls: Vec<IKsControl>) -> Vec<IKsControl> {
+    let mut controls = controls;
+    controls.sort_by_key(|c| c.as_raw() as usize);
+    controls.dedup_by_key(|c| c.as_raw() as usize);
+    controls
+}
+
+/// Polls the paired-device connection flag until it has been `expected` for
+/// two consecutive checks (~1 s of stability), up to ~5 s: the flag flaps
+/// while profiles negotiate, so a single observation is not trustworthy.
+fn wait_until_connected(mac: &str, expected: bool) -> bool {
+    let mut stable = 0;
+    for _ in 0..10 {
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        let now = list_devices()
+            .devices
+            .iter()
+            .find(|d| d.mac == mac)
+            .is_some_and(|d| d.connected == expected);
+        stable = if now { stable + 1 } else { 0 };
+        if stable >= 2 {
+            return true;
+        }
+    }
+    false
 }
 
 /// The `IKsControl` of the Bluetooth audio filter behind every audio endpoint
@@ -521,13 +577,20 @@ mod tests {
             .find(|d| d.name == name)
             .map(|d| d.mac.clone())
             .expect("device not in the paired list");
-        set_connect(&mac, true).unwrap();
-        let connected = wait_for(&mac, true);
-        println!("connected within window: {connected}");
-        crate::audio::enumerator::list_devices().unwrap();
-        set_connect(&mac, false).unwrap();
-        let disconnected = wait_for(&mac, false);
-        println!("disconnected within window: {disconnected}");
+        // Reconnect right after a disconnect — the case the auto-disconnect
+        // feature produces — to observe any connect/drop flapping.
+        for round in 1..=2 {
+            println!("--- connect round {round}");
+            set_connect(&mac, true).unwrap();
+            let connected = wait_for(&mac, true);
+            println!("round {round} connected within window: {connected}");
+            if round == 1 {
+                println!("--- disconnect");
+                set_connect(&mac, false).unwrap();
+                let disconnected = wait_for(&mac, false);
+                println!("round {round} disconnected within window: {disconnected}");
+            }
+        }
     }
 
     /// Polls the connection flag of `mac` for up to 20 s, printing the BT flag

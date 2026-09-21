@@ -96,6 +96,8 @@
     "startMinimized": "Start minimized (to tray)",
     "showDeviceIcon": "Device icon in tray",
     "showDeviceIconHint": "Second icon showing the current output (the microphone stays primary).",
+    "btAutoDisconnect": "Disconnect Bluetooth on switch",
+    "btAutoDisconnectHint": "When the default output changes, disconnects the Bluetooth device that stopped being the default (any switch path: app, hotkey, sound panel).",
     "language": "Language",
     "theme": "Theme",
     "themes": {
