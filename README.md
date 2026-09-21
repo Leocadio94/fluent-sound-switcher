@@ -224,7 +224,8 @@ is why the workflow now forces the release out of draft as its own step
 The flow in the app:
 
 1. A check runs at startup (silent, retried a few times while the network comes
-   up at login) and on demand via the tray's **Verificar atualizações**.
+   up at login) and on demand via the tray's **Verificar atualizações** or the
+   button in Settings → Support (which also shows the running version).
 2. Finding a newer version only *notifies* — a toast plus an update bar in the
    main window.
 3. **Atualizar agora** downloads, installs and restarts. Installing is always

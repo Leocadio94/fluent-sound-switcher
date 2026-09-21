@@ -128,9 +128,17 @@
   },
   "support": {
     "intro": "Found a bug? Have a suggestion? Open an issue on GitHub.",
+    "checkUpdates": "Check for updates",
+    "checkUpdatesHint": "Checks GitHub Releases for a newer version; the result arrives as a notification.",
+    "checking": "Checking...",
     "reportBug": "Report a problem",
     "reportBugHint": "Report bugs, suggest features, or ask questions about the app.",
-    "openIssues": "Open issues page"
+    "openIssues": "Open issues page",
+    "version": "Version {{version}}",
+    "versionLoading": "Version...",
+    "license": "License: {{license}}",
+    "copyright": "Copyright © 2026 Gabriel Leocadio",
+    "viewLicense": "View license"
   },
   "errors": {
     "list": "Could not list the audio devices.",

@@ -4,6 +4,16 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Added
+
+- **Sobre o app na aba Suporte** *(Settings → Suporte)*: a aba agora mostra a
+  versão em execução, a licença (MIT) e o copyright, além de um botão
+  **Verificar atualizações** que dispara a mesma checagem do item da bandeja —
+  o resultado (em dia, nova versão, erro) chega como notificação e, se houver
+  versão nova, a barra de atualização aparece na janela principal.
+
 ## [0.4.8] - 2026-09-21
 
 ### Added
