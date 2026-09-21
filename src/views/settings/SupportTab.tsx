@@ -88,7 +88,13 @@ export default function SupportTab() {
         <Text size={200}>{t("support.license", { license: "MIT" })}</Text>
         <Text size={200}>
           {t("support.copyright")} ·{" "}
-          <Link href={LICENSE_URL} target="_blank" rel="noreferrer">
+          {/* Not a <Link href>: new-window requests are blocked inside the
+              WebView2, so external URLs go through the backend's open_url. */}
+          <Link
+            onClick={() => void openUrl(LICENSE_URL)}
+            inline
+            style={{ cursor: "pointer" }}
+          >
             {t("support.viewLicense")}
           </Link>
         </Text>
