@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 
-import type { Hotkeys, MuteIndicator } from "./config";
+import type { GamepadHotkeys, Hotkeys, MuteIndicator } from "./config";
 
 export type DeviceDirection = "output" | "input";
 
@@ -201,6 +201,14 @@ export interface HotkeyFailure {
  */
 export function updateHotkeys(bindings: Hotkeys): Promise<HotkeyFailure[]> {
   return invoke<HotkeyFailure[]>("update_hotkeys", { bindings });
+}
+
+/**
+ * Applies the gamepad-shortcut toggle live. The value is passed directly (not
+ * re-read from the store) to avoid racing its async write, same as hotkeys.
+ */
+export function updateGamepadHotkeys(gamepad: GamepadHotkeys): Promise<void> {
+  return invoke<void>("update_gamepad_hotkeys", { gamepad });
 }
 
 /** Re-applies the overlay with the given settings after a change. */

@@ -75,7 +75,8 @@ cargo test --manifest-path src-tauri/Cargo.toml
   - `App.tsx` (main window), `views/` (`DeviceList`, `Overlay`, `Flyout`,
     `Banner`, `SettingsDialog` — a shell over `views/settings/*Tab.tsx`),
     `components/` (`HotkeyInput`, `DeviceRow` shared by the list and flyout).
-  - `hooks/` — `useDevices`, `useFavorites`, `useHotkeys`, `useMute`,
+  - `hooks/` — `useDevices`, `useFavorites`, `useHotkeys`, `useGamepadHotkeys`,
+    `useMute`,
     `useMuteIndicator`, `useNotifications`, `useAutoSwitch`, `useGeneral`,
     `useBluetooth` (paired BT audio devices, connect/disconnect),
     `useVolume` (per-device level/mute), `useVolumeOsd`, plus
@@ -108,6 +109,7 @@ cargo test --manifest-path src-tauri/Cargo.toml
   - `tray.rs` (two tray icons: mic + output device), `device_icon.rs` (extract
     the Windows endpoint icon → RGBA), `mute.rs` (central mute state),
     `notify.rs` (toast/banner/sound), `hotkeys.rs` (global shortcuts),
+    `gamepad.rs` (XInput polling for gamepad shortcuts),
     `cli.rs` (subcommands), `config.rs` (reads the store file), `commands.rs`,
     `logging.rs` (log plugin + "open log folder"), `lib.rs` (builder/setup),
     `main.rs` (CLI dispatch then `run`).
@@ -304,6 +306,18 @@ cargo test --manifest-path src-tauri/Cargo.toml
   returns the failures instead of swallowing them; `update_hotkeys` forwards
   them so the settings UI can warn. Never report a binding as applied without
   checking.
+- **Gamepad shortcuts (`gamepad.rs`)**: an always-running polling thread reads
+  `XInputGetState(0)` every 30 ms — user-mode, read-only, official API, so
+  anti-cheats stay uninterested. Deliberately **no** ViGEm, no hooks, no
+  synthetic input, no driver: those are what get flagged, and they are also the
+  only way to *consume* input, so the game still sees the chord buttons. The
+  chord is LB + RB held ~80 ms (the Guide/Home button is reserved by the system
+  and XInput never reports it — do not try to bind it). The thread never exits;
+  `gamepadHotkeys.enabled` flips a shared `AtomicBool` (via
+  `update_gamepad_hotkeys`, value passed directly to race the async store
+  write), and the loop just idles cheaply when off. Actions reuse
+  `hotkeys::perform`; edge detection resets when the chord releases so a
+  half-armed chord never fires.
 
 ## For other agents
 

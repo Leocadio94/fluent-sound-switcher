@@ -9,6 +9,7 @@ mod commands;
 mod config;
 mod device_icon;
 mod flyout;
+mod gamepad;
 mod hotkeys;
 mod i18n;
 mod logging;
@@ -109,6 +110,8 @@ pub fn run() {
             // Mirror volume/mute changes made outside the app (keyboard wheel,
             // Windows mixer) on the current default output.
             audio::volume_events::rearm(handle);
+            // XInput polling for gamepad shortcuts; off unless configured.
+            gamepad::start(handle);
             // Follow the Windows accent colour while the app is open.
             accent::watch(handle);
             // Silent check for a newer signed release on startup.
@@ -124,6 +127,7 @@ pub fn run() {
             commands::toggle_mic_mute,
             commands::get_mic_muted,
             commands::update_hotkeys,
+            commands::update_gamepad_hotkeys,
             commands::refresh_mute_indicator,
             commands::ensure_overlay_visible,
             commands::set_flyout_size,

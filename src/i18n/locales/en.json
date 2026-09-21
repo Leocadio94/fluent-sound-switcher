@@ -47,7 +47,21 @@
     "toggleOutputMute": "Toggle output mute",
     "volumeUp": "Volume up",
     "volumeDown": "Volume down",
-    "mediaKeysHint": "Media keys (volume, play) can be bound on their own, with no modifier — but while the app runs Windows stops receiving them."
+    "mediaKeysHint": "Media keys (volume, play) can be bound on their own, with no modifier — but while the app runs Windows stops receiving them.",
+    "keyboard": "Keyboard",
+    "gamepad": "Gamepad",
+    "gamepadEnable": "Gamepad shortcuts",
+    "gamepadHint": "While the app runs, holding LB + RB on the gamepad (XInput) and pressing a button triggers its action. The game also receives those buttons — the app does not consume them.",
+    "gamepadNoHome": "The Home button is reserved by the system and cannot be used; the modifier is LB + RB.",
+    "gamepadChord": "LB + RB + {{button}}",
+    "gamepadButtons": {
+      "a": "A",
+      "b": "B",
+      "x": "X",
+      "y": "Y",
+      "dpadUp": "D-pad ↑",
+      "dpadDown": "D-pad ↓"
+    }
   },
   "muteIndicator": {
     "mode": "When to show",

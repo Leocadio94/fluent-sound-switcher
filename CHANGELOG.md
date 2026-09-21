@@ -4,6 +4,20 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Added
+
+- **Atalhos de controle (XInput)** *(opcional, Settings → Atalhos → Controle)*:
+  com a opção ligada, segurar **LB + RB** no controle (player 1) e apertar um
+  botão dispara a ação — **A** cicla a saída, **B** cicla a entrada, **X** muta
+  o microfone, **Y** muta a saída, **D-pad ↑/↓** ajustam o volume. Implementado
+  com polling puro de `XInputGetState` (API oficial, user-mode, só leitura —
+  sem hooks, sem driver, sem input sintético), o perfil que anti-cheats não
+  incomoda. Off por padrão. Limitações por desenho: o botão Home é reservado
+  pelo sistema e não pode ser modificador, e os botões do chord também chegam
+  ao jogo (o app não os consome — consumir exigiria hooks/driver).
+
 ## [0.4.9] - 2026-09-21
 
 ### Added

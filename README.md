@@ -62,6 +62,7 @@ top, every time.
 - 🔁 **Switch** output/input devices from a curated favorites list (you choose which show up).
 - 🔊 **Per-device volume** — a slider on the device you are using, and on any other at a click. Mute outputs as well as the mic.
 - ⌨️ **Global hotkeys** — cycle output, cycle input, toggle mic mute, volume up/down, toggle output mute. Fully rebindable, media keys included.
+- 🎮 **Gamepad shortcuts** *(optional)* — hold **LB + RB** on an XInput controller and press a button for the same actions, mid-game. Off by default (Settings → Hotkeys → Gamepad).
 - 🎚️ **Volume OSD** — an on-screen level that shows over fullscreen games, like the mute indicator.
 - 🎙️ **Mic mute** with a configurable on-screen indicator (always / only-muted / only-live / never) and a tray icon that reflects the state.
 - 🖥️ **Fullscreen-safe overlay & banner** — topmost and click-through, visible *over* fullscreen games, on the monitor you are actually looking at.
@@ -130,6 +131,32 @@ away from Windows for as long as the app is running, so it has to be your call.
 If a shortcut is already owned by another app, Windows refuses to register it.
 The Hotkeys tab tells you which ones did not take, instead of showing a dead
 binding as if it worked.
+
+### Gamepad shortcuts (XInput — off by default)
+
+Enable it in **Settings → Hotkeys → Gamepad**. While **LB + RB** are held on
+controller 1, a press of:
+
+| Action             | Button     |
+| ------------------ | ---------- |
+| Cycle output       | `A`        |
+| Cycle input        | `B`        |
+| Toggle mic mute    | `X`        |
+| Toggle output mute | `Y`        |
+| Volume up          | `D-pad ↑`  |
+| Volume down        | `D-pad ↓`  |
+
+Design notes, so nothing surprises you:
+
+- The **Home button cannot be used** — Windows reserves it and never reports it
+  to apps; LB + RB is the modifier instead.
+- The app **does not consume input** (consuming it would need hooks/drivers —
+  exactly what anti-cheats flag). The game also receives the chord buttons;
+  holding both bumpers at once is rare in gameplay, and the whole feature has a
+  kill switch.
+- Reading `XInputGetState` is a plain user-mode poll of an official API: no
+  hooks, no virtual controllers, no drivers — nothing for Steam Input or
+  anti-cheat to collide with.
 
 ### Tray
 
