@@ -33,7 +33,8 @@ backend translations, logging, CI and the first tests; `0.3.x` added
 accent-colour theming (Phase 19), the custom title bar with the system one as an
 option (Phase 20) and disconnected devices keeping their place (Phase 21), plus
 `pnpm release`. Remaining: code signing (Authenticode cert, removes the
-SmartScreen warning), package-manager distribution (winget, then Scoop) and
+SmartScreen warning), distribution reach (winget, then Scoop; Microsoft Store
+signs the MSIX for free) and
 per-app profiles (Phase 9, experimental, deferred). The
 phase numbering in `CHANGELOG.md` is the source of truth.
 

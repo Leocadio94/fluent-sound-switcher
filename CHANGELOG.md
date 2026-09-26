@@ -8,8 +8,9 @@ the project follows phased iterations (see `README.md`).
 
 ### Docs
 
-- Added package-manager distribution (winget, then Scoop) to the roadmap as an
-  easy-install item, alongside the pending code signing.
+- Added package-manager distribution (winget, then Scoop) and a Microsoft Store
+  listing (Microsoft signs the MSIX package, so no paid Authenticode cert is
+  needed for that channel) to the roadmap as easy-install items.
 
 ## [0.5.0] - 2026-09-21
 
