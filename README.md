@@ -301,6 +301,8 @@ then update `plugins.updater.pubkey` in `tauri.conf.json` and re-set the secret.
 | ✅ | Bluetooth audio devices: list paired devices, connect/disconnect from the app |
 | ✅ | Product site and privacy policy at [leocadio.dev](https://leocadio.dev/en/fluent-sound-switcher/) |
 | ⏳ | Code signing (Authenticode cert — removes the SmartScreen warning) |
+| ⏳ | Easy install via package managers (winget first, then Scoop) |
+| ⏳ | Microsoft Store distribution (Microsoft signs the MSIX package — free signing) |
 | 🔮 | Per-app audio profiles *(experimental)* |
 | ✅ | Auto-disconnect Bluetooth when the default device switches away |
 

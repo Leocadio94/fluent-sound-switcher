@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Docs
+
+- Added package-manager distribution (winget, then Scoop) and a Microsoft Store
+  listing (Microsoft signs the MSIX package, so no paid Authenticode cert is
+  needed for that channel) to the roadmap as easy-install items.
+
 ## [0.5.0] - 2026-09-21
 
 ### Added
