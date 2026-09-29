@@ -108,7 +108,8 @@ cargo test --manifest-path src-tauri/Cargo.toml
     updater messages), keyed off the frontend's `language`.
   - `accent.rs` — the Windows accent colour and the six shades Windows derives
     around it (`UISettings`, WinRT), plus a watcher for the user changing it.
-  - `tray.rs` (two tray icons: mic + output device), `device_icon.rs` (extract
+  - `tray.rs` (two tray icons: mic + output device, each with a configurable
+    left-click action read live from the config), `device_icon.rs` (extract
     the Windows endpoint icon → RGBA), `mute.rs` (central mute state),
     `notify.rs` (toast/banner/sound), `hotkeys.rs` (global shortcuts),
     `gamepad.rs` (XInput polling for gamepad shortcuts),

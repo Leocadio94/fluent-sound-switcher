@@ -7,9 +7,11 @@ import {
   AUTO_SWITCH_MODES,
   MONITOR_PREFERENCES as MONITORS,
   TITLE_BAR_STYLES,
+  TRAY_CLICK_ACTIONS,
   saveLanguage,
   type MonitorPreference,
   type TitleBarStyle,
+  type TrayClickAction,
 } from "../../lib/config";
 import { openLogFolder, setLanguage } from "../../lib/tauri";
 import type { ThemePreference } from "../../theme/useSystemTheme";
@@ -132,6 +134,52 @@ export default function GeneralTab({
           checked={general.showDeviceIcon}
           onChange={(_, d) => general.setShowDeviceIcon(d.checked)}
         />
+      </SettingRow>
+
+      <SettingRow
+        label={t("settings.trayClickMic")}
+        hint={t("settings.trayClickHint")}
+      >
+        <Dropdown
+          value={t(`settings.trayClickActions.${general.trayClick.mic}`)}
+          selectedOptions={[general.trayClick.mic]}
+          onOptionSelect={(_, d) =>
+            d.optionValue &&
+            general.setTrayClickAction("mic", d.optionValue as TrayClickAction)
+          }
+        >
+          {TRAY_CLICK_ACTIONS.map((action) => (
+            <Option key={action} value={action}>
+              {t(`settings.trayClickActions.${action}`)}
+            </Option>
+          ))}
+        </Dropdown>
+      </SettingRow>
+
+      <SettingRow
+        label={t("settings.trayClickDevice")}
+        hint={
+          general.showDeviceIcon ? undefined : t("settings.trayClickDeviceDisabled")
+        }
+      >
+        <Dropdown
+          disabled={!general.showDeviceIcon}
+          value={t(`settings.trayClickActions.${general.trayClick.device}`)}
+          selectedOptions={[general.trayClick.device]}
+          onOptionSelect={(_, d) =>
+            d.optionValue &&
+            general.setTrayClickAction(
+              "device",
+              d.optionValue as TrayClickAction,
+            )
+          }
+        >
+          {TRAY_CLICK_ACTIONS.map((action) => (
+            <Option key={action} value={action}>
+              {t(`settings.trayClickActions.${action}`)}
+            </Option>
+          ))}
+        </Dropdown>
       </SettingRow>
 
       <SettingRow

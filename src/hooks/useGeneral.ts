@@ -6,11 +6,14 @@ import {
   loadMonitorPreference,
   loadShowDeviceIcon,
   loadStartMinimized,
+  loadTrayClick,
   saveBtAutoDisconnect,
   saveMonitorPreference,
   saveShowDeviceIcon,
   saveStartMinimized,
+  saveTrayClick,
   type MonitorPreference,
+  type TrayClickConfig,
 } from "../lib/config";
 import {
   getAutostart,
@@ -25,6 +28,8 @@ interface UseGeneral {
   setStartMinimized: (value: boolean) => void;
   showDeviceIcon: boolean;
   setShowDeviceIcon: (value: boolean) => void;
+  trayClick: TrayClickConfig;
+  setTrayClickAction: (icon: keyof TrayClickConfig, value: TrayClickConfig[keyof TrayClickConfig]) => void;
   monitor: MonitorPreference;
   setMonitor: (value: MonitorPreference) => void;
   bluetoothAutoDisconnect: boolean;
@@ -39,6 +44,10 @@ export function useGeneral(): UseGeneral {
   const [autostart, setAutostartState] = useState(false);
   const [startMinimized, setStartMinimizedState] = useState(false);
   const [showDeviceIcon, setShowDeviceIconState] = useState(true);
+  const [trayClick, setTrayClickState] = useState<TrayClickConfig>({
+    mic: "flyout",
+    device: "flyout",
+  });
   const [monitor, setMonitorState] = useState<MonitorPreference>(
     DEFAULT_MONITOR_PREFERENCE,
   );
@@ -50,6 +59,7 @@ export function useGeneral(): UseGeneral {
       .catch((e) => console.error("could not read the autostart state", e));
     void loadStartMinimized().then(setStartMinimizedState);
     void loadShowDeviceIcon().then(setShowDeviceIconState);
+    void loadTrayClick().then(setTrayClickState);
     void loadMonitorPreference().then(setMonitorState);
     void loadBtAutoDisconnect().then(setBtAutoDisconnectState);
   }, []);
@@ -77,6 +87,22 @@ export function useGeneral(): UseGeneral {
     );
   }, []);
 
+  // The backend re-reads the file on every tray click, so saving is all it
+  // takes to apply live.
+  const setTrayClickAction = useCallback(
+    (
+      icon: keyof TrayClickConfig,
+      value: TrayClickConfig[keyof TrayClickConfig],
+    ) => {
+      setTrayClickState((current) => {
+        const next = { ...current, [icon]: value };
+        void saveTrayClick(next);
+        return next;
+      });
+    },
+    [],
+  );
+
   // Read by the backend the next time an aux window is positioned, so there is
   // no command to call here.
   const setMonitor = useCallback((value: MonitorPreference) => {
@@ -98,6 +124,8 @@ export function useGeneral(): UseGeneral {
     setStartMinimized,
     showDeviceIcon,
     setShowDeviceIcon,
+    trayClick,
+    setTrayClickAction,
     monitor,
     setMonitor,
     bluetoothAutoDisconnect,

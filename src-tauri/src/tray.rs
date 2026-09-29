@@ -1,7 +1,8 @@
 //! System tray icons. The primary icon reflects the mic mute state. An optional
 //! secondary icon mirrors the current default output device (using the icon
-//! Windows shows for it in the Sound control panel). Left-click on either opens
-//! the quick-switch flyout; right-click opens the menu.
+//! Windows shows for it in the Sound control panel). Right-click on either
+//! opens the menu; the left-click action is configurable per icon (see
+//! `TrayClickAction`).
 
 use crate::i18n::{self, Msg};
 use tauri::{
@@ -15,6 +16,45 @@ const TRAY_ID: &str = "main";
 const DEVICE_TRAY_ID: &str = "device";
 const MIC_ON: &[u8] = include_bytes!("../icons/mic-on.png");
 const MIC_OFF: &[u8] = include_bytes!("../icons/mic-off.png");
+
+/// What a left-click on a tray icon does. Storage vocabulary of the
+/// `trayLeftClick` config key (`"mic"` / `"device"` sub-keys); the strings the
+/// frontend writes are validated by `config::tray_click_action`.
+pub const TRAY_CLICK_FLYOUT: &str = "flyout";
+pub const TRAY_CLICK_TOGGLE_MIC_MUTE: &str = "toggleMicMute";
+pub const TRAY_CLICK_TOGGLE_OUTPUT_MUTE: &str = "toggleOutputMute";
+pub const TRAY_CLICK_CYCLE_OUTPUT: &str = "cycleOutput";
+pub const TRAY_CLICK_OPEN_APP: &str = "openApp";
+pub const TRAY_CLICK_SOUND_PANEL: &str = "soundPanel";
+
+/// The left-click action configured for a tray icon, parsed from the store.
+#[derive(Clone, Copy, PartialEq)]
+pub enum TrayClickAction {
+    /// The quick-switch flyout (the original behaviour).
+    Flyout,
+    ToggleMicMute,
+    ToggleOutputMute,
+    /// Cycle to the next favorite output device.
+    CycleOutput,
+    /// Reveal the main window.
+    OpenApp,
+    /// Open Windows' Sound settings page.
+    SoundPanel,
+}
+
+fn parse_click_action(value: &str) -> TrayClickAction {
+    match value {
+        TRAY_CLICK_TOGGLE_MIC_MUTE => TrayClickAction::ToggleMicMute,
+        TRAY_CLICK_TOGGLE_OUTPUT_MUTE => TrayClickAction::ToggleOutputMute,
+        TRAY_CLICK_CYCLE_OUTPUT => TrayClickAction::CycleOutput,
+        TRAY_CLICK_OPEN_APP => TrayClickAction::OpenApp,
+        TRAY_CLICK_SOUND_PANEL => TrayClickAction::SoundPanel,
+        // Anything unrecognised, including the documented "flyout", falls back
+        // to the original behaviour so a hand-edited file cannot mute the mic
+        // unexpectedly.
+        _ => TrayClickAction::Flyout,
+    }
+}
 
 pub fn build(app: &AppHandle) -> tauri::Result<()> {
     // Bundled by `tauri.conf.json`; if it is somehow missing there is no icon
@@ -131,6 +171,37 @@ fn on_menu_event(app: &AppHandle, event: tauri::menu::MenuEvent) {
     }
 }
 
+/// Runs a left-click action. Spawned off the event-handler thread like
+/// `hotkeys::perform`: the mute and cycle paths talk to COM, and the flyout
+/// path gives focus to a window — none of it should sit on the event loop.
+fn run_click_action(app: &AppHandle, action: TrayClickAction) {
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        match action {
+            TrayClickAction::Flyout => crate::flyout::toggle(&app),
+            TrayClickAction::ToggleMicMute => crate::mute::toggle(&app),
+            TrayClickAction::ToggleOutputMute => crate::mute::toggle_output(&app),
+            TrayClickAction::CycleOutput => {
+                // Mirrors `hotkeys::cycle` for the output direction: emit for the
+                // frontend/flyout and notify, unlike the raw `audio::cycle_default`.
+                let favorites = crate::config::favorites(&app, "output");
+                match crate::audio::cycle_default("output", &favorites) {
+                    Ok(Some(device)) => {
+                        if let Err(e) = app.emit("device-changed", &device) {
+                            log::warn!("could not emit device-changed: {e}");
+                        }
+                        crate::notify::device_changed(&app, &device.name, device.direction);
+                    }
+                    Ok(None) => log::debug!("tray cycle output: no candidate device"),
+                    Err(e) => log::error!("tray cycle output failed: {e}"),
+                }
+            }
+            TrayClickAction::OpenApp => show_main(&app),
+            TrayClickAction::SoundPanel => open_sound_panel(),
+        }
+    });
+}
+
 fn on_tray_icon_event(tray: &TrayIcon, event: TrayIconEvent) {
     if let TrayIconEvent::Click {
         button: MouseButton::Left,
@@ -138,7 +209,16 @@ fn on_tray_icon_event(tray: &TrayIcon, event: TrayIconEvent) {
         ..
     } = event
     {
-        crate::flyout::toggle(tray.app_handle());
+        // `TrayIconEvent::id()` names the icon that was clicked ("main" or
+        // "device"); each reads its own configured action.
+        let app = tray.app_handle();
+        let action = if event.id() == TRAY_ID {
+            crate::config::tray_click_action(app, "mic")
+        } else {
+            crate::config::tray_click_action(app, "device")
+        };
+        let action = parse_click_action(&action);
+        run_click_action(app, action);
     }
 }
 
