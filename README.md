@@ -71,6 +71,7 @@ top, every time.
 - 🔌 **Auto-switch on connect** *(optional)* — plug in a TV/monitor with audio and it can grab the default output.
 - 🔉 **Auto-disconnect Bluetooth** *(optional)* — when the default output changes, the Bluetooth device that stopped being the default is disconnected (Settings → General).
 - 🖼️ **Output-device tray icon** *(optional)* — a second tray icon mirroring the current output, using the icon Windows shows for it.
+- 🖱️ **Configurable tray left-click** *(per icon)* — each tray icon (microphone and output device) can open the quick-switch flyout, toggle the mic or output mute, switch to the next favorite device, open the app, or open Windows' sound settings. The right-click menu stays.
 - 🎧 **Bluetooth connect/disconnect** — paired Bluetooth audio devices show a Bluetooth badge in the list and can be connected or disconnected right from the app (main list and the title-bar menu).
 - 🎨 **Your Windows accent colour** — the palette is built from the accent and the six shades Windows derives around it, live when you change it. Switchable back to the Fluent blue.
 - 🪟 **App-drawn title bar** carrying the app's own controls, or the system one if you prefer it (Settings → General, applied live).

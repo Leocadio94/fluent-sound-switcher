@@ -330,12 +330,28 @@ pub fn volume_osd(app: &AppHandle) -> VolumeOsd {
 }
 
 /// Which monitor the aux windows target: "cursor" (default), "primary" or
-/// "foreground". See `auxwin::work_area`.
+/// "foreground". See `auxwin::MONITOR_CURSOR`.
 pub fn overlay_monitor(app: &AppHandle) -> String {
     read(app)
         .get("overlayMonitor")
         .and_then(|v| v.as_str())
         .unwrap_or(crate::auxwin::MONITOR_CURSOR)
+        .to_string()
+}
+
+/// Left-click action per tray icon. `which` is "mic" (the primary icon) or
+/// "device" (the optional output icon). Defaults to the flyout on both, which
+/// keeps the pre-configurable behaviour for existing installs.
+///
+/// Re-read on every click, so saving in the UI applies live like
+/// `bluetoothAutoDisconnect` — no command needed.
+pub fn tray_click_action(app: &AppHandle, which: &str) -> String {
+    let key = if which == "device" { "device" } else { "mic" };
+    read(app)
+        .get("trayLeftClick")
+        .and_then(|v| v.get(key))
+        .and_then(|v| v.as_str())
+        .unwrap_or(crate::tray::TRAY_CLICK_FLYOUT)
         .to_string()
 }
 

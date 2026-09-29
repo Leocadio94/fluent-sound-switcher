@@ -110,6 +110,18 @@
     "startMinimized": "Iniciar minimizado (na bandeja)",
     "showDeviceIcon": "Ícone do dispositivo na bandeja",
     "showDeviceIconHint": "Segundo ícone mostrando a saída atual (o microfone continua sendo o principal).",
+    "trayClickMic": "Ação do clique no ícone do microfone",
+    "trayClickDevice": "Ação do clique no ícone do dispositivo",
+    "trayClickHint": "O que um clique esquerdo no ícone da bandeja faz. O clique direito continua abrindo o menu.",
+    "trayClickDeviceDisabled": "Ative o ícone do dispositivo para configurá-lo.",
+    "trayClickActions": {
+      "flyout": "Abrir menu rápido de dispositivos",
+      "toggleMicMute": "Mutar/desmutar microfone",
+      "toggleOutputMute": "Mutar/desmutar saída",
+      "cycleOutput": "Alternar para o próximo dispositivo",
+      "openApp": "Abrir o Fluent Sound Switcher",
+      "soundPanel": "Abrir configurações de som do Windows"
+    },
     "btAutoDisconnect": "Desconectar Bluetooth ao trocar",
     "btAutoDisconnectHint": "Ao trocar de saída, desconecta o aparelho Bluetooth que deixou de ser o padrão (vale para qualquer troca: app, atalho, painel de som).",
     "language": "Idioma",

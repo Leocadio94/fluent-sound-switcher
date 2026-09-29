@@ -340,6 +340,47 @@ export async function saveShowDeviceIcon(value: boolean): Promise<void> {
 }
 
 /**
+ * What a left-click on each tray icon does. The backend re-reads the file on
+ * every click (see `config::tray_click_action`), so saving is all it takes to
+ * apply — no command needed, like `bluetoothAutoDisconnect`.
+ */
+export const TRAY_CLICK_ACTIONS = [
+  "flyout",
+  "toggleMicMute",
+  "toggleOutputMute",
+  "cycleOutput",
+  "openApp",
+  "soundPanel",
+] as const;
+export type TrayClickAction = (typeof TRAY_CLICK_ACTIONS)[number];
+
+export interface TrayClickConfig {
+  mic: TrayClickAction;
+  device: TrayClickAction;
+}
+
+export const DEFAULT_TRAY_CLICK: TrayClickConfig = {
+  mic: "flyout",
+  device: "flyout",
+};
+
+const TRAY_CLICK_KEY = "trayLeftClick";
+
+export async function loadTrayClick(): Promise<TrayClickConfig> {
+  const store = await getStore();
+  const stored = await store.get<Partial<TrayClickConfig>>(TRAY_CLICK_KEY);
+  return {
+    mic: oneOf(stored?.mic, TRAY_CLICK_ACTIONS, DEFAULT_TRAY_CLICK.mic),
+    device: oneOf(stored?.device, TRAY_CLICK_ACTIONS, DEFAULT_TRAY_CLICK.device),
+  };
+}
+
+export async function saveTrayClick(value: TrayClickConfig): Promise<void> {
+  const store = await getStore();
+  await store.set(TRAY_CLICK_KEY, value);
+}
+
+/**
  * Whether the Bluetooth device that stops being the default output gets
  * disconnected when the default changes. Read by the backend on every
  * default-output change; no command needed to apply it live.

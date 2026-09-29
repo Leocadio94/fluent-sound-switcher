@@ -110,6 +110,18 @@
     "startMinimized": "Start minimized (to tray)",
     "showDeviceIcon": "Device icon in tray",
     "showDeviceIconHint": "Second icon showing the current output (the microphone stays primary).",
+    "trayClickMic": "Left-click action on the microphone icon",
+    "trayClickDevice": "Left-click action on the device icon",
+    "trayClickHint": "What a left-click on a tray icon does. Right-click still opens the menu.",
+    "trayClickDeviceDisabled": "Enable the device icon to configure it.",
+    "trayClickActions": {
+      "flyout": "Open quick device menu",
+      "toggleMicMute": "Mute/unmute microphone",
+      "toggleOutputMute": "Mute/unmute output",
+      "cycleOutput": "Switch to the next device",
+      "openApp": "Open Fluent Sound Switcher",
+      "soundPanel": "Open Windows sound settings"
+    },
     "btAutoDisconnect": "Disconnect Bluetooth on switch",
     "btAutoDisconnectHint": "When the default output changes, disconnects the Bluetooth device that stopped being the default (any switch path: app, hotkey, sound panel).",
     "language": "Language",

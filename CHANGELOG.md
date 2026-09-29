@@ -6,6 +6,18 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Added
+
+- **Ação do clique esquerdo na bandeja, por ícone** *(Settings → Geral)*: cada
+  ícone da bandeja (microfone e o opcional de dispositivo) pode ter sua própria
+  ação de clique esquerdo — abrir o menu rápido de dispositivos, mutar/desmutar
+  o microfone, mutar/desmutar a saída, alternativa para o próximo dispositivo
+  favorito, abrir o app ou abrir as configurações de som do Windows. O clique
+  direito continua abrindo o menu. O padrão de ambos continua sendo o menu
+  rápido (o comportamento de antes), e o dropdown do ícone de dispositivo fica
+  desabilitado quando ele está oculto. Com um só ícone, vale a ação configurada
+  para o microfone.
+
 ### Docs
 
 - Added package-manager distribution (winget, then Scoop) and a Microsoft Store
