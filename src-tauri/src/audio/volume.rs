@@ -151,8 +151,17 @@ fn is_live_capture(device: &AudioDevice) -> bool {
 /// should not leave the rest open.
 pub fn set_all_mics_mute(muted: bool) -> windows::core::Result<()> {
     set_mic_mute(muted)?;
-    // The default was just handled above.
-    for device in super::list_devices()?
+    // The default was just handled above, and its change is already real: a
+    // failure to list the rest must not turn into an error that leaves the tray
+    // and overlay showing the old state.
+    let devices = match super::list_devices() {
+        Ok(devices) => devices,
+        Err(e) => {
+            log::warn!("could not list the other microphones to mute: {e}");
+            return Ok(());
+        }
+    };
+    for device in devices
         .iter()
         .filter(|d| is_live_capture(d) && !d.is_default)
     {
