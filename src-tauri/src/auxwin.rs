@@ -47,14 +47,29 @@ pub fn work_area(app: &AppHandle, preference: &str) -> Option<WorkArea> {
         app.primary_monitor().ok().flatten()
     })?;
 
+    Some(area_of(&monitor))
+}
+
+/// The work area of the monitor holding a physical screen point, e.g. where a
+/// tray icon was clicked. Falls back to the primary monitor.
+pub fn work_area_at(app: &AppHandle, x: f64, y: f64) -> Option<WorkArea> {
+    let monitor = app
+        .monitor_from_point(x, y)
+        .ok()
+        .flatten()
+        .or_else(|| app.primary_monitor().ok().flatten())?;
+    Some(area_of(&monitor))
+}
+
+fn area_of(monitor: &Monitor) -> WorkArea {
     let area = monitor.work_area();
-    Some(WorkArea {
+    WorkArea {
         left: area.position.x as f64,
         top: area.position.y as f64,
         right: area.position.x as f64 + area.size.width as f64,
         bottom: area.position.y as f64 + area.size.height as f64,
         scale: monitor.scale_factor(),
-    })
+    }
 }
 
 fn resolve_monitor(app: &AppHandle, preference: &str) -> Option<Monitor> {

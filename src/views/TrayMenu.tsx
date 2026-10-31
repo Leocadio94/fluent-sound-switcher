@@ -51,7 +51,7 @@ export default function TrayMenu({ items }: { items: TrayMenuEntry[] }) {
   useLayoutEffect(() => {
     const el = cardRef.current;
     if (!el) return;
-    const report = () => void setFlyoutSize(el.offsetHeight + 16);
+    const report = () => void setFlyoutSize(el.offsetHeight + 16, true);
     report();
     const observer = new ResizeObserver(report);
     observer.observe(el);

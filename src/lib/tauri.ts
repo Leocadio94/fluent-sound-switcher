@@ -216,9 +216,12 @@ export function refreshMuteIndicator(indicator: MuteIndicator): Promise<void> {
   return invoke<void>("refresh_mute_indicator", { indicator });
 }
 
-/** Resizes the quick-switch flyout to fit its content (logical px height). */
-export function setFlyoutSize(height: number): Promise<void> {
-  return invoke<void>("set_flyout_size", { height });
+/**
+ * Resizes the flyout window to fit its content (logical px height). `menu` says
+ * which face is reporting, so a face the window already left cannot resize it.
+ */
+export function setFlyoutSize(height: number, menu = false): Promise<void> {
+  return invoke<void>("set_flyout_size", { height, menu });
 }
 
 /** One row of the right-click menu; the backend owns the labels. */

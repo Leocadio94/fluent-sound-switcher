@@ -20,6 +20,7 @@ const WIDTH: f64 = 300.0;
 const MENU_WIDTH: f64 = 260.0;
 const MARGIN: f64 = 12.0;
 const DEFAULT_HEIGHT: f64 = 220.0;
+const MIN_HEIGHT: f64 = 64.0;
 
 /// Row and separator heights of the menu, only to size the window before the
 /// webview reports the real height, so it does not jump when it appears.
@@ -96,6 +97,10 @@ pub fn toggle(app: &AppHandle) {
     } else {
         set_anchor(Anchor::Corner);
         let height = CORNER_HEIGHT.lock().map_or(DEFAULT_HEIGHT, |h| *h);
+        // Sent on both sides of the show: before, so the right face is already
+        // drawn when the window appears; after, because a webview that was
+        // suspended may only take it once it is visible.
+        let _ = window.emit("flyout-view", &View::Devices);
         present(app, &window, height);
         let _ = window.emit("flyout-view", &View::Devices);
         // The webview is suspended while hidden and may have missed live
@@ -117,14 +122,15 @@ pub fn show_menu(app: &AppHandle, cursor: (f64, f64)) {
     };
     let items = crate::tray::menu_entries(app);
     set_anchor(Anchor::Cursor(cursor.0, cursor.1));
+    // Both sides of the show, as in `toggle`.
+    let _ = window.emit("flyout-view", &View::Menu { items: &items });
     present(app, &window, estimated_menu_height(&items));
     let _ = window.emit("flyout-view", &View::Menu { items: &items });
 }
 
 /// Sizes, positions and reveals the window, then takes focus.
 fn present(app: &AppHandle, window: &WebviewWindow, height: f64) {
-    resize(window, height);
-    reposition(app, window, height);
+    place(app, window, height);
     let _ = window.show();
     let _ = window.set_focus();
     // Re-assert the band on every open: a session unlock can have dropped the
@@ -156,25 +162,23 @@ pub fn recover(app: &AppHandle) {
 }
 
 /// Resizes the flyout to its content height (logical px) and repositions it.
-pub fn set_size(app: &AppHandle, height: f64) {
+///
+/// `for_menu` says which face is reporting. The other face can still be mounted
+/// for a moment after the window switched, and its stale height must not resize
+/// the window it no longer owns.
+pub fn set_size(app: &AppHandle, height: f64, for_menu: bool) {
     let Some(window) = app.get_webview_window(FLYOUT_LABEL) else {
         return;
     };
+    if for_menu != matches!(anchor(), Anchor::Cursor(..)) {
+        return;
+    }
     if matches!(anchor(), Anchor::Corner) {
         if let Ok(mut remembered) = CORNER_HEIGHT.lock() {
             *remembered = height;
         }
     }
-    resize(&window, height);
-    reposition(app, &window, height);
-}
-
-fn resize(window: &WebviewWindow, height: f64) {
-    let scale = window.scale_factor().unwrap_or(1.0);
-    let _ = window.set_size(PhysicalSize::new(
-        (width_for(anchor()) * scale) as u32,
-        (height.max(64.0) * scale) as u32,
-    ));
+    place(app, &window, height);
 }
 
 fn estimated_menu_height(items: &[MenuEntry]) -> f64 {
@@ -185,22 +189,30 @@ fn estimated_menu_height(items: &[MenuEntry]) -> f64 {
     (items.len() as f64 - separators) * MENU_ROW + separators * MENU_SEPARATOR + MENU_CHROME
 }
 
-fn reposition(app: &AppHandle, window: &WebviewWindow, height_logical: f64) {
+/// Sizes and positions the window on the monitor it is about to land on.
+///
+/// Both use that monitor's scale: the window's own is the one of wherever it
+/// last was, which is the wrong DPI the first time it opens on another screen.
+fn place(app: &AppHandle, window: &WebviewWindow, height_logical: f64) {
     let anchor = anchor();
-    let preference = match anchor {
-        Anchor::Corner => crate::config::overlay_monitor(app),
-        // The menu belongs to the screen that holds the tray icon, whatever the
-        // user prefers for the floating windows.
-        Anchor::Cursor(..) => auxwin::MONITOR_CURSOR.to_string(),
+    let area = match anchor {
+        Anchor::Corner => auxwin::work_area(app, &crate::config::overlay_monitor(app)),
+        // The menu belongs to the screen that holds the clicked tray icon,
+        // whatever the user prefers for the floating windows, and that is the
+        // click point: the cursor may have moved on by the time this runs.
+        Anchor::Cursor(cx, cy) => auxwin::work_area_at(app, cx, cy),
     };
-    let Some(area) = auxwin::work_area(app, &preference) else {
+    let Some(area) = area else {
         log::warn!("no monitor resolved; leaving the flyout where it is");
         return;
     };
-    // Match the monitor the flyout lands on, not the window's stale DPI.
     let scale = area.scale;
     let bounds = (area.left, area.top, area.right, area.bottom);
-    let size = (width_for(anchor) * scale, height_logical * scale);
+    let size = (
+        width_for(anchor) * scale,
+        height_logical.max(MIN_HEIGHT) * scale,
+    );
+    let _ = window.set_size(PhysicalSize::new(size.0 as u32, size.1 as u32));
     let (x, y) = match anchor {
         Anchor::Corner => {
             let margin = MARGIN * scale;

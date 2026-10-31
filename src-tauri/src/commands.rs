@@ -149,8 +149,8 @@ pub fn ensure_overlay_visible(app: tauri::AppHandle) -> Result<(), String> {
 
 /// Resizes the quick-switch flyout to fit its content (logical px height).
 #[tauri::command]
-pub fn set_flyout_size(app: tauri::AppHandle, height: f64) {
-    crate::flyout::set_size(&app, height);
+pub fn set_flyout_size(app: tauri::AppHandle, height: f64, menu: bool) {
+    crate::flyout::set_size(&app, height, menu);
 }
 
 /// Hides the quick-switch flyout (after a device is picked).
@@ -161,7 +161,12 @@ pub fn close_flyout(app: tauri::AppHandle) {
 
 /// Runs an entry of the right-click menu, which the flyout window draws.
 #[tauri::command]
-pub fn tray_menu_action(app: tauri::AppHandle, id: String) {
+pub fn tray_menu_action(app: tauri::AppHandle, window: tauri::WebviewWindow, id: String) {
+    // It can quit the app, so only the window that draws the menu may ask.
+    if window.label() != crate::flyout::FLYOUT_LABEL {
+        log::warn!("ignored a tray menu action from '{}'", window.label());
+        return;
+    }
     // Dismiss first: entries like "Open" hand focus to another window.
     crate::flyout::hide(&app);
     crate::tray::run_menu_action(&app, &id);
