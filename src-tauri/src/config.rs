@@ -294,6 +294,30 @@ pub fn bluetooth_auto_disconnect(app: &AppHandle) -> bool {
         .unwrap_or(false)
 }
 
+/// Whether the microphone mute covers every active capture endpoint instead of
+/// only the default one. Shared with the CLI, which reads the file on its own.
+pub fn mic_mute_all_from(value: &Value) -> bool {
+    value
+        .get("micMuteAllDevices")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
+}
+
+/// See [`mic_mute_all_from`]. Re-read on every toggle, so saving in the UI
+/// applies live.
+pub fn mic_mute_all(app: &AppHandle) -> bool {
+    mic_mute_all_from(&read(app))
+}
+
+/// Whether toggling the microphone mute also sends the Windows call-mute
+/// shortcut (Win+Alt+K). Opt-in: see `callmute.rs`.
+pub fn mic_mute_call_shortcut(app: &AppHandle) -> bool {
+    read(app)
+        .get("micMuteCallShortcut")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
+}
+
 /// Whether to show the second tray icon reflecting the current output device.
 pub fn show_device_icon(app: &AppHandle) -> bool {
     read(app)

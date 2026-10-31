@@ -4,6 +4,25 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Added
+
+- **Mutar todos os microfones** *(Settings → Mudo)*: o atalho de mudo passa a
+  silenciar todos os microfones ativos, não só o padrão, o que cobre apps
+  fixados em um microfone específico. Um microfone conectado com o mudo ligado
+  entra mudo, e o CLI `mute` segue a mesma opção. Desligado por padrão.
+- **Acionar também o mudo de chamada do Windows** *(Settings → Mudo)*: junto
+  com o mudo, envia Win+Alt+K para que o Teams mute a si mesmo. É um
+  alternador sem estado legível, então pode ficar invertido se o mudo for feito
+  pelo botão do app. Desligado por padrão. Ver `docs/mic-mute-scope.md`.
+
+### Changed
+
+- Ícones do microfone na bandeja redesenhados: quadrado arredondado azul com o
+  microfone branco quando ativo, e vermelho com a barra diagonal quando mudo.
+  Antes eram um contorno cinza que quase sumia a 16 px.
+
 ## [0.6.0] - 2026-09-29
 
 ### Added

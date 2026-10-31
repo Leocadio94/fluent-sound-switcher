@@ -14,8 +14,8 @@ pub mod volume_events;
 pub use enumerator::{default_output, list_devices, AudioDevice};
 pub use policy::set_default_device;
 pub use volume::{
-    get_volume, is_mic_muted, is_muted, set_mic_mute, set_volume, step_volume, toggle_mic_mute,
-    toggle_mute,
+    get_volume, is_mic_muted, is_muted, set_all_mics_mute, set_capture_mute, set_mic_mute,
+    set_volume, step_volume, toggle_all_mics_mute, toggle_mic_mute, toggle_mute,
 };
 
 /// Switches the default device for `direction` ("output"/"input") to the next

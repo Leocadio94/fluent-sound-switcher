@@ -4,6 +4,7 @@ mod accent;
 mod audio;
 mod auxwin;
 mod banner;
+mod callmute;
 pub mod cli;
 mod commands;
 mod config;

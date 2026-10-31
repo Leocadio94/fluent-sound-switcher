@@ -5,6 +5,7 @@
 //! else with volume. Every operation now takes an optional device id and works
 //! on either direction.
 
+use super::AudioDevice;
 use windows::core::HSTRING;
 use windows::Win32::Foundation::BOOL;
 use windows::Win32::Media::Audio::Endpoints::IAudioEndpointVolume;
@@ -136,10 +137,75 @@ pub fn set_mic_mute(muted: bool) -> windows::core::Result<()> {
     set_mute(None, "input", muted)
 }
 
+/// Whether `device` is a capture endpoint a mute can be applied to.
+fn is_live_capture(device: &AudioDevice) -> bool {
+    device.direction == "input" && device.is_available()
+}
+
+/// Mutes or unmutes the default microphone and every other active capture
+/// endpoint, so an app pinned to a non-default mic is silenced too.
+///
+/// The default goes first and its failure is the caller's: that is the state the
+/// tray and overlay show. The others are best effort, since one stuck endpoint
+/// should not leave the rest open.
+pub fn set_all_mics_mute(muted: bool) -> windows::core::Result<()> {
+    set_mic_mute(muted)?;
+    for device in super::list_devices()?.iter().filter(|d| is_live_capture(d)) {
+        if let Err(e) = set_mute(Some(&device.id), "input", muted) {
+            log::warn!("could not set the mute of {}: {e}", device.name);
+        }
+    }
+    Ok(())
+}
+
+/// Flips the default microphone's state and applies it to every active one.
+pub fn toggle_all_mics_mute() -> windows::core::Result<bool> {
+    let muted = !is_mic_muted()?;
+    set_all_mics_mute(muted)?;
+    Ok(muted)
+}
+
+/// Applies `muted` to `device_id` when it is an active capture endpoint, e.g. a
+/// microphone that just arrived while the mute is on. Returns whether it applied.
+///
+/// The direction check is not optional: `set_mute` resolves by id and ignores
+/// the flow, so an output id would mute the speakers.
+pub fn set_capture_mute(device_id: &str, muted: bool) -> windows::core::Result<bool> {
+    let is_target = super::list_devices()?
+        .iter()
+        .any(|d| d.id == device_id && is_live_capture(d));
+    if is_target {
+        set_mute(Some(device_id), "input", muted)?;
+    }
+    Ok(is_target)
+}
+
 #[cfg(test)]
 mod tests {
-    use super::flow_for;
+    use super::{flow_for, is_live_capture};
+    use crate::audio::AudioDevice;
     use windows::Win32::Media::Audio::{eCapture, eRender};
+
+    fn device(direction: &'static str, state: &'static str) -> AudioDevice {
+        AudioDevice {
+            id: "id".into(),
+            name: "name".into(),
+            direction,
+            is_default: false,
+            state,
+            is_bluetooth: false,
+            bt_mac: None,
+        }
+    }
+
+    #[test]
+    fn only_active_capture_endpoints_take_the_mute() {
+        assert!(is_live_capture(&device("input", "active")));
+        // A speaker must never be muted by a microphone toggle.
+        assert!(!is_live_capture(&device("output", "active")));
+        assert!(!is_live_capture(&device("input", "unplugged")));
+        assert!(!is_live_capture(&device("input", "disabled")));
+    }
 
     #[test]
     fn input_maps_to_capture_and_everything_else_to_render() {

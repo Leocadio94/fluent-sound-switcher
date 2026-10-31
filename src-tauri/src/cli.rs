@@ -115,8 +115,14 @@ fn cmd_cycle(direction: Option<&str>) -> i32 {
 }
 
 fn cmd_mute(sub: Option<&str>) -> i32 {
+    let all = read_mic_mute_all();
     let result = match sub.unwrap_or("toggle") {
+        "toggle" if all => audio::toggle_all_mics_mute(),
         "toggle" => audio::toggle_mic_mute(),
+        "on" | "off" if all => {
+            let muted = sub == Some("on");
+            audio::set_all_mics_mute(muted).map(|()| muted)
+        }
         "on" => audio::set_mic_mute(true).map(|()| true),
         "off" => audio::set_mic_mute(false).map(|()| false),
         other => {
@@ -132,6 +138,15 @@ fn cmd_mute(sub: Option<&str>) -> i32 {
         }
         Err(e) => fail(&format!("failed to set mute: {e}")),
     }
+}
+
+/// The CLI has no `AppHandle`, so it reads the store file for the same
+/// `micMuteAllDevices` setting the GUI honours.
+fn read_mic_mute_all() -> bool {
+    store_path()
+        .and_then(|path| std::fs::read_to_string(path).ok())
+        .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+        .is_some_and(|v| config::mic_mute_all_from(&v))
 }
 
 fn read_favorites(direction: &str) -> Vec<String> {

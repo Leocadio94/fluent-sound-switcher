@@ -49,6 +49,8 @@ windows = { version = "0.58", features = [
   "Win32_UI_Accessibility",
   # XInput polling for gamepad shortcuts (`gamepad.rs`).
   "Win32_UI_Input_XboxController",
+  # Opt-in Win+Alt+K call-mute shortcut (`callmute.rs`).
+  "Win32_UI_Input_KeyboardAndMouse",
   "Win32_Devices_FunctionDiscovery",
   # Bluetooth radios and paired-device connect/disconnect (`audio/bluetooth.rs`).
   "Win32_Devices_Bluetooth",

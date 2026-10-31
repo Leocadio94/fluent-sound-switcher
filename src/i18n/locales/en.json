@@ -64,6 +64,10 @@
     }
   },
   "muteIndicator": {
+    "allDevices": "Mute all microphones",
+    "allDevicesHint": "The shortcut mutes every active microphone, not just the default one. Covers apps pinned to a specific microphone. A microphone plugged in while muted comes in muted.",
+    "callShortcut": "Also trigger the Windows call mute",
+    "callShortcutHint": "Sends Win+Alt+K too, so Teams mutes itself. It is a toggle and its state cannot be read: if you mute from the app's own button, the two end up inverted. Only works in apps that integrate the feature.",
     "mode": "When to show",
     "position": "Position",
     "style": "Style",

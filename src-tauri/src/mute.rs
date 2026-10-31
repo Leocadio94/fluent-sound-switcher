@@ -55,13 +55,41 @@ pub fn apply_output(app: &AppHandle, muted: bool) {
     }
 }
 
-/// Toggles the hardware microphone mute, then propagates the result.
+/// Flips the microphone mute, covering every active capture endpoint when the
+/// `micMuteAllDevices` setting is on, and propagates the result.
+///
+/// The one entry point for the hotkey, the tray, the gamepad and the UI, so
+/// they cannot disagree about the scope.
+pub fn toggle_mic(app: &AppHandle) -> windows::core::Result<bool> {
+    let muted = if crate::config::mic_mute_all(app) {
+        crate::audio::toggle_all_mics_mute()?
+    } else {
+        crate::audio::toggle_mic_mute()?
+    };
+    apply(app, muted);
+    crate::callmute::trigger(app);
+    Ok(muted)
+}
+
+/// Toggles the microphone mute, logging a failure instead of returning it.
 pub fn toggle(app: &AppHandle) {
-    match crate::audio::toggle_mic_mute() {
-        Ok(muted) => apply(app, muted),
-        // Leaving the tray/overlay showing the previous state is confusing on
-        // its own; at least leave a trace of why.
-        Err(e) => log::error!("could not toggle the mic mute: {e}"),
+    // Leaving the tray/overlay showing the previous state is confusing on its
+    // own; at least leave a trace of why.
+    if let Err(e) = toggle_mic(app) {
+        log::error!("could not toggle the mic mute: {e}");
+    }
+}
+
+/// Carries an active mute over to a microphone that just arrived, so plugging
+/// one in does not open a hole in a mute the user asked for.
+pub fn mute_arrived_mic(app: &AppHandle, device_id: &str) {
+    if !current(app) || !crate::config::mic_mute_all(app) {
+        return;
+    }
+    match crate::audio::set_capture_mute(device_id, true) {
+        Ok(true) => log::info!("muted the microphone that just arrived ({device_id})"),
+        Ok(false) => {}
+        Err(e) => log::warn!("could not mute the arrived microphone {device_id}: {e}"),
     }
 }
 
