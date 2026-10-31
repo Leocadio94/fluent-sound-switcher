@@ -16,6 +16,12 @@ the project follows phased iterations (see `README.md`).
   com o mudo, envia Win+Alt+K para que o Teams mute a si mesmo. É um
   alternador sem estado legível, então pode ficar invertido se o mudo for feito
   pelo botão do app. Desligado por padrão. Ver `docs/mic-mute-scope.md`.
+- **Menu da bandeja com visual Fluent**: o clique direito nos ícones da bandeja
+  deixa de abrir o menu clássico do Win32 e passa a abrir um menu Fluent, com
+  ícones, cantos arredondados e o tema do app (claro/escuro e cor de destaque).
+  Abre ao lado do cursor, no monitor do ícone, e fica acima de jogos em tela
+  cheia como o flyout. Setas, Enter e Esc funcionam. As entradas são as mesmas
+  de antes.
 
 ### Changed
 

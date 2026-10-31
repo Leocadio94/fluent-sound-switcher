@@ -133,6 +133,7 @@ pub fn run() {
             commands::ensure_overlay_visible,
             commands::set_flyout_size,
             commands::close_flyout,
+            commands::tray_menu_action,
             commands::preview_notification,
             commands::get_autostart,
             commands::set_autostart,

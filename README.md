@@ -162,7 +162,7 @@ Design notes, so nothing surprises you:
 ### Tray
 
 - **Left-click** — quick-switch flyout (favorites + mute toggle).
-- **Right-click** — Open, Settings, Playback devices, toggle mute, Quit.
+- **Right-click** — a Fluent menu (it also shows over fullscreen games): Open, Settings, Playback devices, toggle mute, Check for updates, Quit. Arrow keys, Enter and Esc work.
 
 ### Floating windows and monitors
 

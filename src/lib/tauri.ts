@@ -221,6 +221,21 @@ export function setFlyoutSize(height: number): Promise<void> {
   return invoke<void>("set_flyout_size", { height });
 }
 
+/** One row of the right-click menu; the backend owns the labels. */
+export type TrayMenuEntry =
+  | { kind: "item"; id: string; label: string }
+  | { kind: "separator" };
+
+/** What the flyout window should draw, pushed by the backend on every open. */
+export type FlyoutView =
+  | { kind: "devices" }
+  | { kind: "menu"; items: TrayMenuEntry[] };
+
+/** Runs a right-click menu entry and dismisses the menu. */
+export function trayMenuAction(id: string): Promise<void> {
+  return invoke<void>("tray_menu_action", { id });
+}
+
 /** Hides the quick-switch flyout. */
 export function closeFlyout(): Promise<void> {
   return invoke<void>("close_flyout");

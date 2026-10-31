@@ -159,6 +159,14 @@ pub fn close_flyout(app: tauri::AppHandle) {
     crate::flyout::hide(&app);
 }
 
+/// Runs an entry of the right-click menu, which the flyout window draws.
+#[tauri::command]
+pub fn tray_menu_action(app: tauri::AppHandle, id: String) {
+    // Dismiss first: entries like "Open" hand focus to another window.
+    crate::flyout::hide(&app);
+    crate::tray::run_menu_action(&app, &id);
+}
+
 /// Shows/hides the output-device tray icon live (passed directly to avoid racing
 /// the store's async write).
 #[tauri::command]
@@ -323,7 +331,7 @@ pub fn open_url(url: String) -> Result<(), String> {
 /// once. The value is passed directly rather than re-read, to avoid racing the
 /// store's async write.
 #[tauri::command]
-pub fn set_language(app: tauri::AppHandle, language: String) -> Result<(), String> {
+pub fn set_language(app: tauri::AppHandle, language: String) {
     crate::i18n::set_language(&language);
-    crate::tray::rebuild_menus(&app).map_err(|e| e.to_string())
+    crate::tray::refresh_texts(&app);
 }
