@@ -80,16 +80,22 @@ pub fn toggle(app: &AppHandle) {
     }
 }
 
-/// Carries an active mute over to a microphone that just arrived, so plugging
-/// one in does not open a hole in a mute the user asked for.
-pub fn mute_arrived_mic(app: &AppHandle, device_id: &str) {
-    if !current(app) || !crate::config::mic_mute_all(app) {
+/// Brings a microphone that just arrived in line with the current mute state.
+///
+/// Windows keeps the flag per endpoint, and an unplugged one is skipped by the
+/// toggle, so it comes back with whatever it had. Syncing both ways covers a
+/// mute that was turned on *and* one that was lifted while it was away.
+pub fn sync_arrived_mic(app: &AppHandle, device_id: &str) {
+    if !crate::config::mic_mute_all(app) {
         return;
     }
-    match crate::audio::set_capture_mute(device_id, true) {
-        Ok(true) => log::info!("muted the microphone that just arrived ({device_id})"),
+    let muted = current(app);
+    match crate::audio::set_capture_mute(device_id, muted) {
+        Ok(true) => {
+            log::info!("set the microphone that just arrived to muted={muted} ({device_id})")
+        }
         Ok(false) => {}
-        Err(e) => log::warn!("could not mute the arrived microphone {device_id}: {e}"),
+        Err(e) => log::warn!("could not sync the arrived microphone {device_id}: {e}"),
     }
 }
 

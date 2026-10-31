@@ -310,8 +310,9 @@ cargo test --manifest-path src-tauri/Cargo.toml
   returns the failures instead of swallowing them; `update_hotkeys` forwards
   them so the settings UI can warn. Never report a binding as applied without
   checking.
-- **Mic mute scope** (`mute::toggle_mic` is the only entry point — hotkey, tray,
-  gamepad and the UI command all go through it): `micMuteAllDevices` mutes every
+- **Mic mute scope** (`mute::toggle_mic` is the one toggle inside the app —
+  hotkey, tray, gamepad and the UI command all go through it; the CLI is a
+  separate process and does not update the tray): `micMuteAllDevices` mutes every
   active capture endpoint, `micMuteCallShortcut` also sends Win+Alt+K. Both are
   re-read from the config on every toggle. `set_mute` resolves by id and ignores
   the flow, so anything that targets an arbitrary id must check it is a capture

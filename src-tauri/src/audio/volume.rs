@@ -6,11 +6,12 @@
 //! on either direction.
 
 use super::AudioDevice;
-use windows::core::HSTRING;
+use windows::core::{Interface, HSTRING};
 use windows::Win32::Foundation::BOOL;
 use windows::Win32::Media::Audio::Endpoints::IAudioEndpointVolume;
 use windows::Win32::Media::Audio::{
-    eCapture, eConsole, eRender, EDataFlow, IMMDeviceEnumerator, MMDeviceEnumerator,
+    eCapture, eConsole, eRender, EDataFlow, IMMDeviceEnumerator, IMMEndpoint, MMDeviceEnumerator,
+    DEVICE_STATE_ACTIVE,
 };
 use windows::Win32::System::Com::{CoCreateInstance, CLSCTX_ALL};
 
@@ -150,7 +151,11 @@ fn is_live_capture(device: &AudioDevice) -> bool {
 /// should not leave the rest open.
 pub fn set_all_mics_mute(muted: bool) -> windows::core::Result<()> {
     set_mic_mute(muted)?;
-    for device in super::list_devices()?.iter().filter(|d| is_live_capture(d)) {
+    // The default was just handled above.
+    for device in super::list_devices()?
+        .iter()
+        .filter(|d| is_live_capture(d) && !d.is_default)
+    {
         if let Err(e) = set_mute(Some(&device.id), "input", muted) {
             log::warn!("could not set the mute of {}: {e}", device.name);
         }
@@ -166,18 +171,26 @@ pub fn toggle_all_mics_mute() -> windows::core::Result<bool> {
 }
 
 /// Applies `muted` to `device_id` when it is an active capture endpoint, e.g. a
-/// microphone that just arrived while the mute is on. Returns whether it applied.
+/// microphone that just arrived. Returns whether it applied.
 ///
 /// The direction check is not optional: `set_mute` resolves by id and ignores
-/// the flow, so an output id would mute the speakers.
+/// the flow, so an output id would mute the speakers. It asks the endpoint
+/// itself rather than enumerating everything, since this runs on every arrival.
 pub fn set_capture_mute(device_id: &str, muted: bool) -> windows::core::Result<bool> {
-    let is_target = super::list_devices()?
-        .iter()
-        .any(|d| d.id == device_id && is_live_capture(d));
-    if is_target {
-        set_mute(Some(device_id), "input", muted)?;
+    super::ensure_com();
+    unsafe {
+        let enumerator: IMMDeviceEnumerator =
+            CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL)?;
+        let device = enumerator.GetDevice(&HSTRING::from(device_id))?;
+        let is_capture = device.cast::<IMMEndpoint>()?.GetDataFlow()? == eCapture;
+        if !is_capture || device.GetState()? != DEVICE_STATE_ACTIVE {
+            return Ok(false);
+        }
+        device
+            .Activate::<IAudioEndpointVolume>(CLSCTX_ALL, None)?
+            .SetMute(BOOL::from(muted), std::ptr::null())?;
+        Ok(true)
     }
-    Ok(is_target)
 }
 
 #[cfg(test)]

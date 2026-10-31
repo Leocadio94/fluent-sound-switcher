@@ -236,7 +236,7 @@ fn schedule_auto_disconnect(app: &AppHandle, old_id: Option<String>) {
 /// already-default device is skipped, so the add + state-changed double event is
 /// idempotent.
 fn on_arrival(app: &AppHandle, device_id: &str) {
-    crate::mute::mute_arrived_mic(app, device_id);
+    crate::mute::sync_arrived_mic(app, device_id);
     let cfg = crate::config::auto_switch(app);
     if !cfg.enabled {
         refresh_gui(app);

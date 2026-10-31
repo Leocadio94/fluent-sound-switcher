@@ -18,9 +18,10 @@ microfone padrão é mutado, e um app fixado em outro microfone continua captand
 - O novo estado é o inverso do estado do **padrão**, aplicado a todos os
   endpoints de captura ativos (`audio::set_all_mics_mute`). O padrão vai
   primeiro e a falha dele é a do toggle; os demais são best effort.
-- Microfone que chega com o mudo ligado entra mudo (`mute::mute_arrived_mic`,
-  chamado de `events::on_arrival`). Desmutar não precisa desse caminho, porque
-  todos já foram desmutados no toggle.
+- Microfone que chega é posto no estado atual, mudo ou não
+  (`mute::sync_arrived_mic`, chamado de `events::on_arrival`). O toggle só
+  alcança endpoints ativos, e o Windows guarda o mudo por endpoint: um
+  microfone desplugado voltaria com o estado de antes, nos dois sentidos.
 - O CLI (`mute`) lê a mesma chave direto do arquivo da config.
 
 ## Mudo de chamada do Windows (Win+Alt+K)
