@@ -123,9 +123,7 @@ pub fn set_autostart(app: tauri::AppHandle, enabled: bool) -> Result<(), String>
 /// the tray icon and overlay too.
 #[tauri::command]
 pub fn toggle_mic_mute(app: tauri::AppHandle) -> Result<bool, String> {
-    let muted = audio::toggle_mic_mute().map_err(|e| e.to_string())?;
-    crate::mute::apply(&app, muted);
-    Ok(muted)
+    crate::mute::toggle_mic(&app).map_err(|e| e.to_string())
 }
 
 /// Re-applies the overlay with the given settings (passed directly to avoid

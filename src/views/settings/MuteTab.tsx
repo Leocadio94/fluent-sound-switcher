@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Dropdown, Option } from "@fluentui/react-components";
+import { Dropdown, Option, Switch } from "@fluentui/react-components";
 
 import {
   MUTE_INDICATOR_MODES as MODES,
@@ -9,22 +9,42 @@ import {
   type OverlayPosition,
   type OverlayStyle,
 } from "../../lib/config";
+import type { useMicMute } from "../../hooks/useMicMute";
 import SettingRow from "./SettingRow";
 import { POSITIONS } from "./shared";
 
 interface MuteTabProps {
   indicator: MuteIndicator;
+  micMute: ReturnType<typeof useMicMute>;
   onChange: <K extends keyof MuteIndicator>(
     key: K,
     value: MuteIndicator[K],
   ) => void;
 }
 
-export default function MuteTab({ indicator, onChange }: MuteTabProps) {
+export default function MuteTab({ indicator, micMute, onChange }: MuteTabProps) {
   const { t } = useTranslation();
 
   return (
     <>
+      <SettingRow
+        label={t("muteIndicator.allDevices")}
+        hint={t("muteIndicator.allDevicesHint")}
+      >
+        <Switch
+          checked={micMute.allDevices}
+          onChange={(_, d) => micMute.setAllDevices(d.checked)}
+        />
+      </SettingRow>
+      <SettingRow
+        label={t("muteIndicator.callShortcut")}
+        hint={t("muteIndicator.callShortcutHint")}
+      >
+        <Switch
+          checked={micMute.callShortcut}
+          onChange={(_, d) => micMute.setCallShortcut(d.checked)}
+        />
+      </SettingRow>
       <SettingRow label={t("muteIndicator.mode")}>
         <Dropdown
           value={t(`muteIndicator.modes.${indicator.mode}`)}

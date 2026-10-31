@@ -55,13 +55,47 @@ pub fn apply_output(app: &AppHandle, muted: bool) {
     }
 }
 
-/// Toggles the hardware microphone mute, then propagates the result.
+/// Flips the microphone mute, covering every active capture endpoint when the
+/// `micMuteAllDevices` setting is on, and propagates the result.
+///
+/// The one entry point for the hotkey, the tray, the gamepad and the UI, so
+/// they cannot disagree about the scope.
+pub fn toggle_mic(app: &AppHandle) -> windows::core::Result<bool> {
+    let muted = if crate::config::mic_mute_all(app) {
+        crate::audio::toggle_all_mics_mute()?
+    } else {
+        crate::audio::toggle_mic_mute()?
+    };
+    apply(app, muted);
+    crate::callmute::trigger(app);
+    Ok(muted)
+}
+
+/// Toggles the microphone mute, logging a failure instead of returning it.
 pub fn toggle(app: &AppHandle) {
-    match crate::audio::toggle_mic_mute() {
-        Ok(muted) => apply(app, muted),
-        // Leaving the tray/overlay showing the previous state is confusing on
-        // its own; at least leave a trace of why.
-        Err(e) => log::error!("could not toggle the mic mute: {e}"),
+    // Leaving the tray/overlay showing the previous state is confusing on its
+    // own; at least leave a trace of why.
+    if let Err(e) = toggle_mic(app) {
+        log::error!("could not toggle the mic mute: {e}");
+    }
+}
+
+/// Brings a microphone that just arrived in line with the current mute state.
+///
+/// Windows keeps the flag per endpoint, and an unplugged one is skipped by the
+/// toggle, so it comes back with whatever it had. Syncing both ways covers a
+/// mute that was turned on *and* one that was lifted while it was away.
+pub fn sync_arrived_mic(app: &AppHandle, device_id: &str) {
+    if !crate::config::mic_mute_all(app) {
+        return;
+    }
+    let muted = current(app);
+    match crate::audio::set_capture_mute(device_id, muted) {
+        Ok(true) => {
+            log::info!("set the microphone that just arrived to muted={muted} ({device_id})")
+        }
+        Ok(false) => {}
+        Err(e) => log::warn!("could not sync the arrived microphone {device_id}: {e}"),
     }
 }
 

@@ -64,6 +64,10 @@
     }
   },
   "muteIndicator": {
+    "allDevices": "Mutar todos os microfones",
+    "allDevicesHint": "O atalho muta todos os microfones ativos, não só o padrão. Cobre apps fixados em um microfone específico. Um microfone conectado com o mudo ligado entra mudo.",
+    "callShortcut": "Acionar também o mudo de chamada do Windows",
+    "callShortcutHint": "Envia Win+Alt+K junto, para o Teams mutar a si mesmo. É um alternador e o estado não pode ser lido: se você mutar pelo botão do app, os dois ficam invertidos. Só funciona em apps que integram o recurso.",
     "mode": "Quando mostrar",
     "position": "Posição",
     "style": "Estilo",

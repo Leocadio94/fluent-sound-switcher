@@ -22,6 +22,7 @@ import NotificationsTab from "./settings/NotificationsTab";
 import SupportTab from "./settings/SupportTab";
 import VolumeTab from "./settings/VolumeTab";
 import type { ThemePreference } from "../theme/useSystemTheme";
+import type { useMicMute } from "../hooks/useMicMute";
 import type { HotkeyFailure } from "../lib/tauri";
 import type {
   AutoSwitchConfig,
@@ -76,6 +77,7 @@ interface SettingsDialogProps {
   gamepad: GamepadHotkeys;
   onGamepadChange: (enabled: boolean) => void;
   indicator: MuteIndicator;
+  micMute: ReturnType<typeof useMicMute>;
   onIndicatorChange: <K extends keyof MuteIndicator>(
     key: K,
     value: MuteIndicator[K],
@@ -158,6 +160,7 @@ export default function SettingsDialog(props: SettingsDialogProps) {
             {tab === "mute" && (
               <MuteTab
                 indicator={props.indicator}
+                micMute={props.micMute}
                 onChange={props.onIndicatorChange}
               />
             )}

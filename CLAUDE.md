@@ -113,6 +113,7 @@ cargo test --manifest-path src-tauri/Cargo.toml
     the Windows endpoint icon → RGBA), `mute.rs` (central mute state),
     `notify.rs` (toast/banner/sound), `hotkeys.rs` (global shortcuts),
     `gamepad.rs` (XInput polling for gamepad shortcuts),
+    `callmute.rs` (opt-in Win+Alt+K after a mic mute, via `SendInput`),
     `cli.rs` (subcommands), `config.rs` (reads the store file), `commands.rs`,
     `logging.rs` (log plugin + "open log folder"), `lib.rs` (builder/setup),
     `main.rs` (CLI dispatch then `run`).
@@ -309,6 +310,15 @@ cargo test --manifest-path src-tauri/Cargo.toml
   returns the failures instead of swallowing them; `update_hotkeys` forwards
   them so the settings UI can warn. Never report a binding as applied without
   checking.
+- **Mic mute scope** (`mute::toggle_mic` is the one toggle inside the app —
+  hotkey, tray, gamepad and the UI command all go through it; the CLI is a
+  separate process and does not update the tray): `micMuteAllDevices` mutes every
+  active capture endpoint, `micMuteCallShortcut` also sends Win+Alt+K. Both are
+  re-read from the config on every toggle. `set_mute` resolves by id and ignores
+  the flow, so anything that targets an arbitrary id must check it is a capture
+  endpoint first (`audio::set_capture_mute`) or it mutes a speaker. The call
+  shortcut is the one place the app injects input, deliberately opt-in; the
+  gamepad poller still never does. See `docs/mic-mute-scope.md`.
 - **Gamepad shortcuts (`gamepad.rs`)**: an always-running polling thread reads
   `XInputGetState(0)` every 30 ms — user-mode, read-only, official API, so
   anti-cheats stay uninterested. Deliberately **no** ViGEm, no hooks, no

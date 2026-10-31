@@ -64,7 +64,7 @@ top, every time.
 - ⌨️ **Global hotkeys** — cycle output, cycle input, toggle mic mute, volume up/down, toggle output mute. Fully rebindable, media keys included.
 - 🎮 **Gamepad shortcuts** *(optional)* — hold **LB + RB** on an XInput controller and press a button for the same actions, mid-game. Off by default (Settings → Hotkeys → Gamepad).
 - 🎚️ **Volume OSD** — an on-screen level that shows over fullscreen games, like the mute indicator.
-- 🎙️ **Mic mute** with a configurable on-screen indicator (always / only-muted / only-live / never) and a tray icon that reflects the state.
+- 🎙️ **Mic mute** with a configurable on-screen indicator (always / only-muted / only-live / never) and a tray icon that reflects the state. Optionally mutes **every** active microphone instead of just the default, and can also fire the Windows call-mute shortcut (Win+Alt+K) so Teams mutes itself — see [docs/mic-mute-scope.md](docs/mic-mute-scope.md).
 - 🖥️ **Fullscreen-safe overlay & banner** — topmost and click-through, visible *over* fullscreen games, on the monitor you are actually looking at.
 - 🟦 **Tray quick-switch flyout** (left-click) and a context menu (right-click); works over fullscreen apps.
 - 🔔 **Switch notifications** — any mix of a native Windows toast, an on-screen banner, and a sound.
@@ -301,6 +301,7 @@ then update `plugins.updater.pubkey` in `tauri.conf.json` and re-set the secret.
 | ✅ | Disconnected favourites keep their place in the list and the cycle |
 | ✅ | Bluetooth audio devices: list paired devices, connect/disconnect from the app |
 | ✅ | Product site and privacy policy at [leocadio.dev](https://leocadio.dev/en/fluent-sound-switcher/) |
+| ✅ | Mute all microphones + optional Windows call-mute shortcut, bolder tray mic icon |
 | ⏳ | Code signing (Authenticode cert — removes the SmartScreen warning) |
 | ⏳ | Easy install via package managers (winget first, then Scoop) |
 | ⏳ | Microsoft Store distribution (Microsoft signs the MSIX package — free signing) |

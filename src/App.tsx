@@ -21,6 +21,7 @@ import { useFavorites } from "./hooks/useFavorites";
 import { useHotkeys } from "./hooks/useHotkeys";
 import { useGamepadHotkeys } from "./hooks/useGamepadHotkeys";
 import { useMute } from "./hooks/useMute";
+import { useMicMute } from "./hooks/useMicMute";
 import { useMuteIndicator } from "./hooks/useMuteIndicator";
 import { useNotifications } from "./hooks/useNotifications";
 import { useAutoSwitch } from "./hooks/useAutoSwitch";
@@ -107,6 +108,7 @@ export default function App({
   const { hotkeys, setBinding, failures: hotkeyFailures } = useHotkeys();
   const { gamepad, setField: setGamepadField } = useGamepadHotkeys();
   const { indicator, setField: setIndicatorField } = useMuteIndicator();
+  const micMute = useMicMute();
   const { notifications, setField: setNotificationField } = useNotifications();
   const { autoSwitch, setField: setAutoSwitchField } = useAutoSwitch();
   const bluetooth = useBluetooth();
@@ -196,6 +198,7 @@ export default function App({
         gamepad={gamepad}
         onGamepadChange={(enabled) => setGamepadField("enabled", enabled)}
         indicator={indicator}
+        micMute={micMute}
         onIndicatorChange={setIndicatorField}
         notifications={notifications}
         onNotificationChange={setNotificationField}

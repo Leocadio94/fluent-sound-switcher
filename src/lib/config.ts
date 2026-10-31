@@ -158,6 +158,8 @@ const THEME_KEY = "theme";
 const SYSTEM_ACCENT_KEY = "useSystemAccent";
 const TITLE_BAR_KEY = "titleBarStyle";
 const BT_AUTO_DISCONNECT_KEY = "bluetoothAutoDisconnect";
+const MIC_MUTE_ALL_KEY = "micMuteAllDevices";
+const MIC_MUTE_CALL_SHORTCUT_KEY = "micMuteCallShortcut";
 
 const SCHEMA_VERSION_KEY = "schemaVersion";
 
@@ -393,6 +395,28 @@ export async function loadBtAutoDisconnect(): Promise<boolean> {
 export async function saveBtAutoDisconnect(value: boolean): Promise<void> {
   const store = await getStore();
   await store.set(BT_AUTO_DISCONNECT_KEY, value);
+}
+
+/** Whether the mic mute covers every active microphone, not just the default. */
+export async function loadMicMuteAll(): Promise<boolean> {
+  const store = await getStore();
+  return boolOr(await store.get(MIC_MUTE_ALL_KEY), false);
+}
+
+export async function saveMicMuteAll(value: boolean): Promise<void> {
+  const store = await getStore();
+  await store.set(MIC_MUTE_ALL_KEY, value);
+}
+
+/** Whether the mic mute also sends Win+Alt+K, the Windows call-mute shortcut. */
+export async function loadMicMuteCallShortcut(): Promise<boolean> {
+  const store = await getStore();
+  return boolOr(await store.get(MIC_MUTE_CALL_SHORTCUT_KEY), false);
+}
+
+export async function saveMicMuteCallShortcut(value: boolean): Promise<void> {
+  const store = await getStore();
+  await store.set(MIC_MUTE_CALL_SHORTCUT_KEY, value);
 }
 
 export async function loadVolumeOsd(): Promise<VolumeOsd> {
