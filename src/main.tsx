@@ -5,7 +5,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import App from "./App";
 import Overlay from "./views/Overlay";
-import Flyout from "./views/Flyout";
+import FlyoutHost from "./views/FlyoutHost";
 import Banner from "./views/Banner";
 import { useSystemTheme, type ThemePreference } from "./theme/useSystemTheme";
 import { useAccentTheme } from "./theme/useAccentTheme";
@@ -120,7 +120,7 @@ function content(props: WindowProps) {
     case "flyout":
       return (
         <AuxWindow {...props}>
-          <Flyout />
+          <FlyoutHost />
         </AuxWindow>
       );
     case "banner":

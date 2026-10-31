@@ -1,13 +1,13 @@
 //! System tray icons. The primary icon reflects the mic mute state. An optional
 //! secondary icon mirrors the current default output device (using the icon
 //! Windows shows for it in the Sound control panel). Right-click on either
-//! opens the menu; the left-click action is configurable per icon (see
-//! `TrayClickAction`).
+//! opens the Fluent menu drawn by the flyout window (`flyout::show_menu`); the
+//! left-click action is configurable per icon (see `TrayClickAction`).
 
 use crate::i18n::{self, Msg};
+use serde::Serialize;
 use tauri::{
     image::Image,
-    menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent},
     AppHandle, Emitter, Manager,
 };
@@ -72,9 +72,6 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
     TrayIconBuilder::with_id(TRAY_ID)
         .icon(base_icon.clone())
         .tooltip("Fluent Sound Switcher")
-        .menu(&build_menu(app)?)
-        .show_menu_on_left_click(false)
-        .on_menu_event(on_menu_event)
         .on_tray_icon_event(on_tray_icon_event)
         .build(app)?;
 
@@ -83,9 +80,6 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
     TrayIconBuilder::with_id(DEVICE_TRAY_ID)
         .icon(base_icon)
         .tooltip(i18n::t(app, Msg::OutputDevice))
-        .menu(&build_menu(app)?)
-        .show_menu_on_left_click(false)
-        .on_menu_event(on_menu_event)
         .on_tray_icon_event(on_tray_icon_event)
         .build(app)?;
 
@@ -93,82 +87,58 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
     Ok(())
 }
 
-/// Rebuilds both trays' menus and tooltips, e.g. after the UI language changed.
-pub fn rebuild_menus(app: &AppHandle) -> tauri::Result<()> {
-    for id in [TRAY_ID, DEVICE_TRAY_ID] {
-        let Some(tray) = app.tray_by_id(id) else {
-            log::warn!("tray '{id}' missing; cannot rebuild its menu");
-            continue;
-        };
-        tray.set_menu(Some(build_menu(app)?))?;
-    }
-    // The tooltips carry translated text too.
+/// Re-reads the translated tooltips, e.g. after the UI language changed. The
+/// menu needs no refresh: its labels are fetched each time it opens.
+pub fn refresh_texts(app: &AppHandle) {
     set_mute_icon(app, crate::mute::current(app));
     refresh_device_icon(app);
-    Ok(())
 }
 
-fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
-    let show = MenuItem::with_id(app, "show", i18n::t(app, Msg::TrayOpen), true, None::<&str>)?;
-    let sound_panel = MenuItem::with_id(
-        app,
-        "sound_panel",
-        i18n::t(app, Msg::TrayPlaybackDevices),
-        true,
-        None::<&str>,
-    )?;
-    let settings = MenuItem::with_id(
-        app,
-        "settings",
-        i18n::t(app, Msg::TraySettings),
-        true,
-        None::<&str>,
-    )?;
-    let toggle_mute = MenuItem::with_id(
-        app,
-        "toggle_mute",
-        i18n::t(app, Msg::TrayToggleMute),
-        true,
-        None::<&str>,
-    )?;
-    let check_updates = MenuItem::with_id(
-        app,
-        "check_updates",
-        i18n::t(app, Msg::TrayCheckUpdates),
-        true,
-        None::<&str>,
-    )?;
-    let quit = MenuItem::with_id(app, "quit", i18n::t(app, Msg::TrayQuit), true, None::<&str>)?;
-    let sep = PredefinedMenuItem::separator(app)?;
-    let sep2 = PredefinedMenuItem::separator(app)?;
-    Menu::with_items(
-        app,
-        &[
-            &show,
-            &settings,
-            &sound_panel,
-            &sep,
-            &toggle_mute,
-            &sep2,
-            &check_updates,
-            &quit,
-        ],
-    )
+/// One row of the right-click menu, as the flyout window draws it. The labels
+/// come from here so the backend stays the single owner of the tray strings.
+#[derive(Serialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum MenuEntry {
+    Item { id: &'static str, label: String },
+    Separator,
 }
 
-fn on_menu_event(app: &AppHandle, event: tauri::menu::MenuEvent) {
-    match event.id.as_ref() {
-        "show" => show_main(app),
-        "settings" => {
-            show_main(app);
-            let _ = app.emit("open-settings", ());
+pub fn menu_entries(app: &AppHandle) -> Vec<MenuEntry> {
+    let item = |id, msg| MenuEntry::Item {
+        id,
+        label: i18n::t(app, msg).to_string(),
+    };
+    vec![
+        item("show", Msg::TrayOpen),
+        item("settings", Msg::TraySettings),
+        item("sound_panel", Msg::TrayPlaybackDevices),
+        MenuEntry::Separator,
+        item("toggle_mute", Msg::TrayToggleMute),
+        MenuEntry::Separator,
+        item("check_updates", Msg::TrayCheckUpdates),
+        item("quit", Msg::TrayQuit),
+    ]
+}
+
+/// Runs the menu entry the flyout reported. Spawned off the caller's thread
+/// like the left-click actions: the mute path talks to COM.
+pub fn run_menu_action(app: &AppHandle, id: &str) {
+    let app = app.clone();
+    let id = id.to_owned();
+    tauri::async_runtime::spawn(async move {
+        match id.as_str() {
+            "show" => show_main(&app),
+            "settings" => {
+                show_main(&app);
+                let _ = app.emit("open-settings", ());
+            }
+            "sound_panel" => open_sound_panel(),
+            "toggle_mute" => crate::mute::toggle(&app),
+            "check_updates" => crate::updater::check(&app, false),
+            "quit" => app.exit(0),
+            other => log::warn!("unknown tray menu entry '{other}'"),
         }
-        "sound_panel" => open_sound_panel(),
-        "toggle_mute" => crate::mute::toggle(app),
-        "check_updates" => crate::updater::check(app, false),
-        "quit" => app.exit(0),
-        _ => {}
-    }
+    });
 }
 
 /// Runs a left-click action. Spawned off the event-handler thread like
@@ -203,22 +173,36 @@ fn run_click_action(app: &AppHandle, action: TrayClickAction) {
 }
 
 fn on_tray_icon_event(tray: &TrayIcon, event: TrayIconEvent) {
-    if let TrayIconEvent::Click {
-        button: MouseButton::Left,
-        button_state: MouseButtonState::Up,
-        ..
-    } = event
-    {
-        // `TrayIconEvent::id()` names the icon that was clicked ("main" or
-        // "device"); each reads its own configured action.
-        let app = tray.app_handle();
-        let action = if event.id() == TRAY_ID {
-            crate::config::tray_click_action(app, "mic")
-        } else {
-            crate::config::tray_click_action(app, "device")
-        };
-        let action = parse_click_action(&action);
-        run_click_action(app, action);
+    let app = tray.app_handle();
+    match &event {
+        TrayIconEvent::Click {
+            button: MouseButton::Left,
+            button_state: MouseButtonState::Up,
+            ..
+        } => {
+            // `TrayIconEvent::id()` names the icon that was clicked ("main" or
+            // "device"); each reads its own configured action.
+            let action = if event.id() == TRAY_ID {
+                crate::config::tray_click_action(app, "mic")
+            } else {
+                crate::config::tray_click_action(app, "device")
+            };
+            run_click_action(app, parse_click_action(&action));
+        }
+        TrayIconEvent::Click {
+            button: MouseButton::Right,
+            button_state: MouseButtonState::Up,
+            position,
+            ..
+        } => {
+            // Gives focus to a window, so keep it off the event-loop thread.
+            let app = app.clone();
+            let cursor = (position.x, position.y);
+            tauri::async_runtime::spawn(async move {
+                crate::flyout::show_menu(&app, cursor);
+            });
+        }
+        _ => {}
     }
 }
 

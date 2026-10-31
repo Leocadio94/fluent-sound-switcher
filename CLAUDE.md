@@ -99,7 +99,8 @@ cargo test --manifest-path src-tauri/Cargo.toml
     the driver's `KSPROPSETID_BtAudio` one-shot property), `mod.rs`
     (`ensure_com`, `cycle_default`). `sessions.rs` (per-app) not built yet.
   - Windows: `overlay.rs` (mute indicator), `banner.rs` (switch banner),
-    `flyout.rs` (tray quick-switch) — all transparent/topmost/click-through;
+    `flyout.rs` (tray quick-switch + the right-click menu) — all
+    transparent/topmost/click-through;
     `auxwin.rs` holds what the three share (monitor resolution, anchoring, the
     click-through extended style, the direct `SetWindowPos(HWND_TOPMOST)` band
     re-assert); `power.rs` catches resume/session-unlock and re-asserts them;
@@ -319,6 +320,17 @@ cargo test --manifest-path src-tauri/Cargo.toml
   endpoint first (`audio::set_capture_mute`) or it mutes a speaker. The call
   shortcut is the one place the app injects input, deliberately opt-in; the
   gamepad poller still never does. See `docs/mic-mute-scope.md`.
+- **Tray right-click menu**: there is no native menu attached to the trays. A
+  right-click calls `flyout::show_menu`, which reuses the flyout window (a fifth
+  WebView2 was not worth it) with `Anchor::Cursor` instead of `Anchor::Corner`;
+  the frontend (`FlyoutHost` → `TrayMenu`) picks its face from the `flyout-view`
+  event, which the backend sends on **every** open because the suspended webview
+  cannot know which face it was left on. The labels come from
+  `tray::menu_entries` so `i18n.rs` stays the only owner of the tray strings,
+  and an entry goes back through `tray_menu_action` → `tray::run_menu_action`.
+  Adding an entry means touching those two plus the icon map in `TrayMenu.tsx`.
+  The click position is the tray event's physical `position`; place it with
+  `menu_origin` (tested), never from the window's own scale.
 - **Gamepad shortcuts (`gamepad.rs`)**: an always-running polling thread reads
   `XInputGetState(0)` every 30 ms — user-mode, read-only, official API, so
   anti-cheats stay uninterested. Deliberately **no** ViGEm, no hooks, no

@@ -149,14 +149,27 @@ pub fn ensure_overlay_visible(app: tauri::AppHandle) -> Result<(), String> {
 
 /// Resizes the quick-switch flyout to fit its content (logical px height).
 #[tauri::command]
-pub fn set_flyout_size(app: tauri::AppHandle, height: f64) {
-    crate::flyout::set_size(&app, height);
+pub fn set_flyout_size(app: tauri::AppHandle, height: f64, menu: bool) {
+    crate::flyout::set_size(&app, height, menu);
 }
 
 /// Hides the quick-switch flyout (after a device is picked).
 #[tauri::command]
 pub fn close_flyout(app: tauri::AppHandle) {
     crate::flyout::hide(&app);
+}
+
+/// Runs an entry of the right-click menu, which the flyout window draws.
+#[tauri::command]
+pub fn tray_menu_action(app: tauri::AppHandle, window: tauri::WebviewWindow, id: String) {
+    // It can quit the app, so only the window that draws the menu may ask.
+    if window.label() != crate::flyout::FLYOUT_LABEL {
+        log::warn!("ignored a tray menu action from '{}'", window.label());
+        return;
+    }
+    // Dismiss first: entries like "Open" hand focus to another window.
+    crate::flyout::hide(&app);
+    crate::tray::run_menu_action(&app, &id);
 }
 
 /// Shows/hides the output-device tray icon live (passed directly to avoid racing
@@ -323,7 +336,7 @@ pub fn open_url(url: String) -> Result<(), String> {
 /// once. The value is passed directly rather than re-read, to avoid racing the
 /// store's async write.
 #[tauri::command]
-pub fn set_language(app: tauri::AppHandle, language: String) -> Result<(), String> {
+pub fn set_language(app: tauri::AppHandle, language: String) {
     crate::i18n::set_language(&language);
-    crate::tray::rebuild_menus(&app).map_err(|e| e.to_string())
+    crate::tray::refresh_texts(&app);
 }
