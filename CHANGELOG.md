@@ -19,9 +19,10 @@ the project follows phased iterations (see `README.md`).
 
 ### Changed
 
-- Ícones do microfone na bandeja redesenhados: quadrado arredondado azul com o
-  microfone branco quando ativo, e vermelho com a barra diagonal quando mudo.
-  Antes eram um contorno cinza que quase sumia a 16 px.
+- Ícones do microfone na bandeja redesenhados: microfone branco com contorno
+  fino e sem fundo quando ativo, e um retângulo vertical vermelho com o
+  microfone grande e a barra diagonal quando mudo. Antes eram um contorno cinza
+  que quase sumia a 16 px.
 
 ## [0.6.0] - 2026-09-29
 
