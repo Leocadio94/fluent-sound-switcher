@@ -16,7 +16,9 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
 const RELEASE_TIMEOUT: Duration = Duration::from_millis(600);
 const POLL: Duration = Duration::from_millis(15);
 
-const MODIFIERS: [VIRTUAL_KEY; 5] = [VK_CONTROL, VK_SHIFT, VK_MENU, VK_LWIN, VK_RWIN];
+/// Keys that must be up before the chord goes out: the modifiers of the user's
+/// own shortcut, and K itself, in case that shortcut ends on it.
+const HELD_KEYS: [VIRTUAL_KEY; 6] = [VK_CONTROL, VK_SHIFT, VK_MENU, VK_LWIN, VK_RWIN, VK_K];
 
 /// Win+Alt+K as (key, is_release) steps: pressed in order, released in reverse.
 const CHORD: [(VIRTUAL_KEY, bool); 6] = [
@@ -36,22 +38,22 @@ pub fn trigger(app: &AppHandle) {
     tauri::async_runtime::spawn_blocking(|| {
         // The mute hotkey is usually still down here. Its Ctrl/Shift/Alt would
         // merge into the chord and Windows would see a different shortcut.
-        if !wait_for_modifier_release() {
-            log::warn!("modifiers still held; skipped the Win+Alt+K call-mute shortcut");
+        if !wait_for_release() {
+            log::warn!("keys still held; skipped the Win+Alt+K call-mute shortcut");
             return;
         }
         send_chord();
     });
 }
 
-fn modifier_down(key: VIRTUAL_KEY) -> bool {
+fn key_down(key: VIRTUAL_KEY) -> bool {
     // The high bit of the returned state is "currently down".
     unsafe { GetAsyncKeyState(i32::from(key.0)) < 0 }
 }
 
-fn wait_for_modifier_release() -> bool {
+fn wait_for_release() -> bool {
     let deadline = Instant::now() + RELEASE_TIMEOUT;
-    while MODIFIERS.iter().any(|&key| modifier_down(key)) {
+    while HELD_KEYS.iter().any(|&key| key_down(key)) {
         if Instant::now() >= deadline {
             return false;
         }
