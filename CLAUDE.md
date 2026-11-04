@@ -22,6 +22,9 @@ Picture).
 - **Tauri plugins**: `store` (config), `global-shortcut`, `notification`,
   `autostart`, `updater` (signed auto-update via GitHub Releases; pubkey in
   `tauri.conf.json`, private key kept outside the repo at `~/.tauri/`), `log`.
+- **Why not GPUI** (native Rust UI, no WebView): evaluated and rejected —
+  `docs/decisions/0001-manter-tauri-em-vez-de-gpui.md`. Re-read it before
+  proposing a UI-framework migration.
 - **Package manager**: pnpm. **Identifier**: `com.fluentsoundswitcher.app`
   (config at `%APPDATA%/com.fluentsoundswitcher.app/config.json`).
 
@@ -303,6 +306,10 @@ cargo test --manifest-path src-tauri/Cargo.toml
   `list_audio_devices`: that would activate an `IAudioEndpointVolume` interface
   per endpoint on every refresh, and the list refetches on each
   `device-changed`. Slider writes are debounced (~40 ms).
+- **Build profile** (`docs/build-profile.md`): the lib is `crate-type =
+  ["rlib"]` on purpose — the template's `staticlib`/`cdylib` are mobile-only
+  and wrote a 1.15 GB `.lib` per build. `[profile.dev]` keeps line tables only
+  (deps without debuginfo). Don't restore either "to match the template".
 - **Logging**: the GUI build is `windows_subsystem = "windows"`, so nothing
   printed reaches a console — always use `log::` (never `println!`/`eprintln!`)
   and read the rotating file via Settings → General → "Abrir pasta de logs".
