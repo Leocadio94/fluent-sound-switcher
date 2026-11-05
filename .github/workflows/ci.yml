@@ -19,14 +19,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      # pnpm comes from devEngines.packageManager; install runs below.
+      - name: Setup pnpm and Node
+        uses: pnpm/setup@v3
         with:
-          node-version: 22
-          cache: pnpm
+          runtime: node@24
+          cache: true
+          install: false
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable

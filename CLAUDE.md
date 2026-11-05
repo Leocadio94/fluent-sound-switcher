@@ -27,6 +27,12 @@ Picture).
   proposing a UI-framework migration.
 - **Package manager**: pnpm. **Identifier**: `com.fluentsoundswitcher.app`
   (config at `%APPDATA%/com.fluentsoundswitcher.app/config.json`).
+- **pnpm is pinned by range** in `devEngines.packageManager` (`>=12 <13`,
+  `onFail: download`), never by an exact `packageManager`. A pin that differs
+  from the global pnpm makes pnpm relaunch the pinned one through a `.cmd` shim,
+  and Ctrl+C then hangs the terminal on "Terminate batch job". CI installs pnpm
+  and Node with `pnpm/setup@v3`; `pnpm/action-setup@v4` does not read
+  `devEngines` and fails without `packageManager`.
 
 ## Status
 
