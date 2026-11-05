@@ -4,6 +4,21 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Build
+
+- O build de dev ocupa cerca de um terço do espaço em disco e compila na
+  metade do tempo: o `target/` limpo caiu de 6,82 GB para 2,15 GB e o build de
+  2m46s para 1m27s. O crate deixou de gerar as bibliotecas usadas só no mobile,
+  e o perfil de dev passou a gravar só as tabelas de linha. Ver
+  `docs/build-profile.md`.
+
+### Docs
+
+- Registrada a decisão de manter o Tauri em vez de migrar para o GPUI, com o
+  que pesou e quando reavaliar: `docs/decisions/0001-manter-tauri-em-vez-de-gpui.md`.
+
 ## [0.7.0] - 2026-10-31
 
 ### Added
