@@ -17,6 +17,13 @@ the project follows phased iterations (see `README.md`).
 - **Fonte Segoe UI Variable**, a que o resto do Windows 11 usa, em todas as
   janelas. O Fluent web pede a Segoe UI estática, do Windows 10.
 
+### Added
+
+- **Segurar o atalho de volume repete o passo.** Depois de uma pausa de 0,4 s o
+  volume sobe ou desce continuamente até soltar a tecla ou chegar ao limite; um
+  toque rápido continua sendo um passo só. Antes era preciso apertar uma vez por
+  passo.
+
 ### Fixed
 
 - **A barra do volume na tela não aparecia.** Só o ícone e o número eram

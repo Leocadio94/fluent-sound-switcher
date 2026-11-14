@@ -14,7 +14,7 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::OnceLock;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, LogicalSize, Manager, WebviewWindow};
@@ -89,6 +89,18 @@ pub fn configure(app: &AppHandle) {
     }
 }
 
+/// Milliseconds since first use, never 0 (0 means "never").
+fn now_ms() -> u64 {
+    static START: OnceLock<Instant> = OnceLock::new();
+    START.get_or_init(Instant::now).elapsed().as_millis() as u64 + 1
+}
+
+/// Until when (`now_ms`) the window is known to be showing the volume OSD.
+fn volume_until() -> &'static AtomicU64 {
+    static U: OnceLock<AtomicU64> = OnceLock::new();
+    U.get_or_init(|| AtomicU64::new(0))
+}
+
 /// Shows/hides the overlay using the stored config (mute toggles, startup).
 pub fn update(app: &AppHandle, muted: bool) {
     update_with(app, muted, &config::mute_indicator(app));
@@ -100,6 +112,9 @@ pub fn update_with(app: &AppHandle, muted: bool, cfg: &MuteIndicator) {
     let Some(window) = app.get_webview_window(OVERLAY_LABEL) else {
         return;
     };
+    // The window is about to change face and size, so the next volume OSD has to
+    // set it up again.
+    volume_until().store(0, Ordering::SeqCst);
 
     let visible = match cfg.mode.as_str() {
         "always" => true,
@@ -184,11 +199,18 @@ pub fn show_volume(app: &AppHandle, level: f32) {
         level: level.clamp(0.0, 1.0),
     };
 
-    let _ = window.set_size(LogicalSize::new(VOLUME_WIDTH, HEIGHT));
-    auxwin::anchor(app, &window, &cfg.position, VOLUME_WIDTH, HEIGHT, MARGIN);
-    let _ = window.show();
-    let _ = window.set_ignore_cursor_events(true);
-    auxwin::reassert_topmost(&window);
+    // A held volume key calls this ~12 times a second. While the OSD is already
+    // up only the payload changes: `set_ignore_cursor_events` flips
+    // `WS_EX_LAYERED` and a burst of it races DWM (tauri-apps/tauri#15947).
+    let already_up = now_ms() < volume_until().load(Ordering::SeqCst);
+    volume_until().store(now_ms() + VOLUME_SHOW_MS, Ordering::SeqCst);
+    if !already_up {
+        let _ = window.set_size(LogicalSize::new(VOLUME_WIDTH, HEIGHT));
+        auxwin::anchor(app, &window, &cfg.position, VOLUME_WIDTH, HEIGHT, MARGIN);
+        let _ = window.show();
+        let _ = window.set_ignore_cursor_events(true);
+        auxwin::reassert_topmost(&window);
+    }
     let generation_id = emit_state(app, &window, payload);
 
     let app = app.clone();
