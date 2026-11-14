@@ -153,6 +153,9 @@ pub fn update_with(app: &AppHandle, muted: bool, cfg: &MuteIndicator) {
         // Supersede anything still retrying. The next show pushes its own state,
         // and pushing one here would cancel the exit animation in the frontend.
         let mine = generation().fetch_add(1, Ordering::SeqCst) + 1;
+        if !window.is_visible().unwrap_or(false) {
+            return;
+        }
         auxwin::hide_animated(
             &window,
             "overlay-leave",

@@ -6,7 +6,7 @@
 //! as a Fluent menu next to the cursor instead of the native Win32 one. A fifth
 //! WebView2 for the menu was not worth it.
 
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Mutex;
 
 use serde::Serialize;
@@ -58,14 +58,22 @@ enum View<'a> {
 /// click on the tray icon right after the blur does exactly that).
 static GENERATION: AtomicU64 = AtomicU64::new(0);
 
+/// A dismissal is waiting out its exit animation. The window is still visible
+/// then, but it no longer counts as open: a second blur must not restart the
+/// exit, and a tray click must reopen it instead of closing it again.
+static DISMISSING: AtomicBool = AtomicBool::new(false);
+
 /// Hides the window after its exit animation.
 fn dismiss(window: &WebviewWindow) {
+    if !window.is_visible().unwrap_or(false) || DISMISSING.swap(true, Ordering::SeqCst) {
+        return;
+    }
     let mine = GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
     auxwin::hide_animated(
         window,
         "flyout-leave",
         move || GENERATION.load(Ordering::SeqCst) == mine,
-        || {},
+        || DISMISSING.store(false, Ordering::SeqCst),
     );
 }
 
@@ -109,7 +117,7 @@ pub fn toggle(app: &AppHandle) {
     let Some(window) = app.get_webview_window(FLYOUT_LABEL) else {
         return;
     };
-    if window.is_visible().unwrap_or(false) {
+    if window.is_visible().unwrap_or(false) && !DISMISSING.load(Ordering::SeqCst) {
         dismiss(&window);
     } else {
         set_anchor(Anchor::Corner);
@@ -149,6 +157,7 @@ pub fn show_menu(app: &AppHandle, cursor: (f64, f64)) {
 /// Sizes, positions and reveals the window, then takes focus.
 fn present(app: &AppHandle, window: &WebviewWindow, height: f64) {
     GENERATION.fetch_add(1, Ordering::SeqCst);
+    DISMISSING.store(false, Ordering::SeqCst);
     place(app, window, height);
     let _ = window.show();
     let _ = window.set_focus();
