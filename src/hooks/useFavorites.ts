@@ -94,8 +94,8 @@ export function useFavorites(devices?: AudioDevice[]): UseFavorites {
 
   // The flyout window is created once and lives suspended while hidden, so
   // favorite edits made in the main window never reach it; the backend pushes
-  // "favorites-changed" on every flyout open.
-  useTauriEvent("favorites-changed", reload, [reload]);
+  // "flyout-opened" on every flyout open.
+  useTauriEvent("flyout-opened", reload, [reload]);
 
   useEffect(() => {
     if (!devices || devices.length === 0 || !loaded.current) return;

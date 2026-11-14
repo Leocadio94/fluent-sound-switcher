@@ -9,6 +9,7 @@ import { usePersistedConfig } from "./usePersistedConfig";
 interface UseVolumeOsd {
   osd: VolumeOsd;
   setField: <K extends keyof VolumeOsd>(key: K, value: VolumeOsd[K]) => void;
+  reload: () => void;
 }
 
 /**
@@ -16,11 +17,11 @@ interface UseVolumeOsd {
  * `config.json` when a volume hotkey fires, so there is no command to call.
  */
 export function useVolumeOsd(): UseVolumeOsd {
-  const { value, setField } = usePersistedConfig({
+  const { value, setField, reload } = usePersistedConfig({
     defaults: DEFAULT_VOLUME_OSD,
     load: loadVolumeOsd,
     save: saveVolumeOsd,
   });
 
-  return { osd: value, setField };
+  return { osd: value, setField, reload };
 }
