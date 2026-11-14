@@ -343,6 +343,10 @@ cargo test --manifest-path src-tauri/Cargo.toml
   endpoint first (`audio::set_capture_mute`) or it mutes a speaker. The call
   shortcut is the one place the app injects input, deliberately opt-in; the
   gamepad poller still never does. See `docs/mic-mute-scope.md`.
+- **The flyout window lives suspended between opens and never sees a setting
+  or favorite changed in the main window.** Whatever it reads from the config
+  must reload on the `flyout-opened` event (`useFavorites`; `usePersistedConfig`
+  exposes `reload`), or the stale value shows until the app restarts.
 - **Tray right-click menu**: there is no native menu attached to the trays. A
   right-click calls `flyout::show_menu`, which reuses the flyout window (a fifth
   WebView2 was not worth it) with `Anchor::Cursor` instead of `Anchor::Corner`;

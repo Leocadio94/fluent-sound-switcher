@@ -4,6 +4,14 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Fixed
+
+- **"Controle de volume no menu rápido" desligado continuava aparecendo** no
+  menu da bandeja até o app reiniciar. A janela do menu fica viva entre as
+  aberturas e só lia essa opção uma vez; agora relê a cada abertura.
+
 ## [0.7.1] - 2026-11-14
 
 ### Fixed

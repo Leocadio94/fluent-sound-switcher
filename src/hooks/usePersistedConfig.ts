@@ -16,6 +16,12 @@ interface Options<T extends object> {
 interface Persisted<T extends object> {
   value: T;
   setField: <K extends keyof T>(key: K, fieldValue: T[K]) => void;
+  /**
+   * Reads the stored value again. For a window that lives suspended and cannot
+   * see edits made elsewhere (the tray flyout); a field edited here meanwhile
+   * wins over the read.
+   */
+  reload: () => void;
 }
 
 /**
@@ -35,25 +41,33 @@ export function usePersistedConfig<T extends object>({
 }: Options<T>): Persisted<T> {
   const [value, setValue] = useState<T>(defaults);
   const latest = useRef(value);
+  // Bumped by every read, edit and unmount, so a read still in flight cannot
+  // undo a newer edit or land on an unmounted component.
+  const generation = useRef(0);
 
-  useEffect(() => {
-    let cancelled = false;
+  // The loaders are module-level functions, stable by construction.
+  const reload = useCallback(() => {
+    const mine = ++generation.current;
     void load()
       .then((loaded) => {
-        if (cancelled) return;
+        if (mine !== generation.current) return;
         latest.current = loaded;
         setValue(loaded);
       })
       .catch((e) => console.error("could not load settings", e));
-    return () => {
-      cancelled = true;
-    };
-    // The loaders are module-level functions, stable by construction.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    reload();
+    return () => {
+      generation.current += 1;
+    };
+  }, [reload]);
+
   const setField = useCallback(
     <K extends keyof T>(key: K, fieldValue: T[K]) => {
+      generation.current += 1;
       const next = { ...latest.current, [key]: fieldValue };
       latest.current = next;
       setValue(next);
@@ -65,5 +79,5 @@ export function usePersistedConfig<T extends object>({
     [],
   );
 
-  return { value, setField };
+  return { value, setField, reload };
 }
