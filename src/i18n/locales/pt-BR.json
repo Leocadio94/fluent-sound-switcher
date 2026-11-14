@@ -14,6 +14,10 @@
     "installing": "Atualizando...",
     "later": "Depois"
   },
+  "banner": {
+    "output": "Saída de som",
+    "input": "Entrada de som"
+  },
   "devices": {
     "onlyFavorites": "Somente favoritos",
     "addToCycle": "Adicionar à lista de ciclo",
