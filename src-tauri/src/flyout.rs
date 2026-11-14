@@ -107,9 +107,10 @@ pub fn toggle(app: &AppHandle) {
         // events, so re-push the current device + mute state on open.
         let _ = window.emit("device-changed", ());
         let _ = window.emit("mic-mute-changed", crate::mute::current(app));
-        // Favorites are only ever edited in the main window, which the
-        // suspended flyout cannot see; re-push them too.
-        let _ = window.emit("favorites-changed", ());
+        // Favorites and the flyout's own settings are edited in the main
+        // window, which the suspended flyout cannot see; it re-reads them on
+        // this.
+        let _ = window.emit("flyout-opened", ());
     }
 }
 

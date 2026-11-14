@@ -20,6 +20,7 @@ import { useDevices } from "../hooks/useDevices";
 import { useFavorites } from "../hooks/useFavorites";
 import { useMute } from "../hooks/useMute";
 import { useVolume } from "../hooks/useVolume";
+import { useTauriEvent } from "../hooks/useTauriEvent";
 import { useVolumeOsd } from "../hooks/useVolumeOsd";
 import { closeFlyout, setFlyoutSize, type AudioDevice } from "../lib/tauri";
 
@@ -86,7 +87,10 @@ export default function Flyout() {
   const { favorites } = useFavorites();
   const { muted, toggle: toggleMute } = useMute();
   const { volumes, setLevel, toggleMute: toggleDeviceMute } = useVolume(devices);
-  const { osd } = useVolumeOsd();
+  const { osd, reload: reloadOsd } = useVolumeOsd();
+  // The window lives suspended between opens and never sees a setting changed
+  // in the main window; the backend announces every open.
+  useTauriEvent("flyout-opened", reloadOsd, [reloadOsd]);
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Unlike the main list, the flyout hides unavailable devices outright: it is
