@@ -7,13 +7,14 @@
 use std::ffi::c_void;
 
 use serde::Serialize;
-use windows::core::{PROPVARIANT, PWSTR};
+use windows::core::{HSTRING, PROPVARIANT, PWSTR};
 use windows::Win32::Devices::FunctionDiscovery::{
     PKEY_Device_EnumeratorName, PKEY_Device_FriendlyName,
 };
 use windows::Win32::Media::Audio::{
-    eCapture, eConsole, eRender, EDataFlow, IMMDeviceEnumerator, MMDeviceEnumerator,
-    DEVICE_STATE_ACTIVE, DEVICE_STATE_DISABLED, DEVICE_STATE_UNPLUGGED,
+    eCapture, eConsole, eRender, EDataFlow, IMMDevice, IMMDeviceEnumerator, MMDeviceEnumerator,
+    DEVICE_STATE, DEVICE_STATE_ACTIVE, DEVICE_STATE_DISABLED, DEVICE_STATE_NOTPRESENT,
+    DEVICE_STATE_UNPLUGGED,
 };
 use windows::Win32::System::Com::StructuredStorage::PropVariantToStringAlloc;
 use windows::Win32::System::Com::{CoCreateInstance, CoTaskMemFree, CLSCTX_ALL, STGM_READ};
@@ -98,12 +99,78 @@ pub fn default_output() -> windows::core::Result<Option<AudioDevice>> {
         .find(|d| d.direction == "output" && d.is_default))
 }
 
+/// What Windows still remembers about an endpoint id.
+///
+/// The id is not stable: a driver update or a USB device moved to another port
+/// gives the same hardware a new one, leaving the old id behind. The frontend
+/// uses this to tell a favorite that is gone for good from one that is merely
+/// missing from a list snapshot.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResolvedEndpoint {
+    pub id: String,
+    /// Friendly name, when Windows can still read it.
+    pub name: Option<String>,
+    /// `"active"`, `"unplugged"`, `"disabled"`, `"notpresent"` (driver gone,
+    /// still in the registry) or `"missing"` (not known at all).
+    pub state: &'static str,
+}
+
+/// Looks up each id directly, so endpoints that `list_devices` leaves out
+/// (`NOTPRESENT`) are still resolved.
+pub fn resolve_endpoints(ids: &[String]) -> windows::core::Result<Vec<ResolvedEndpoint>> {
+    super::ensure_com();
+    unsafe {
+        let enumerator: IMMDeviceEnumerator =
+            CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL)?;
+        Ok(ids.iter().map(|id| resolve(&enumerator, id)).collect())
+    }
+}
+
+unsafe fn resolve(enumerator: &IMMDeviceEnumerator, id: &str) -> ResolvedEndpoint {
+    let Ok(device) = enumerator.GetDevice(&HSTRING::from(id)) else {
+        return ResolvedEndpoint {
+            id: id.to_string(),
+            name: None,
+            state: "missing",
+        };
+    };
+    ResolvedEndpoint {
+        id: id.to_string(),
+        name: friendly_name(&device),
+        // Same rule as `collect`: a state that cannot be read is never
+        // `notpresent`, or a transient COM failure would look like a device
+        // that is gone for good.
+        state: device
+            .GetState()
+            .map(resolved_state_name)
+            .unwrap_or("unplugged"),
+    }
+}
+
+unsafe fn friendly_name(device: &IMMDevice) -> Option<String> {
+    device
+        .OpenPropertyStore(STGM_READ)
+        .ok()
+        .and_then(|store| store.GetValue(&PKEY_Device_FriendlyName).ok())
+        .and_then(|prop| propvariant_to_string(&prop))
+}
+
 /// Maps a Windows endpoint state to the string the frontend uses.
-fn state_name(state: windows::Win32::Media::Audio::DEVICE_STATE) -> &'static str {
+fn state_name(state: DEVICE_STATE) -> &'static str {
     match state {
         DEVICE_STATE_UNPLUGGED => "unplugged",
         DEVICE_STATE_DISABLED => "disabled",
         _ => "active",
+    }
+}
+
+/// [`state_name`] plus `NOTPRESENT`, which only a direct lookup can see.
+fn resolved_state_name(state: DEVICE_STATE) -> &'static str {
+    if state == DEVICE_STATE_NOTPRESENT {
+        "notpresent"
+    } else {
+        state_name(state)
     }
 }
 
@@ -132,12 +199,7 @@ unsafe fn collect(
             Some(id) => id,
             None => continue,
         };
-        let name = device
-            .OpenPropertyStore(STGM_READ)
-            .ok()
-            .and_then(|store| store.GetValue(&PKEY_Device_FriendlyName).ok())
-            .and_then(|prop| propvariant_to_string(&prop))
-            .unwrap_or_else(|| "Unknown device".to_string());
+        let name = friendly_name(&device).unwrap_or_else(|| "Unknown device".to_string());
 
         // BTHENUM marks Bluetooth-fed endpoints. The endpoint property store
         // does not expose the paired device's MAC (PKEY_Device_InstanceId is
@@ -189,11 +251,18 @@ pub(crate) unsafe fn propvariant_to_string(prop: &PROPVARIANT) -> Option<String>
 
 #[cfg(test)]
 mod tests {
-    use super::state_name;
+    use super::{resolved_state_name, state_name};
     use windows::Win32::Media::Audio::{
         DEVICE_STATE, DEVICE_STATE_ACTIVE, DEVICE_STATE_DISABLED, DEVICE_STATE_NOTPRESENT,
         DEVICE_STATE_UNPLUGGED,
     };
+
+    #[test]
+    fn a_direct_lookup_can_see_not_present() {
+        assert_eq!(resolved_state_name(DEVICE_STATE_NOTPRESENT), "notpresent");
+        assert_eq!(resolved_state_name(DEVICE_STATE_UNPLUGGED), "unplugged");
+        assert_eq!(resolved_state_name(DEVICE_STATE_ACTIVE), "active");
+    }
 
     #[test]
     fn maps_the_states_the_ui_distinguishes() {
@@ -208,6 +277,22 @@ mod tests {
         // that works.
         assert_eq!(state_name(DEVICE_STATE_NOTPRESENT), "active");
         assert_eq!(state_name(DEVICE_STATE(0)), "active");
+    }
+
+    /// Live check that a direct lookup resolves listed endpoints and reports an
+    /// unknown id as missing: run with `cargo test -- --ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn resolves_listed_and_unknown_ids() {
+        let listed = super::list_devices().unwrap();
+        let mut ids: Vec<String> = listed.iter().map(|d| d.id.clone()).collect();
+        ids.push("{0.0.0.00000000}.{00000000-0000-0000-0000-000000000000}".to_string());
+        let resolved = super::resolve_endpoints(&ids).unwrap();
+        for (device, endpoint) in listed.iter().zip(&resolved) {
+            assert_eq!(endpoint.name.as_deref(), Some(device.name.as_str()));
+            assert_eq!(endpoint.state, device.state);
+        }
+        assert_eq!(resolved.last().unwrap().state, "missing");
     }
 
     /// Live check that Bluetooth endpoints get flagged and correlated with

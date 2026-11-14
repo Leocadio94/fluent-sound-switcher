@@ -18,6 +18,9 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2.11.0", features = ["tray-icon", "image-png"] }
 tauri-plugin-store = "2"
+# One process owns the config store: each instance caches the whole file and
+# rewrites it on save, so two of them overwrite each other's changes.
+tauri-plugin-single-instance = "2"
 tauri-plugin-global-shortcut = "2"
 tauri-plugin-notification = "2"
 tauri-plugin-autostart = "2"

@@ -33,7 +33,15 @@ fn ping() -> String {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        // Registered first so every later plugin/setup step can log.
+        // Must come first: a second launch has to bail out before it touches
+        // the store or registers a shortcut. It just brings the first one up.
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            // Off the event-loop thread: window calls wait on that loop, and
+            // this callback may be running on it.
+            let app = app.clone();
+            std::thread::spawn(move || tray::show_main(&app));
+        }))
+        // Registered early so every later plugin/setup step can log.
         .plugin(logging::plugin())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -122,6 +130,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             ping,
             commands::list_audio_devices,
+            commands::resolve_audio_endpoints,
             commands::list_bluetooth_devices,
             commands::set_bluetooth_connect,
             commands::set_default_audio_device,

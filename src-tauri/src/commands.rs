@@ -51,6 +51,19 @@ pub fn list_audio_devices() -> Result<Vec<AudioDevice>, String> {
     audio::list_devices().map_err(|e| e.to_string())
 }
 
+/// Resolves endpoint ids that may no longer be listed (see
+/// [`audio::ResolvedEndpoint`]); used to reconcile favorites whose id Windows
+/// has replaced.
+#[tauri::command]
+pub async fn resolve_audio_endpoints(
+    ids: Vec<String>,
+) -> Result<Vec<audio::ResolvedEndpoint>, String> {
+    tauri::async_runtime::spawn_blocking(move || audio::resolve_endpoints(&ids))
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())
+}
+
 /// Reports Bluetooth state in one shot: `available` is false when the machine
 /// has no radio (the UI hides the feature entirely) and `devices` lists the
 /// paired audio devices with their connection state. Runs on a blocking
