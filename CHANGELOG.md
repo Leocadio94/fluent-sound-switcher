@@ -6,8 +6,23 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Changed
+
+- **Volume na tela e banner de troca de dispositivo com o visual do Windows
+  11:** cantos de 8 px no lugar da pílula, borda fina e fundo opaco (a janela é
+  transparente, então não havia o que desfocar e o fundo translúcido só ficava
+  turvo sobre um jogo). O banner perdeu o rótulo em caixa alta: agora traz o
+  nome do aparelho e, embaixo, "Saída de som" / "Entrada de som", com o ícone
+  neutro (o do accent sumia num accent escuro).
+- **Fonte Segoe UI Variable**, a que o resto do Windows 11 usa, em todas as
+  janelas. O Fluent web pede a Segoe UI estática, do Windows 10.
+
 ### Fixed
 
+- **A barra do volume na tela não aparecia.** Só o ícone e o número eram
+  visíveis: a barra ficava com largura zero.
+- O banner só animava a primeira troca de dispositivo; as seguintes apareciam
+  sem animação.
 - **"Controle de volume no menu rápido" desligado continuava aparecendo** no
   menu da bandeja até o app reiniciar. A janela do menu fica viva entre as
   aberturas e só lia essa opção uma vez; agora relê a cada abertura.

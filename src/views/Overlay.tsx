@@ -3,9 +3,9 @@ import { invoke } from "@tauri-apps/api/core";
 import {
   MicProhibitedFilled,
   MicFilled,
-  Speaker0Filled,
-  Speaker2Filled,
-  SpeakerMuteFilled,
+  Speaker0Regular,
+  Speaker2Regular,
+  SpeakerMuteRegular,
 } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
@@ -13,25 +13,23 @@ import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 import { useTauriEvent } from "../hooks/useTauriEvent";
 import { getOverlayState, type OverlayState } from "../lib/tauri";
 
-// Colours come from Fluent tokens rather than the hardcoded hex values this
-// used to carry, so the pill follows the light/dark theme like the rest of the
-// app. `colorNeutralBackgroundAlpha` keeps the acrylic look in both themes.
+/** @see docs/visual-windows-11.md */
 const useStyles = makeStyles({
   pill: {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "10px",
+    gap: "12px",
     boxSizing: "border-box",
     height: "48px",
-    padding: "0 20px",
-    borderRadius: "999px",
+    padding: "0 16px",
+    borderRadius: tokens.borderRadiusXLarge,
+    border: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
     fontFamily: tokens.fontFamilyBase,
     fontSize: tokens.fontSizeBase400,
     fontWeight: tokens.fontWeightSemibold,
     color: tokens.colorNeutralForeground1,
-    backgroundColor: tokens.colorNeutralBackgroundAlpha,
-    backdropFilter: "blur(8px)",
+    backgroundColor: tokens.colorNeutralBackground1,
     boxShadow: tokens.shadow16,
     userSelect: "none",
     whiteSpace: "nowrap",
@@ -55,16 +53,20 @@ const useStyles = makeStyles({
   },
   // The volume face is a neutral pill: a level readout is not a state that
   // wants a red or green tint.
+  // Fills the 260 px window (`VOLUME_WIDTH` in overlay.rs) less room for the
+  // shadow; a shrink-to-fit pill left the track at zero width.
   volume: {
+    width: "calc(100vw - 24px)",
     color: tokens.colorNeutralForeground1,
     gap: "14px",
+    fontWeight: tokens.fontWeightRegular,
   },
   track: {
     position: "relative",
     flexGrow: 1,
-    height: "6px",
+    height: "4px",
     borderRadius: "999px",
-    backgroundColor: tokens.colorNeutralBackground5,
+    backgroundColor: tokens.colorNeutralStrokeAccessible,
     overflow: "hidden",
   },
   fill: {
@@ -72,17 +74,23 @@ const useStyles = makeStyles({
     insetBlock: 0,
     left: 0,
     borderRadius: "999px",
-    backgroundColor: tokens.colorBrandBackground,
+    backgroundColor: tokens.colorCompoundBrandBackground,
+    transitionProperty: "width",
+    transitionDuration: tokens.durationFaster,
+    transitionTimingFunction: tokens.curveEasyEase,
   },
-  fillMuted: {
-    backgroundColor: tokens.colorNeutralForeground4,
+  // Dimmed rather than recoloured: any fixed grey lands too close to the rail
+  // in one of the two themes.
+  trackMuted: {
+    opacity: 0.4,
   },
   percent: {
     minWidth: "3ch",
     textAlign: "right",
     fontVariantNumeric: "tabular-nums",
-    fontSize: tokens.fontSizeBase300,
-    color: tokens.colorNeutralForeground2,
+    fontSize: tokens.fontSizeBase400,
+    fontWeight: tokens.fontWeightSemibold,
+    color: tokens.colorNeutralForeground1,
   },
 });
 
@@ -135,18 +143,15 @@ export default function Overlay() {
   if (kind === "volume") {
     const percent = Math.round(level * 100);
     const VolumeIcon = muted
-      ? SpeakerMuteFilled
+      ? SpeakerMuteRegular
       : percent === 0
-        ? Speaker0Filled
-        : Speaker2Filled;
+        ? Speaker0Regular
+        : Speaker2Regular;
     return (
       <div aria-hidden="true" className={mergeClasses(styles.pill, styles.volume)}>
         <VolumeIcon />
-        <div className={styles.track}>
-          <div
-            className={mergeClasses(styles.fill, muted && styles.fillMuted)}
-            style={{ width: `${percent}%` }}
-          />
+        <div className={mergeClasses(styles.track, muted && styles.trackMuted)}>
+          <div className={styles.fill} style={{ width: `${percent}%` }} />
         </div>
         <span className={styles.percent}>{percent}</span>
       </div>

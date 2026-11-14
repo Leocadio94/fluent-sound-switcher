@@ -10,6 +10,12 @@ import {
 import { useTauriEvent } from "../hooks/useTauriEvent";
 import { getAccentPalette, type AccentPalette } from "../lib/tauri";
 import { paletteToBrand } from "./accentTheme";
+import { withWindowsFont } from "./windowsFont";
+
+const DEFAULT_THEMES = {
+  light: withWindowsFont(webLightTheme),
+  dark: withWindowsFont(webDarkTheme),
+};
 
 /**
  * Themes built from the Windows accent colour, or the Fluent defaults when the
@@ -37,25 +43,23 @@ export function useAccentTheme(enabled: boolean): {
     setPalette(event.payload),
   );
 
-  const [themes, setThemes] = useState({
-    light: webLightTheme,
-    dark: webDarkTheme,
-  });
+  const [themes, setThemes] = useState(DEFAULT_THEMES);
 
   useEffect(() => {
-    if (!enabled || !palette) {
-      setThemes({ light: webLightTheme, dark: webDarkTheme });
-      return;
-    }
-    const brand = paletteToBrand(palette);
-    if (!brand) {
+    const brand = enabled && palette ? paletteToBrand(palette) : null;
+    if (enabled && palette && !brand) {
       // A shade we could not parse: better the default palette than a ramp
       // built from half a reading.
       console.warn("accent palette was unreadable; keeping the default theme");
-      setThemes({ light: webLightTheme, dark: webDarkTheme });
-      return;
     }
-    setThemes({ light: createLightTheme(brand), dark: createDarkTheme(brand) });
+    setThemes(
+      brand
+        ? {
+            light: withWindowsFont(createLightTheme(brand)),
+            dark: withWindowsFont(createDarkTheme(brand)),
+          }
+        : DEFAULT_THEMES,
+    );
   }, [enabled, palette]);
 
   return themes;
