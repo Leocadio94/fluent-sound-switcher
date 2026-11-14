@@ -299,7 +299,17 @@ cargo test --manifest-path src-tauri/Cargo.toml
   material (`translucent` in `App`), never from the stored preference. Light or
   dark comes from the window's theme, not the page's, so `theme/windowChrome.ts`
   pins it to the app preference; drop that and Mica goes dark behind a light UI.
-  The floating windows stay solid on purpose. See `docs/janela-material.md`.
+  The OSD, banner and mute indicator stay solid on purpose. See
+  `docs/janela-material.md`.
+- **Acrylic flyout/menu (`floatingAcrylic`, opt-in): the window *is* the card.**
+  The DWM backdrop fills the window rectangle and ignores CSS `border-radius`, so
+  `flyout::style_window` sizes nothing around the card: the backend sends
+  `flush: true`, the page drops its margin/shadow/border/fill and stops adding
+  the 16 px shadow allowance to the height it reports, and corners/shadow come
+  from DWM (`set_shadow`, `auxwin::round_corners`). No enter/exit animation in
+  this mode (the glass cannot follow the content); `dismiss` hides at once. The
+  window theme is pinned from the config on each open (`theme_preference`), and
+  handed back to the system when Acrylic goes off.
 - Window controls called from the webview (`minimize`, `toggleMaximize`,
   `close`, and `data-tauri-drag-region`) need explicit permissions —
   `core:default` does not include them. They live in

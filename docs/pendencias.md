@@ -27,9 +27,10 @@ de saída (0.8.0).
   `DeviceRow`, ações que aparecem no hover e `Collapse` animado no painel de
   volume. Os cards de dispositivo seguem opacos (`colorNeutralBackground1`) sobre
   a Mica; ver se leem bem antes de trocar o token.
-- **Acrylic nas janelas flutuantes**, adiado. O efeito do Tauri não segue o
-  `border-radius` do CSS numa janela transparente; só funcionaria com a janela do
-  tamanho exato do card e o arredondamento do DWM. Reavaliar se valer o custo.
+- **Acrílico no flyout e no menu da bandeja**, feito como opção experimental
+  (desligada). A janela vira o card e o DWM desenha canto e sombra; ver
+  `janela-material.md`. Falta ver na tela. Se ficar bom, vale ligar por padrão;
+  se não, é só deixar desligado ou remover.
 
 ## Distribuição
 
@@ -53,9 +54,24 @@ Nada disto foi visto renderizado por quem escreveu o código.
   na primeira abertura depois de iniciar o app, que pode não animar.
 - **Atualizador com o plugin de instância única**: o relançamento depois de
   atualizar não foi testado.
-- **Mica na janela principal**, a lista de conferência:
+- **Acrílico no flyout e no menu da bandeja** (Configurações → Geral, ligar e
+  abrir de novo):
+  - o vidro aparece e a janela tem o tamanho do conteúdo, sem faixa transparente
+    em volta nem corte embaixo;
+  - cantos arredondados e sombra do sistema, e a borda de 1 px do DWM;
+  - o vidro continua ativo com a janela em foco (ela é `WS_EX_NOACTIVATE`: o DWM
+    pode tratá-la como inativa e cair para cor sólida);
+  - texto legível sobre papel de parede claro e escuro, e com o app em claro com
+    o Windows em escuro (e o inverso);
+  - fecha na hora, sem vidro vazio ficando para trás, e reabre sem piscar;
+  - volume por slider dentro do flyout e a troca de dispositivo seguem funcionando;
+  - desligar volta ao card sólido de antes, com a sombra e a animação;
+  - sobre um jogo em tela cheia (borderless), que é o motivo de a janela existir.
+- **Mica e Acrílico na janela principal**, a lista de conferência. A Mica é
+  sutil e, com Wallpaper Engine, quase igual ao Sólido: teste com papel de parede
+  estático e colorido (o Acrílico é o que se vê através):
   - o fundo aparece (e a janela não fica preta, branca ou invisível), em claro e
-    escuro, nas três opções, trocando ao vivo;
+    escuro, nas quatro opções, trocando ao vivo;
   - com o app em "claro" e o Windows em escuro (e o inverso), a Mica acompanha o
     app, inclusive ao trocar a preferência com a janela aberta;
   - voltar para "Sistema" depois de fixar claro ou escuro: o `setTheme(null)` da

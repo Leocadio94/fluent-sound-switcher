@@ -9,10 +9,15 @@ the project follows phased iterations (see `README.md`).
 ### Added
 
 - **Material da janela principal** (Configurações → Geral): Mica (padrão), Mica
-  Alt ou Sólido. O fundo da janela passa a mostrar a cor do papel de parede,
-  como nos apps do Windows 11. No Windows 10 fica sólido, e com os efeitos de
-  transparência do Windows desligados o sistema pinta uma cor sólida. As janelas
-  flutuantes continuam sólidas. Ver `docs/janela-material.md`.
+  Alt, Acrílico ou Sólido. A Mica tinge o fundo com a cor do papel de parede e é
+  sutil; o Acrílico borra o que está atrás da janela. O Acrílico exige o Windows
+  11 22H2; antes disso vira Mica, e no Windows 10 tudo fica sólido. Com os
+  efeitos de transparência do Windows desligados o sistema pinta uma cor sólida.
+- **Acrílico nos menus flutuantes** (experimental, desligado): a troca rápida da
+  bandeja e o menu de clique direito. A janela passa a ter o tamanho do card e o
+  sistema desenha canto e sombra; sem animação de entrada e saída. O volume na
+  tela, o banner e o indicador de mudo continuam sólidos. Ver
+  `docs/janela-material.md`.
 
 ### Changed
 

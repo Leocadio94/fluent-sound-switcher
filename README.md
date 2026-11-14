@@ -75,7 +75,7 @@ top, every time.
 - 🎧 **Bluetooth connect/disconnect** — paired Bluetooth audio devices show a Bluetooth badge in the list and can be connected or disconnected right from the app (main list and the title-bar menu).
 - 🎨 **Your Windows accent colour** — the palette is built from the accent and the six shades Windows derives around it, live when you change it. Switchable back to the Fluent blue.
 - 🪟 **App-drawn title bar** carrying the app's own controls, or the system one if you prefer it (Settings → General, applied live).
-- 🌫️ **Mica** on the main window (Mica, Mica Alt or solid; Settings → General, applied live). The floating windows stay solid.
+- 🌫️ **Mica or Acrylic** on the main window (Mica, Mica Alt, Acrylic or solid; Settings → General, applied live), and an experimental **Acrylic** option for the tray quick-switch and right-click menu. The volume OSD and banners stay solid.
 - 😴 **Sleeping favourites keep their place** — a wireless headset that dozes off stays in the list, dimmed and marked *Disconnected*, keeping its star and its position in the cycle order.
 - 🧰 **CLI** with the same actions as the GUI (`list`, `switch`, `cycle`, `mute`).
 - 🚀 **Start with Windows** (optionally minimized to tray).
