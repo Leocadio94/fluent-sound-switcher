@@ -6,7 +6,10 @@
 
 use std::collections::HashMap;
 use std::str::FromStr;
-use std::sync::{Mutex, MutexGuard};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Mutex, MutexGuard, OnceLock};
+use std::thread;
+use std::time::{Duration, Instant};
 
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
@@ -70,14 +73,73 @@ fn lock(state: &HotkeyState) -> MutexGuard<'_, HashMap<Shortcut, Action>> {
     }
 }
 
+/// Pause before a held volume key starts repeating, and the gap between steps.
+const HOLD_DELAY: Duration = Duration::from_millis(400);
+const HOLD_INTERVAL: Duration = Duration::from_millis(70);
+/// A release that never arrives must not leave the volume running away.
+const HOLD_MAX: Duration = Duration::from_secs(20);
+
+/// Identifies the newest held volume key; a release or a new press bumps it,
+/// which ends the repeat loop of the one before.
+fn hold_generation() -> &'static AtomicU64 {
+    static G: OnceLock<AtomicU64> = OnceLock::new();
+    G.get_or_init(|| AtomicU64::new(0))
+}
+
 /// Called by the plugin handler for every shortcut event.
 pub fn handle_event(app: &AppHandle, shortcut: &Shortcut, state: ShortcutState) {
-    if state != ShortcutState::Pressed {
-        return;
-    }
     let action = lock(&app.state::<HotkeyState>()).get(shortcut).copied();
-    if let Some(action) = action {
-        perform(app.clone(), action);
+    let Some(action) = action else {
+        return;
+    };
+    match (state, action) {
+        (ShortcutState::Pressed, Action::VolumeUp) => hold_volume(app, true),
+        (ShortcutState::Pressed, Action::VolumeDown) => hold_volume(app, false),
+        (ShortcutState::Pressed, _) => perform(app.clone(), action),
+        (ShortcutState::Released, Action::VolumeUp | Action::VolumeDown) => {
+            hold_generation().fetch_add(1, Ordering::SeqCst);
+        }
+        (ShortcutState::Released, _) => {}
+    }
+}
+
+/// One step right away, then, if the key is still down after `HOLD_DELAY`, a step
+/// every `HOLD_INTERVAL` until it is released or the volume hits the end.
+///
+/// The OS reports a held shortcut as a single press (`MOD_NOREPEAT`), and the
+/// release as a separate event, so the repeat has to be driven from here.
+fn hold_volume(app: &AppHandle, up: bool) {
+    let id = hold_generation().fetch_add(1, Ordering::SeqCst) + 1;
+    perform(
+        app.clone(),
+        if up {
+            Action::VolumeUp
+        } else {
+            Action::VolumeDown
+        },
+    );
+
+    let app = app.clone();
+    thread::spawn(move || {
+        thread::sleep(HOLD_DELAY);
+        let started = Instant::now();
+        while hold_generation().load(Ordering::SeqCst) == id && started.elapsed() < HOLD_MAX {
+            match step_volume(&app, up) {
+                Some(level) if at_limit(level, up) => break,
+                Some(_) => {}
+                None => break,
+            }
+            thread::sleep(HOLD_INTERVAL);
+        }
+    });
+}
+
+/// Whether a step in this direction can do nothing more.
+fn at_limit(level: f32, up: bool) -> bool {
+    if up {
+        level >= 0.999
+    } else {
+        level <= 0.001
     }
 }
 
@@ -90,18 +152,29 @@ pub(crate) fn perform(app: AppHandle, action: Action) {
             Action::CycleOutput => cycle(&app, "output"),
             Action::CycleInput => cycle(&app, "input"),
             Action::ToggleMute => crate::mute::toggle(&app),
-            Action::VolumeUp => step_volume(&app, true),
-            Action::VolumeDown => step_volume(&app, false),
+            Action::VolumeUp => {
+                step_volume(&app, true);
+            }
+            Action::VolumeDown => {
+                step_volume(&app, false);
+            }
             Action::ToggleOutputMute => crate::mute::toggle_output(&app),
         }
     });
 }
 
-/// Nudges the default output one step and shows the volume OSD.
-fn step_volume(app: &AppHandle, up: bool) {
+/// Nudges the default output one step and shows the volume OSD. Returns the new
+/// level, or `None` when the step failed.
+fn step_volume(app: &AppHandle, up: bool) -> Option<f32> {
     match crate::audio::step_volume(None, "output", up) {
-        Ok(level) => crate::overlay::show_volume(app, level),
-        Err(e) => log::error!("could not step the output volume: {e}"),
+        Ok(level) => {
+            crate::overlay::show_volume(app, level);
+            Some(level)
+        }
+        Err(e) => {
+            log::error!("could not step the output volume: {e}");
+            None
+        }
     }
 }
 
@@ -186,4 +259,19 @@ pub fn register_with(app: &AppHandle, cfg: &HotkeyConfig) -> tauri::Result<Vec<H
 pub fn register_all(app: &AppHandle) -> tauri::Result<Vec<HotkeyFailure>> {
     let cfg = config::hotkeys(app);
     register_with(app, &cfg)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::at_limit;
+
+    #[test]
+    fn a_held_key_stops_at_the_end_it_is_heading_for() {
+        assert!(at_limit(1.0, true));
+        assert!(at_limit(0.0, false));
+        // Held the other way from where it sits, the step still does something.
+        assert!(!at_limit(1.0, false));
+        assert!(!at_limit(0.0, true));
+        assert!(!at_limit(0.5, true));
+    }
 }

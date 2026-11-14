@@ -6,6 +6,13 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Added
+
+- **Segurar o atalho de volume repete o passo.** Depois de uma pausa de 0,4 s o
+  volume sobe ou desce continuamente até soltar a tecla ou chegar ao limite; um
+  toque rápido continua sendo um passo só. Antes era preciso apertar uma vez por
+  passo.
+
 ### Fixed
 
 - **"Controle de volume no menu rápido" desligado continuava aparecendo** no

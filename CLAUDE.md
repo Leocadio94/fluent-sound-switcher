@@ -358,6 +358,13 @@ cargo test --manifest-path src-tauri/Cargo.toml
   Adding an entry means touching those two plus the icon map in `TrayMenu.tsx`.
   The click position is the tray event's physical `position`; place it with
   `menu_origin` (tested), never from the window's own scale.
+- **Holding a volume hotkey repeats it** (`hotkeys::hold_volume`). The OS
+  reports a held shortcut as one press (`MOD_NOREPEAT`) plus a separate release
+  (polled every 50 ms by `global-hotkey`), so the repeat loop lives in our code,
+  cancelled by a generation counter. Every step goes through
+  `overlay::show_volume`, which skips the window setup while the OSD is already
+  up: `set_ignore_cursor_events` in a ~12 Hz burst races DWM
+  (tauri-apps/tauri#15947).
 - **Gamepad shortcuts (`gamepad.rs`)**: an always-running polling thread reads
   `XInputGetState(0)` every 30 ms — user-mode, read-only, official API, so
   anti-cheats stay uninterested. Deliberately **no** ViGEm, no hooks, no
