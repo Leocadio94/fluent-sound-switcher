@@ -27,6 +27,7 @@ import { useMuteIndicator } from "./hooks/useMuteIndicator";
 import { useNotifications } from "./hooks/useNotifications";
 import { useAutoSwitch } from "./hooks/useAutoSwitch";
 import { useBluetooth } from "./hooks/useBluetooth";
+import { useRestoreAutostart } from "./hooks/useRestoreAutostart";
 import { useVolume } from "./hooks/useVolume";
 import { useVolumeOsd } from "./hooks/useVolumeOsd";
 import { useTauriEvent } from "./hooks/useTauriEvent";
@@ -135,6 +136,8 @@ export default function App({
   useEffect(() => {
     void mainWindowReady();
   }, []);
+
+  useRestoreAutostart();
 
   // The tray "Configurações" item asks the main window to open settings.
   useTauriEvent("open-settings", () => setSettingsOpen(true));

@@ -157,6 +157,7 @@ const GAMEPAD_HOTKEYS_KEY = "gamepadHotkeys";
 const MUTE_INDICATOR_KEY = "muteIndicator";
 const NOTIFICATIONS_KEY = "notifications";
 const AUTO_SWITCH_KEY = "autoSwitch";
+const AUTOSTART_KEY = "autostart";
 const START_MINIMIZED_KEY = "startMinimized";
 const SHOW_DEVICE_ICON_KEY = "showDeviceIcon";
 const OVERLAY_MONITOR_KEY = "overlayMonitor";
@@ -328,6 +329,22 @@ export async function loadAutoSwitch(): Promise<AutoSwitchConfig> {
 export async function saveAutoSwitch(value: AutoSwitchConfig): Promise<void> {
   const store = await getStore();
   await store.set(AUTO_SWITCH_KEY, value);
+}
+
+/**
+ * Whether the user wants the app to start with Windows; `null` when never
+ * recorded. The Run entry itself belongs to Windows and an installer can remove
+ * it, so this is what survives a reinstall.
+ */
+export async function loadAutostartPreference(): Promise<boolean | null> {
+  const store = await getStore();
+  const stored = await store.get(AUTOSTART_KEY);
+  return typeof stored === "boolean" ? stored : null;
+}
+
+export async function saveAutostartPreference(value: boolean): Promise<void> {
+  const store = await getStore();
+  await store.set(AUTOSTART_KEY, value);
 }
 
 export async function loadStartMinimized(): Promise<boolean> {

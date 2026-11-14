@@ -27,6 +27,9 @@ const EMIT_RETRIES_MS: [u64; 3] = [80, 200, 400];
 
 #[derive(Serialize, Clone)]
 struct BannerPayload {
+    /// The banner's generation: the retries of one banner share it, so the
+    /// frontend can tell a re-delivery from a new banner.
+    id: u64,
     name: String,
     direction: String,
 }
@@ -70,7 +73,11 @@ pub fn show(app: &AppHandle, name: &str, direction: &str) {
     auxwin::anchor(app, &window, &cfg.banner_position, WIDTH, HEIGHT, MARGIN);
     let _ = window.set_size(LogicalSize::new(WIDTH, HEIGHT));
 
+    // One generation per banner, driving the retries, the auto-hide and the
+    // frontend's React key.
+    let generation_id = generation().fetch_add(1, Ordering::SeqCst) + 1;
     let payload = BannerPayload {
+        id: generation_id,
         name: name.to_string(),
         direction: direction.to_string(),
     };
@@ -80,9 +87,6 @@ pub fn show(app: &AppHandle, name: &str, direction: &str) {
     let _ = window.set_ignore_cursor_events(true);
     auxwin::reassert_topmost(&window);
     let _ = window.emit("banner-show", payload.clone());
-
-    // One generation per banner, driving both the retries and the auto-hide.
-    let generation_id = generation().fetch_add(1, Ordering::SeqCst) + 1;
 
     let retry = window.clone();
     thread::spawn(move || {
