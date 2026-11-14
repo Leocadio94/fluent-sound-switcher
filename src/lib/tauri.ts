@@ -56,6 +56,21 @@ export function listAudioDevices(): Promise<AudioDevice[]> {
 }
 
 /**
+ * What Windows still knows about an endpoint id. `notpresent` (driver gone) and
+ * `missing` (unknown) are the two states `listAudioDevices` never returns.
+ */
+export interface ResolvedEndpoint {
+  id: string;
+  name: string | null;
+  state: DeviceState | "notpresent" | "missing";
+}
+
+/** Looks up endpoint ids directly, including ones no longer in the device list. */
+export function resolveAudioEndpoints(ids: string[]): Promise<ResolvedEndpoint[]> {
+  return invoke<ResolvedEndpoint[]>("resolve_audio_endpoints", { ids });
+}
+
+/**
  * Switches the system default device (all roles) to the given endpoint id.
  * `notify` fires a device-change notification (used by hotkey/flyout switches,
  * not manual clicks in the main window).

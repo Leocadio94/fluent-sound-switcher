@@ -95,6 +95,7 @@ cargo test --manifest-path src-tauri/Cargo.toml
     `useTauriEvent` (subscribe for a component's lifetime).
   - `lib/tauri.ts` (invoke wrappers), `lib/config.ts` (store wrapper + types),
     `lib/configSchema.ts` (validation + schema migration),
+    `lib/reconcileFavorites.ts` (favorites follow a device across id changes),
     `theme/` (Fluent theme + OS sync), `i18n/locales/*.json`.
   - `styles.css` scopes the transparent/centered aux-window CSS via
     `:root[data-window="…"]` so it doesn't leak into the main window.
@@ -308,6 +309,15 @@ cargo test --manifest-path src-tauri/Cargo.toml
   topology churn (Bluetooth handshakes) stale COM objects fail that call, and
   treating the failure as active rendered ghost rows — a disabled HDMI output
   flashing into the list as available for the length of the handshake.
+- **Favorites are keyed by endpoint id, and Windows changes that id** (driver
+  update, USB port change). `favorites.names` records each name so
+  `reconcileFavorites` can re-point a gone favorite at its replacement, but
+  only for ids `resolve_audio_endpoints` confirms as `notpresent`/`missing`,
+  and only from the main window (`useFavorites(devices)`; the flyout calls it
+  without, or two windows write over each other). Nothing is written before
+  the first read finishes. A single-instance plugin is registered first for the
+  same reason: each process caches and rewrites the whole store file. See
+  `docs/favoritos-e-ids-de-endpoint.md`.
 - Device volume is fetched per device on demand (`useVolume`), never folded into
   `list_audio_devices`: that would activate an `IAudioEndpointVolume` interface
   per endpoint on every refresh, and the list refetches on each

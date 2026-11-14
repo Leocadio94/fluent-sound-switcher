@@ -6,6 +6,22 @@ the project follows phased iterations (see `README.md`).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Favoritos que sumiam** depois de atualizar o driver de vídeo ou trocar um
+  dongle USB de porta. O Windows dá um ID novo ao mesmo aparelho e o favorito
+  ficava preso ao ID velho, invisível. Agora o app guarda o nome do aparelho e
+  leva o favorito para o ID novo sozinho (inclusive o prefixo `3- ` que o
+  Windows põe no nome ao mudar de porta). O que não tem par aparece como "Não
+  encontrado", com botão de remover, em vez de sumir. Ver
+  `docs/favoritos-e-ids-de-endpoint.md`.
+- Abrir o app uma segunda vez agora só traz a janela aberta para a frente. Duas
+  instâncias regravavam o `config.json` uma por cima da outra e podiam desfazer
+  favoritos adicionados na outra.
+- Um clique na estrela antes de os favoritos terminarem de carregar apagava os
+  favoritos da outra direção; uma leitura em andamento também podia desfazer
+  uma alteração recém-feita.
+
 ### Build
 
 - O build de dev ocupa cerca de um terço do espaço em disco e compila na

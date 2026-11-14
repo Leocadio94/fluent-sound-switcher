@@ -7,6 +7,7 @@ import {
   oneOf,
   stringList,
   stringOr,
+  stringRecord,
 } from "./configSchema";
 
 describe("oneOf", () => {
@@ -50,6 +51,18 @@ describe("stringList", () => {
   it("returns an empty list for anything that is not an array", () => {
     for (const bad of [undefined, null, "a", 3, {}]) {
       expect(stringList(bad)).toEqual([]);
+    }
+  });
+});
+
+describe("stringRecord", () => {
+  it("keeps only string values", () => {
+    expect(stringRecord({ a: "x", b: 1, c: null })).toEqual({ a: "x" });
+  });
+
+  it("returns an empty record for anything that is not an object", () => {
+    for (const bad of [undefined, null, "a", 3, ["a"]]) {
+      expect(stringRecord(bad)).toEqual({});
     }
   });
 });

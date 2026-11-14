@@ -11,7 +11,9 @@ mod policy;
 mod volume;
 pub mod volume_events;
 
-pub use enumerator::{default_output, list_devices, AudioDevice};
+pub use enumerator::{
+    default_output, list_devices, resolve_endpoints, AudioDevice, ResolvedEndpoint,
+};
 pub use policy::set_default_device;
 pub use volume::{
     get_volume, is_mic_muted, is_muted, set_all_mics_mute, set_capture_mute, set_mic_mute,

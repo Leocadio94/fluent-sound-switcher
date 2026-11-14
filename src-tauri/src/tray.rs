@@ -206,7 +206,7 @@ fn on_tray_icon_event(tray: &TrayIcon, event: TrayIconEvent) {
     }
 }
 
-fn show_main(app: &AppHandle) {
+pub(crate) fn show_main(app: &AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.show();
         let _ = window.unminimize();
