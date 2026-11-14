@@ -34,6 +34,9 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground2,
     userSelect: "none",
   },
+  barTranslucent: {
+    backgroundColor: "transparent",
+  },
   drag: {
     display: "flex",
     alignItems: "center",
@@ -126,7 +129,14 @@ const useStyles = makeStyles({
  * so the hit test never reaches it — measured, not assumed. Settings has a
  * "native" option for anyone who would rather have that back.
  */
-export default function TitleBar({ children }: { children?: ReactNode }) {
+export default function TitleBar({
+  children,
+  translucent = false,
+}: {
+  children?: ReactNode;
+  /** Let the window's backdrop show through instead of painting the bar. */
+  translucent?: boolean;
+}) {
   const styles = useStyles();
   const { t } = useTranslation();
   const [maximized, setMaximized] = useState(false);
@@ -161,7 +171,9 @@ export default function TitleBar({ children }: { children?: ReactNode }) {
   }, [appWindow]);
 
   return (
-    <div className={styles.bar}>
+    <div
+      className={mergeClasses(styles.bar, translucent && styles.barTranslucent)}
+    >
       <div className={styles.drag} data-tauri-drag-region>
         <img src="/favicon.png" alt="" className={styles.icon} />
         <span className={styles.title}>{t("app.name")}</span>

@@ -166,6 +166,7 @@ const LANGUAGE_KEY = "language";
 const THEME_KEY = "theme";
 const SYSTEM_ACCENT_KEY = "useSystemAccent";
 const TITLE_BAR_KEY = "titleBarStyle";
+const WINDOW_MATERIAL_KEY = "windowMaterial";
 const BT_AUTO_DISCONNECT_KEY = "bluetoothAutoDisconnect";
 const MIC_MUTE_ALL_KEY = "micMuteAllDevices";
 const MIC_MUTE_CALL_SHORTCUT_KEY = "micMuteCallShortcut";
@@ -204,6 +205,7 @@ function getStore(): Promise<Store> {
         [OVERLAY_MONITOR_KEY]: DEFAULT_MONITOR_PREFERENCE,
         [SYSTEM_ACCENT_KEY]: true,
         [TITLE_BAR_KEY]: "custom",
+        [WINDOW_MATERIAL_KEY]: "mica",
         [VOLUME_OSD_KEY]: DEFAULT_VOLUME_OSD,
       },
     }).then(async (store) => {
@@ -542,6 +544,24 @@ export async function loadTitleBarStyle(): Promise<TitleBarStyle> {
 export async function saveTitleBarStyle(value: TitleBarStyle): Promise<void> {
   const store = await getStore();
   await store.set(TITLE_BAR_KEY, value);
+}
+
+/**
+ * Backdrop of the main window. The floating windows stay solid on purpose
+ * (`docs/janela-material.md`). The backend steps a choice down when the OS
+ * cannot draw it, so what is stored is a preference, not a promise.
+ */
+export const WINDOW_MATERIALS = ["mica", "micaAlt", "solid"] as const;
+export type WindowMaterial = (typeof WINDOW_MATERIALS)[number];
+
+export async function loadWindowMaterial(): Promise<WindowMaterial> {
+  const store = await getStore();
+  return oneOf(await store.get(WINDOW_MATERIAL_KEY), WINDOW_MATERIALS, "mica");
+}
+
+export async function saveWindowMaterial(value: WindowMaterial): Promise<void> {
+  const store = await getStore();
+  await store.set(WINDOW_MATERIAL_KEY, value);
 }
 
 export type { DeviceDirection };

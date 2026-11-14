@@ -14,6 +14,7 @@ mod gamepad;
 mod hotkeys;
 mod i18n;
 mod logging;
+mod material;
 mod mute;
 mod notify;
 mod overlay;
@@ -164,6 +165,7 @@ pub fn run() {
             commands::get_overlay_state,
             commands::get_accent_palette,
             commands::set_title_bar_style,
+            commands::set_window_material,
             commands::set_language,
             commands::get_device_volume,
             commands::set_device_volume,

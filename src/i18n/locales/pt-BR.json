@@ -150,6 +150,13 @@
     "titleBars": {
       "custom": "Do aplicativo",
       "native": "Do sistema"
+    },
+    "windowMaterial": "Material da janela",
+    "windowMaterialHint": "Deixa o fundo da janela principal translúcido, com a cor do seu papel de parede. Só vale para esta janela; no Windows 10 e com os efeitos de transparência desligados, fica sólido.",
+    "windowMaterials": {
+      "mica": "Mica",
+      "micaAlt": "Mica Alt",
+      "solid": "Sólido"
     }
   },
   "general": {

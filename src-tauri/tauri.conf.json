@@ -22,7 +22,8 @@
         "fullscreen": false,
         "visible": false,
         "center": true,
-        "decorations": false
+        "decorations": false,
+        "transparent": true
       },
       {
         "label": "overlay",

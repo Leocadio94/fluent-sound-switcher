@@ -8,10 +8,12 @@ import {
   MONITOR_PREFERENCES as MONITORS,
   TITLE_BAR_STYLES,
   TRAY_CLICK_ACTIONS,
+  WINDOW_MATERIALS,
   saveLanguage,
   type MonitorPreference,
   type TitleBarStyle,
   type TrayClickAction,
+  type WindowMaterial,
 } from "../../lib/config";
 import { openLogFolder, setLanguage } from "../../lib/tauri";
 import type { ThemePreference } from "../../theme/useSystemTheme";
@@ -27,6 +29,8 @@ interface GeneralTabProps {
   onUseSystemAccentChange: (value: boolean) => void;
   titleBarStyle: TitleBarStyle;
   onTitleBarStyleChange: (value: TitleBarStyle) => void;
+  windowMaterial: WindowMaterial;
+  onWindowMaterialChange: (value: WindowMaterial) => void;
   autoSwitch: AutoSwitchConfig;
   onAutoSwitchChange: <K extends keyof AutoSwitchConfig>(
     key: K,
@@ -41,6 +45,8 @@ export default function GeneralTab({
   onUseSystemAccentChange,
   titleBarStyle,
   onTitleBarStyleChange,
+  windowMaterial,
+  onWindowMaterialChange,
   autoSwitch,
   onAutoSwitchChange,
 }: GeneralTabProps) {
@@ -102,6 +108,25 @@ export default function GeneralTab({
           {TITLE_BAR_STYLES.map((style) => (
             <Option key={style} value={style}>
               {t(`settings.titleBars.${style}`)}
+            </Option>
+          ))}
+        </Dropdown>
+      </SettingRow>
+
+      <SettingRow
+        label={t("settings.windowMaterial")}
+        hint={t("settings.windowMaterialHint")}
+      >
+        <Dropdown
+          value={t(`settings.windowMaterials.${windowMaterial}`)}
+          selectedOptions={[windowMaterial]}
+          onOptionSelect={(_, d) =>
+            d.optionValue && onWindowMaterialChange(d.optionValue as WindowMaterial)
+          }
+        >
+          {WINDOW_MATERIALS.map((option) => (
+            <Option key={option} value={option}>
+              {t(`settings.windowMaterials.${option}`)}
             </Option>
           ))}
         </Dropdown>

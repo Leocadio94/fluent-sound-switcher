@@ -159,6 +159,13 @@ export function setTitleBarStyle(style: "custom" | "native"): Promise<void> {
   return invoke<void>("set_title_bar_style", { style });
 }
 
+/** Applies the main window's backdrop; resolves to the material actually in effect. */
+export function setWindowMaterial(
+  material: "mica" | "micaAlt" | "solid",
+): Promise<"mica" | "micaAlt" | "solid"> {
+  return invoke("set_window_material", { material });
+}
+
 /** Reads the accent palette; null when Windows will not report it. */
 export function getAccentPalette(): Promise<AccentPalette | null> {
   return invoke<AccentPalette | null>("get_accent_palette");

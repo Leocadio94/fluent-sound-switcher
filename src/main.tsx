@@ -14,12 +14,16 @@ import {
   loadTheme,
   loadTitleBarStyle,
   loadUseSystemAccent,
+  loadWindowMaterial,
   saveTheme,
   saveTitleBarStyle,
   saveUseSystemAccent,
+  saveWindowMaterial,
   type TitleBarStyle,
+  type WindowMaterial,
 } from "./lib/config";
-import { setTitleBarStyle } from "./lib/tauri";
+import { setTitleBarStyle, setWindowMaterial } from "./lib/tauri";
+import { applyMainWindowChrome, syncWindowTheme } from "./theme/windowChrome";
 import i18n from "./i18n";
 import "./styles.css";
 
@@ -36,14 +40,25 @@ interface WindowProps {
   titleBar: TitleBarStyle;
 }
 
+/** The main window's backdrop: the stored choice and what Windows really drew. */
+interface MainChrome {
+  material: WindowMaterial;
+  applied: WindowMaterial;
+}
+
+const SOLID_CHROME: MainChrome = { material: "solid", applied: "solid" };
+
 function Root({
   themePref: initialTheme,
   accent: initialAccent,
   titleBar: initialTitleBar,
-}: WindowProps) {
+  chrome,
+}: WindowProps & { chrome: MainChrome }) {
   const [themePref, setThemePref] = useState<ThemePreference>(initialTheme);
   const [useSystemAccent, setUseSystemAccent] = useState(initialAccent);
   const [titleBarStyle, setTitleBar] = useState<TitleBarStyle>(initialTitleBar);
+  const [material, setMaterial] = useState(chrome.material);
+  const [appliedMaterial, setAppliedMaterial] = useState(chrome.applied);
   const themes = useAccentTheme(useSystemAccent);
   const { theme, isDark } = useSystemTheme(themePref, themes);
   useColorScheme(isDark);
@@ -53,6 +68,20 @@ function Root({
   const changeTheme = useCallback((pref: ThemePreference) => {
     setThemePref(pref);
     void saveTheme(pref);
+    void syncWindowTheme(pref);
+  }, []);
+
+  // `appliedMaterial`, not `material`, decides whether the page paints: the
+  // window is transparent, so a backdrop the OS refused must not be assumed.
+  const changeMaterial = useCallback((value: WindowMaterial) => {
+    setMaterial(value);
+    void saveWindowMaterial(value);
+    void setWindowMaterial(value)
+      .then(setAppliedMaterial)
+      .catch((e) => {
+        console.error("could not change the window material", e);
+        setAppliedMaterial("solid");
+      });
   }, []);
 
   const changeAccent = useCallback((value: boolean) => {
@@ -71,7 +100,13 @@ function Root({
   }, []);
 
   return (
-    <FluentProvider theme={theme} style={{ height: "100vh" }}>
+    <FluentProvider
+      theme={theme}
+      style={{
+        height: "100vh",
+        background: appliedMaterial === "solid" ? undefined : "transparent",
+      }}
+    >
       <App
         themePref={themePref}
         onThemePrefChange={changeTheme}
@@ -79,6 +114,9 @@ function Root({
         onUseSystemAccentChange={changeAccent}
         titleBarStyle={titleBarStyle}
         onTitleBarStyleChange={changeTitleBar}
+        windowMaterial={material}
+        onWindowMaterialChange={changeMaterial}
+        translucent={appliedMaterial !== "solid"}
       />
     </FluentProvider>
   );
@@ -109,7 +147,7 @@ const label = getCurrentWindow().label;
 // so the global bundle doesn't shrink the main window.
 document.documentElement.dataset.window = label;
 
-function content(props: WindowProps) {
+function content(props: WindowProps, chrome: MainChrome) {
   switch (label) {
     case "overlay":
       return (
@@ -130,7 +168,7 @@ function content(props: WindowProps) {
         </AuxWindow>
       );
     default:
-      return <Root {...props} />;
+      return <Root {...props} chrome={chrome} />;
   }
 }
 
@@ -145,11 +183,12 @@ function content(props: WindowProps) {
  * its first frame anyway.
  */
 async function bootstrap() {
-  const [language, theme, accent, titleBar] = await Promise.all([
+  const [language, theme, accent, titleBar, material] = await Promise.all([
     loadLanguage().catch(() => null),
     loadTheme().catch(() => null),
     loadUseSystemAccent().catch(() => true),
     loadTitleBarStyle().catch(() => "custom" as TitleBarStyle),
+    loadWindowMaterial().catch(() => "solid" as WindowMaterial),
   ]);
 
   if (language && language !== i18n.language) {
@@ -165,8 +204,15 @@ async function bootstrap() {
     titleBar,
   };
 
+  // Before the first render, so the hidden main window already has its
+  // backdrop when it is revealed. The auxiliary windows have none.
+  const chrome: MainChrome =
+    label === "main"
+      ? { material, applied: await applyMainWindowChrome(props.themePref, material) }
+      : SOLID_CHROME;
+
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-    <React.StrictMode>{content(props)}</React.StrictMode>,
+    <React.StrictMode>{content(props, chrome)}</React.StrictMode>,
   );
 }
 

@@ -8,6 +8,7 @@ import {
   MessageBarBody,
   Spinner,
   makeStyles,
+  mergeClasses,
   tokens,
 } from "@fluentui/react-components";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -37,7 +38,7 @@ import {
   previewNotification,
 } from "./lib/tauri";
 import type { ThemePreference } from "./theme/useSystemTheme";
-import type { TitleBarStyle } from "./lib/config";
+import type { TitleBarStyle, WindowMaterial } from "./lib/config";
 
 const useStyles = makeStyles({
   root: {
@@ -46,6 +47,10 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "column",
     backgroundColor: tokens.colorNeutralBackground2,
+  },
+  // Lets the window's Mica show through; the cards keep their own fill.
+  rootTranslucent: {
+    backgroundColor: "transparent",
   },
   header: {
     display: "flex",
@@ -87,6 +92,10 @@ interface AppProps {
   onUseSystemAccentChange: (value: boolean) => void;
   titleBarStyle: TitleBarStyle;
   onTitleBarStyleChange: (value: TitleBarStyle) => void;
+  windowMaterial: WindowMaterial;
+  onWindowMaterialChange: (value: WindowMaterial) => void;
+  /** The window really has a backdrop, so the page must not paint over it. */
+  translucent: boolean;
 }
 
 export default function App({
@@ -96,6 +105,9 @@ export default function App({
   onUseSystemAccentChange,
   titleBarStyle,
   onTitleBarStyleChange,
+  windowMaterial,
+  onWindowMaterialChange,
+  translucent,
 }: AppProps) {
   const styles = useStyles();
   const { t } = useTranslation();
@@ -182,10 +194,12 @@ export default function App({
   };
 
   return (
-    <div className={styles.root}>
+    <div
+      className={mergeClasses(styles.root, translucent && styles.rootTranslucent)}
+    >
       {/* Windows draws the caption itself in "native" mode. */}
       {titleBarStyle === "custom" && (
-        <TitleBar>
+        <TitleBar translucent={translucent}>
           <AppControls {...controlProps} />
         </TitleBar>
       )}
@@ -206,6 +220,8 @@ export default function App({
         onUseSystemAccentChange={onUseSystemAccentChange}
         titleBarStyle={titleBarStyle}
         onTitleBarStyleChange={onTitleBarStyleChange}
+        windowMaterial={windowMaterial}
+        onWindowMaterialChange={onWindowMaterialChange}
         hotkeys={hotkeys}
         onHotkeyChange={setBinding}
         hotkeyFailures={hotkeyFailures}
