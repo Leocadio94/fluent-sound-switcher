@@ -4,6 +4,21 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Added
+
+- **Material da janela principal** (Configurações → Geral): Mica (padrão), Mica
+  Alt ou Sólido. O fundo da janela passa a mostrar a cor do papel de parede,
+  como nos apps do Windows 11. No Windows 10 fica sólido, e com os efeitos de
+  transparência do Windows desligados o sistema pinta uma cor sólida. As janelas
+  flutuantes continuam sólidas. Ver `docs/janela-material.md`.
+
+### Changed
+
+- O tema da janela (e, com ele, a barra de título do sistema) agora segue a
+  preferência de tema do app, e não só a do Windows.
+
 ## [0.8.0] - 2026-11-14
 
 ### Changed

@@ -22,9 +22,11 @@ de saída (0.8.0).
   Light2 no preenchimento e Light3 no texto; claro: Dark1 e Dark2), com uma guarda
   `pickReadable` de 3:1 para ícone e 4,5:1 para texto, e testes. A nota "stop 80
   fixo" do `CLAUDE.md` deixa de valer quando isso entrar.
-- **E, janela principal.** Mica e cards (`colorNeutralCardBackground`) por seção
-  da lista, pílula de seleção no `DeviceRow`, ações que aparecem no hover e
-  `Collapse` animado no painel de volume.
+- **E, janela principal.** A Mica já entrou (`janela-material.md`). Falta: cards
+  (`colorNeutralCardBackground`) por seção da lista, pílula de seleção no
+  `DeviceRow`, ações que aparecem no hover e `Collapse` animado no painel de
+  volume. Os cards de dispositivo seguem opacos (`colorNeutralBackground1`) sobre
+  a Mica; ver se leem bem antes de trocar o token.
 - **Acrylic nas janelas flutuantes**, adiado. O efeito do Tauri não segue o
   `border-radius` do CSS numa janela transparente; só funcionaria com a janela do
   tamanho exato do card e o arredondamento do DWM. Reavaliar se valer o custo.
@@ -51,6 +53,16 @@ Nada disto foi visto renderizado por quem escreveu o código.
   na primeira abertura depois de iniciar o app, que pode não animar.
 - **Atualizador com o plugin de instância única**: o relançamento depois de
   atualizar não foi testado.
+- **Mica na janela principal**, a lista de conferência:
+  - o fundo aparece (e a janela não fica preta, branca ou invisível), em claro e
+    escuro, nas três opções, trocando ao vivo;
+  - com o app em "claro" e o Windows em escuro (e o inverso), a Mica acompanha o
+    app, inclusive ao trocar a preferência com a janela aberta;
+  - "Efeitos de transparência" desligado no Windows: deve virar cor sólida;
+  - barra de título do sistema com Mica, e a troca custom ↔ sistema ao vivo;
+  - os cantos arredondados e a sombra da janela, que agora é `transparent`;
+  - abrir minimizado (`--autostart`) e depois pelo tray, sem piscar chapado;
+  - arrastar e redimensionar sem travar.
 - **Favoritos sem nome recuperável**: 14 IDs antigos do `config.json` do
   desenvolvedor não têm como virar nome; aparecem como "Não encontrado" para
   remover.

@@ -15,6 +15,7 @@ dispositivo. O que o app tinha parecia Fluent, mas genérico; a referência agor
   retângulo da janela inteira e não segue o `border-radius` do CSS. Para ter
   cantos arredondados a janela teria de ter exatamente o tamanho do card, com o
   arredondamento do próprio DWM, e isso se ajusta olhando no aparelho.
+- A janela principal é a exceção: ela tem Mica. Ver `janela-material.md`.
 
 ## Tipografia
 
