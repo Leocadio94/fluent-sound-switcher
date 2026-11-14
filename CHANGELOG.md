@@ -16,6 +16,9 @@ the project follows phased iterations (see `README.md`).
   neutro (o do accent sumia num accent escuro).
 - **Fonte Segoe UI Variable**, a que o resto do Windows 11 usa, em todas as
   janelas. O Fluent web pede a Segoe UI estática, do Windows 10.
+- **Animação de saída** no banner, no volume na tela e no flyout/menu do tray:
+  antes eles sumiam de uma vez. Respeita a opção de reduzir animações do
+  Windows.
 
 ### Added
 

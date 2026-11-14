@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { MicRegular, Speaker2Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
-import { makeStyles, tokens } from "@fluentui/react-components";
+import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 
 import { useTauriEvent } from "../hooks/useTauriEvent";
+import { useLeaving, useWindowMotion } from "../theme/motion";
 
 interface BannerData {
   /** One per banner; the backend's retries of it share the same id. */
@@ -28,13 +29,6 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground1,
     boxShadow: tokens.shadow16,
     userSelect: "none",
-    animationName: {
-      from: { opacity: 0, transform: "translateY(-8px)" },
-      to: { opacity: 1, transform: "translateY(0)" },
-    },
-    animationDuration: tokens.durationNormal,
-    animationTimingFunction: tokens.curveDecelerateMid,
-    animationFillMode: "both",
     "& svg": {
       fontSize: "24px",
       flexShrink: 0,
@@ -70,6 +64,8 @@ export default function Banner() {
   const [data, setData] = useState<BannerData | null>(null);
 
   useTauriEvent<BannerData>("banner-show", (event) => setData(event.payload));
+  const leaving = useLeaving("banner-leave", "banner-show");
+  const motion = useWindowMotion("drop", leaving);
 
   if (!data) return null;
   const Icon = data.direction === "output" ? Speaker2Regular : MicRegular;
@@ -78,7 +74,11 @@ export default function Banner() {
     // Keyed by banner so each one remounts and replays its entrance; a retry
     // carries the same id and leaves it alone. Decorative: the window is
     // click-through.
-    <div key={data.id} aria-hidden="true" className={styles.pill}>
+    <div
+      key={data.id}
+      aria-hidden="true"
+      className={mergeClasses(styles.pill, motion)}
+    >
       <Icon />
       <div className={styles.text}>
         <span className={styles.name}>{data.name}</span>

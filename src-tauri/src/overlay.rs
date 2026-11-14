@@ -150,12 +150,15 @@ pub fn update_with(app: &AppHandle, muted: bool, cfg: &MuteIndicator) {
         auxwin::reassert_topmost(&window);
         emit_state(app, &window, payload);
     } else {
-        let _ = window.hide();
-        // Supersede anything still retrying, then push the state so the
-        // (hidden) webview stays in sync for the next time it is shown. No
-        // retries needed while hidden.
-        generation().fetch_add(1, Ordering::SeqCst);
-        let _ = app.emit("overlay-state", payload);
+        // Supersede anything still retrying. The next show pushes its own state,
+        // and pushing one here would cancel the exit animation in the frontend.
+        let mine = generation().fetch_add(1, Ordering::SeqCst) + 1;
+        auxwin::hide_animated(
+            &window,
+            "overlay-leave",
+            move || generation().load(Ordering::SeqCst) == mine,
+            || {},
+        );
     }
 }
 

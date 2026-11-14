@@ -8,7 +8,36 @@
 //! this app is the whole point: they exist to be visible over the fullscreen
 //! game the user is actually looking at.
 
-use tauri::{AppHandle, LogicalPosition, Monitor, WebviewWindow};
+use std::thread;
+use std::time::Duration;
+
+use tauri::{AppHandle, Emitter, LogicalPosition, Monitor, WebviewWindow};
+
+/// How long an aux window stays up while its exit animation plays; the
+/// frontend's is 150 ms (`durationFast`).
+pub const EXIT_MS: u64 = 160;
+
+/// Tells the window to play its exit animation, waits for it, then hides it.
+///
+/// `current` says whether nothing newer has been shown since: a window that was
+/// shown again meanwhile must not be hidden under the user. `after_hide` runs
+/// only when the window really was hidden.
+pub fn hide_animated(
+    window: &WebviewWindow,
+    leave_event: &'static str,
+    current: impl Fn() -> bool + Send + 'static,
+    after_hide: impl FnOnce() + Send + 'static,
+) {
+    let window = window.clone();
+    thread::spawn(move || {
+        let _ = window.emit(leave_event, ());
+        thread::sleep(Duration::from_millis(EXIT_MS));
+        if current() {
+            let _ = window.hide();
+            after_hide();
+        }
+    });
+}
 
 /// Which monitor the aux windows should appear on (config `overlayMonitor`).
 pub const MONITOR_CURSOR: &str = "cursor";

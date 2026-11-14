@@ -6,6 +6,7 @@
 //! as a Fluent menu next to the cursor instead of the native Win32 one. A fifth
 //! WebView2 for the menu was not worth it.
 
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 
 use serde::Serialize;
@@ -52,6 +53,22 @@ enum View<'a> {
     Menu { items: &'a [MenuEntry] },
 }
 
+/// Bumped by every show and every dismissal, so a dismissal still waiting out
+/// its exit animation cannot hide a window that was opened again meanwhile (a
+/// click on the tray icon right after the blur does exactly that).
+static GENERATION: AtomicU64 = AtomicU64::new(0);
+
+/// Hides the window after its exit animation.
+fn dismiss(window: &WebviewWindow) {
+    let mine = GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
+    auxwin::hide_animated(
+        window,
+        "flyout-leave",
+        move || GENERATION.load(Ordering::SeqCst) == mine,
+        || {},
+    );
+}
+
 fn anchor() -> Anchor {
     ANCHOR.lock().map_or(Anchor::Corner, |a| *a)
 }
@@ -77,10 +94,10 @@ pub fn configure(app: &AppHandle) {
         let _ = window.set_skip_taskbar(true);
         auxwin::apply_overlay_exstyle(&window);
 
-        let dismiss = window.clone();
+        let blurred = window.clone();
         window.on_window_event(move |event| {
             if let tauri::WindowEvent::Focused(false) = event {
-                let _ = dismiss.hide();
+                dismiss(&blurred);
             }
         });
     }
@@ -93,7 +110,7 @@ pub fn toggle(app: &AppHandle) {
         return;
     };
     if window.is_visible().unwrap_or(false) {
-        let _ = window.hide();
+        dismiss(&window);
     } else {
         set_anchor(Anchor::Corner);
         let height = CORNER_HEIGHT.lock().map_or(DEFAULT_HEIGHT, |h| *h);
@@ -131,6 +148,7 @@ pub fn show_menu(app: &AppHandle, cursor: (f64, f64)) {
 
 /// Sizes, positions and reveals the window, then takes focus.
 fn present(app: &AppHandle, window: &WebviewWindow, height: f64) {
+    GENERATION.fetch_add(1, Ordering::SeqCst);
     place(app, window, height);
     let _ = window.show();
     let _ = window.set_focus();
@@ -143,7 +161,7 @@ fn present(app: &AppHandle, window: &WebviewWindow, height: f64) {
 /// Hides the flyout (used after a device or a menu entry is picked).
 pub fn hide(app: &AppHandle) {
     if let Some(window) = app.get_webview_window(FLYOUT_LABEL) {
-        let _ = window.hide();
+        dismiss(&window);
     }
 }
 

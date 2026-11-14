@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { useTauriEvent } from "../hooks/useTauriEvent";
 import type { FlyoutView, TrayMenuEntry } from "../lib/tauri";
+import { useLeaving, useWindowMotion } from "../theme/motion";
 import Flyout from "./Flyout";
 import TrayMenu from "./TrayMenu";
 
@@ -24,5 +25,12 @@ export default function FlyoutHost() {
     ),
   );
 
-  return menu ? <TrayMenu key={menu.opened} items={menu.items} /> : <Flyout />;
+  const leaving = useLeaving("flyout-leave", "flyout-view");
+  const motion = useWindowMotion("rise", leaving);
+
+  return (
+    <div className={motion}>
+      {menu ? <TrayMenu key={menu.opened} items={menu.items} /> : <Flyout />}
+    </div>
+  );
 }
