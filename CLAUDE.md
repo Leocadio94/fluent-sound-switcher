@@ -46,6 +46,7 @@ SmartScreen warning), distribution reach (winget, then Scoop; Microsoft Store
 signs the MSIX for free) and
 per-app profiles (Phase 9, experimental, deferred). The
 phase numbering in `CHANGELOG.md` is the source of truth.
+What is still open, with the reasoning, is in `docs/pendencias.md`.
 
 ## Product site
 
