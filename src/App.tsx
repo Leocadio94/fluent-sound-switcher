@@ -10,7 +10,7 @@ import {
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import TitleBar from "./components/TitleBar";
 import AppControls from "./components/AppControls";
@@ -18,6 +18,7 @@ import DeviceList from "./views/DeviceList";
 import SettingsDialog from "./views/SettingsDialog";
 import { useDevices } from "./hooks/useDevices";
 import { useFavorites } from "./hooks/useFavorites";
+import { missingFavorites } from "./lib/reconcileFavorites";
 import { useHotkeys } from "./hooks/useHotkeys";
 import { useGamepadHotkeys } from "./hooks/useGamepadHotkeys";
 import { useMute } from "./hooks/useMute";
@@ -99,12 +100,22 @@ export default function App({
   const { t } = useTranslation();
   const { devices, loading, error, refresh, switchTo, switching } =
     useDevices();
+  // The only window that reconciles favorites against the device list.
   const {
+    favorites,
     isFavorite,
     toggleFavorite,
+    removeFavorites,
     showOnlyFavorites,
     setShowOnlyFavorites,
-  } = useFavorites();
+  } = useFavorites(devices);
+  const missing = useMemo(
+    () => ({
+      output: missingFavorites(favorites, devices, "output"),
+      input: missingFavorites(favorites, devices, "input"),
+    }),
+    [favorites, devices],
+  );
   const { hotkeys, setBinding, failures: hotkeyFailures } = useHotkeys();
   const { gamepad, setField: setGamepadField } = useGamepadHotkeys();
   const { indicator, setField: setIndicatorField } = useMuteIndicator();
@@ -282,6 +293,8 @@ export default function App({
               isFavorite={isFavorite}
               onToggleFavorite={toggleFavorite}
               showOnlyFavorites={showOnlyFavorites}
+              missing={missing}
+              onRemoveMissing={removeFavorites}
               btDevices={bluetooth.devices}
               btBusyMac={bluetooth.busyMac}
               onBluetoothToggle={bluetooth.available ? toggleBluetooth : undefined}

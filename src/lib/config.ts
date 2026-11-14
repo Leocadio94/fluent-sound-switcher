@@ -7,15 +7,23 @@ import {
   oneOf,
   stringList,
   stringOr,
+  stringRecord,
 } from "./configSchema";
 
 /** Device ids the user picked to take part in the cycle list, per direction. */
 export interface Favorites {
   output: string[];
   input: string[];
+  /**
+   * Friendly name of each favorite, by id. Windows gives the same hardware a
+   * new endpoint id after a driver update or a USB port change, so the name is
+   * what lets a favorite follow its device.
+   * @see docs/favoritos-e-ids-de-endpoint.md
+   */
+  names: Record<string, string>;
 }
 
-export const EMPTY_FAVORITES: Favorites = { output: [], input: [] };
+export const EMPTY_FAVORITES: Favorites = { output: [], input: [], names: {} };
 
 /** Global-shortcut accelerators (Tauri format), one per action. */
 export interface Hotkeys {
@@ -216,6 +224,7 @@ export async function loadFavorites(): Promise<Favorites> {
   return {
     output: stringList(stored?.output),
     input: stringList(stored?.input),
+    names: stringRecord(stored?.names),
   };
 }
 

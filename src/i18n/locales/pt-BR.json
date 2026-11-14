@@ -18,6 +18,10 @@
     "onlyFavorites": "Somente favoritos",
     "addToCycle": "Adicionar à lista de ciclo",
     "removeFromCycle": "Remover da lista de ciclo",
+    "missing": "Não encontrado",
+    "missingUnnamed": "Dispositivo desconhecido",
+    "removeMissing": "Remover dos favoritos",
+    "removeAllMissing": "Remover todos os não encontrados",
     "states": {
       "active": "",
       "unplugged": "Desconectado",

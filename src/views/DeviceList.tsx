@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import {
+  Button,
   Caption1,
   Subtitle2,
   makeStyles,
@@ -8,7 +9,9 @@ import {
 import { MicRegular, Speaker2Regular } from "@fluentui/react-icons";
 
 import DeviceRow from "../components/DeviceRow";
+import MissingFavoriteRow from "../components/MissingFavoriteRow";
 import type { DeviceVolume } from "../hooks/useVolume";
+import type { MissingFavorite } from "../lib/reconcileFavorites";
 import type { AudioDevice, BtDevice, DeviceDirection } from "../lib/tauri";
 
 const useStyles = makeStyles({
@@ -32,6 +35,7 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground3,
     padding: tokens.spacingVerticalS,
   },
+  removeAll: { alignSelf: "flex-end" },
 });
 
 interface VolumeProps {
@@ -52,6 +56,8 @@ interface DeviceSectionProps extends VolumeProps {
   btDevices: BtDevice[];
   btBusyMac: string | null;
   onBluetoothToggle?: (device: AudioDevice) => void;
+  missing: MissingFavorite[];
+  onRemoveMissing: (direction: DeviceDirection, ids: string[]) => void;
 }
 
 function DeviceSection({
@@ -61,6 +67,8 @@ function DeviceSection({
   onSwitch,
   isFavorite,
   onToggleFavorite,
+  missing,
+  onRemoveMissing,
   btDevices,
   btBusyMac,
   onBluetoothToggle,
@@ -81,7 +89,7 @@ function DeviceSection({
         <Subtitle2>{heading}</Subtitle2>
       </div>
       <div className={styles.list} role="list">
-        {devices.length === 0 && (
+        {devices.length === 0 && missing.length === 0 && (
           <Caption1 className={styles.empty}>{t("common.noDevices")}</Caption1>
         )}
         {devices.map((device) => (
@@ -108,6 +116,30 @@ function DeviceSection({
             />
           </div>
         ))}
+        {missing.map((favorite) => (
+          <div key={favorite.id} role="listitem">
+            <MissingFavoriteRow
+              favorite={favorite}
+              direction={direction}
+              onRemove={(id) => onRemoveMissing(direction, [id])}
+            />
+          </div>
+        ))}
+        {missing.length > 1 && (
+          <Button
+            className={styles.removeAll}
+            appearance="subtle"
+            size="small"
+            onClick={() =>
+              onRemoveMissing(
+                direction,
+                missing.map((m) => m.id),
+              )
+            }
+          >
+            {t("devices.removeAllMissing")}
+          </Button>
+        )}
       </div>
     </section>
   );
@@ -120,6 +152,9 @@ interface DeviceListProps extends VolumeProps {
   isFavorite: (direction: DeviceDirection, id: string) => boolean;
   onToggleFavorite: (direction: DeviceDirection, id: string) => void;
   showOnlyFavorites: boolean;
+  /** Favorites whose device is not listed, per direction. */
+  missing: Record<DeviceDirection, MissingFavorite[]>;
+  onRemoveMissing: (direction: DeviceDirection, ids: string[]) => void;
   btDevices: BtDevice[];
   btBusyMac: string | null;
   onBluetoothToggle?: (device: AudioDevice) => void;
@@ -132,6 +167,8 @@ export default function DeviceList({
   isFavorite,
   onToggleFavorite,
   showOnlyFavorites,
+  missing,
+  onRemoveMissing,
   btDevices,
   btBusyMac,
   onBluetoothToggle,
@@ -157,6 +194,7 @@ export default function DeviceList({
     onSwitch,
     isFavorite,
     onToggleFavorite,
+    onRemoveMissing,
     btDevices,
     btBusyMac,
     onBluetoothToggle,
@@ -168,8 +206,18 @@ export default function DeviceList({
 
   return (
     <>
-      <DeviceSection direction="output" devices={outputs} {...sectionProps} />
-      <DeviceSection direction="input" devices={inputs} {...sectionProps} />
+      <DeviceSection
+        direction="output"
+        devices={outputs}
+        missing={missing.output}
+        {...sectionProps}
+      />
+      <DeviceSection
+        direction="input"
+        devices={inputs}
+        missing={missing.input}
+        {...sectionProps}
+      />
     </>
   );
 }
