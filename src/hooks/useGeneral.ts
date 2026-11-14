@@ -7,6 +7,7 @@ import {
   loadShowDeviceIcon,
   loadStartMinimized,
   loadTrayClick,
+  saveAutostartPreference,
   saveBtAutoDisconnect,
   saveMonitorPreference,
   saveShowDeviceIcon,
@@ -66,6 +67,7 @@ export function useGeneral(): UseGeneral {
 
   const setAutostart = useCallback((value: boolean) => {
     setAutostartState(value);
+    void saveAutostartPreference(value);
     void apiSetAutostart(value).catch((e) => {
       // Registering with Windows can fail (policy, permissions); at least
       // leave a trace instead of a switch that silently does nothing.

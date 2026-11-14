@@ -23,6 +23,11 @@ the project follows phased iterations (see `README.md`).
   visíveis: a barra ficava com largura zero.
 - O banner só animava a primeira troca de dispositivo; as seguintes apareciam
   sem animação.
+- **"Iniciar com o Windows" voltava desligado depois de instalar uma versão
+  nova.** O instalador remove a entrada do Windows ao instalar por cima de uma
+  instalação existente. O app agora guarda a sua escolha e registra a entrada de
+  novo ao abrir. Quem já perdeu a opção precisa ligá-la uma vez. Ver
+  `docs/autostart-e-reinstalacao.md`.
 - **"Controle de volume no menu rápido" desligado continuava aparecendo** no
   menu da bandeja até o app reiniciar. A janela do menu fica viva entre as
   aberturas e só lia essa opção uma vez; agora relê a cada abertura.
