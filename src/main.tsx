@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { FluentProvider } from "@fluentui/react-components";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -73,14 +73,20 @@ function Root({
 
   // `appliedMaterial`, not `material`, decides whether the page paints: the
   // window is transparent, so a backdrop the OS refused must not be assumed.
+  // Replies can arrive out of order when the choice flips quickly; only the
+  // latest request may set the applied material.
+  const materialRequest = useRef(0);
   const changeMaterial = useCallback((value: WindowMaterial) => {
+    const request = ++materialRequest.current;
     setMaterial(value);
     void saveWindowMaterial(value);
     void setWindowMaterial(value)
-      .then(setAppliedMaterial)
+      .then((applied) => {
+        if (request === materialRequest.current) setAppliedMaterial(applied);
+      })
       .catch((e) => {
         console.error("could not change the window material", e);
-        setAppliedMaterial("solid");
+        if (request === materialRequest.current) setAppliedMaterial("solid");
       });
   }, []);
 
@@ -188,7 +194,7 @@ async function bootstrap() {
     loadTheme().catch(() => null),
     loadUseSystemAccent().catch(() => true),
     loadTitleBarStyle().catch(() => "custom" as TitleBarStyle),
-    loadWindowMaterial().catch(() => "solid" as WindowMaterial),
+    loadWindowMaterial().catch(() => "mica" as WindowMaterial),
   ]);
 
   if (language && language !== i18n.language) {

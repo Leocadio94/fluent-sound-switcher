@@ -58,6 +58,11 @@ Nada disto foi visto renderizado por quem escreveu o código.
     escuro, nas três opções, trocando ao vivo;
   - com o app em "claro" e o Windows em escuro (e o inverso), a Mica acompanha o
     app, inclusive ao trocar a preferência com a janela aberta;
+  - voltar para "Sistema" depois de fixar claro ou escuro: o `setTheme(null)` da
+    janela tem de devolver o `prefers-color-scheme` ao do Windows, senão o tema
+    "Sistema" do app não volta a seguir o sistema;
+  - com Sólido ou no Windows 10 a janela é `transparent` do mesmo jeito: conferir
+    sombra e cantos, que podem mudar em relação à 0.8.0;
   - "Efeitos de transparência" desligado no Windows: deve virar cor sólida;
   - barra de título do sistema com Mica, e a troca custom ↔ sistema ao vivo;
   - os cantos arredondados e a sombra da janela, que agora é `transparent`;
