@@ -332,6 +332,13 @@ pub fn set_window_material(app: tauri::AppHandle, material: String) -> Result<St
     crate::material::apply(&app, &material).map(|m| m.as_str().to_string())
 }
 
+/// Turns Acrylic on or off for the flyout and the tray menu; takes effect the
+/// next time one opens. Passed directly to avoid racing the store's async write.
+#[tauri::command]
+pub fn set_floating_acrylic(enabled: bool) {
+    crate::flyout::set_acrylic(enabled);
+}
+
 /// Opens the folder holding the rotating log file, so a user can attach it to a
 /// bug report. Nothing in the GUI build reaches stdout, so this is the only way
 /// to see what the backend did.

@@ -67,12 +67,15 @@ export function useLeaving(leaveEvent: string, showEvent: string): boolean {
  * animation, so the entrance replays on every show without remounting.
  *
  * `rise` slides up from below (bottom-anchored windows), `drop` down from above.
+ * `none` is for an Acrylic window: the system backdrop cannot move or fade with
+ * the content, so animating only the content would leave the glass behind.
  */
 export function useWindowMotion(
-  from: "rise" | "drop",
+  from: "rise" | "drop" | "none",
   leaving: boolean,
 ): string {
   const styles = useStyles();
+  if (from === "none") return "";
   if (from === "rise") return leaving ? styles.leaveRise : styles.enterRise;
   return leaving ? styles.leaveDrop : styles.enterDrop;
 }

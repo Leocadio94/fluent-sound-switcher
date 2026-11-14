@@ -7,13 +7,16 @@ use tauri::{AppHandle, Manager};
 
 /// First Windows 11 build; the undocumented Mica switch works from here.
 const MICA_MIN_BUILD: u32 = 22000;
-/// First build with `DWMWA_SYSTEMBACKDROP_TYPE`, which Mica Alt (tabbed) needs.
-const MICA_ALT_MIN_BUILD: u32 = 22621;
+/// First build with `DWMWA_SYSTEMBACKDROP_TYPE`, which Mica Alt (tabbed) and the
+/// system Acrylic need. Before it Acrylic is the legacy accent policy, which
+/// stutters while the window is dragged, so it is not offered there at all.
+const SYSTEM_BACKDROP_MIN_BUILD: u32 = 22621;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Material {
     Mica,
     MicaAlt,
+    Acrylic,
     Solid,
 }
 
@@ -23,6 +26,7 @@ impl Material {
         match self {
             Material::Mica => "mica",
             Material::MicaAlt => "micaAlt",
+            Material::Acrylic => "acrylic",
             Material::Solid => "solid",
         }
     }
@@ -32,15 +36,22 @@ impl Material {
 ///
 /// The window is `transparent`, so asking for a backdrop the OS cannot paint
 /// would leave it see-through instead of merely flat: anything unsupported
-/// steps down (Mica Alt to Mica, Mica to solid) and the caller learns where it
-/// landed. An unknown name is solid, the one answer that is always safe.
+/// steps down (Mica Alt and Acrylic to Mica, Mica to solid) and the caller
+/// learns where it landed. An unknown name is solid, the one answer that is
+/// always safe.
 pub fn resolve(requested: &str, build: u32) -> Material {
     match requested {
         "mica" if build >= MICA_MIN_BUILD => Material::Mica,
-        "micaAlt" if build >= MICA_ALT_MIN_BUILD => Material::MicaAlt,
-        "micaAlt" if build >= MICA_MIN_BUILD => Material::Mica,
+        "micaAlt" if build >= SYSTEM_BACKDROP_MIN_BUILD => Material::MicaAlt,
+        "acrylic" if build >= SYSTEM_BACKDROP_MIN_BUILD => Material::Acrylic,
+        "micaAlt" | "acrylic" if build >= MICA_MIN_BUILD => Material::Mica,
         _ => Material::Solid,
     }
+}
+
+/// Whether this Windows draws the system Acrylic, for the floating windows.
+pub fn supports_acrylic() -> bool {
+    windows_build() >= SYSTEM_BACKDROP_MIN_BUILD
 }
 
 /// Applies `requested` to the main window and returns the material in effect.
@@ -55,6 +66,9 @@ pub fn apply(app: &AppHandle, requested: &str) -> Result<Material, String> {
     let effects = match material {
         Material::Mica => Some(EffectsBuilder::new().effect(Effect::Mica).build()),
         Material::MicaAlt => Some(EffectsBuilder::new().effect(Effect::Tabbed).build()),
+        // From build 22621 this is the system backdrop (`DWMSBT_TRANSIENTWINDOW`),
+        // and `resolve` never asks for it earlier.
+        Material::Acrylic => Some(EffectsBuilder::new().effect(Effect::Acrylic).build()),
         Material::Solid => None,
     };
     window.set_effects(effects).map_err(|e| e.to_string())?;
@@ -120,6 +134,13 @@ mod tests {
     }
 
     #[test]
+    fn acrylic_needs_the_system_backdrop_api_and_never_uses_the_legacy_one() {
+        assert_eq!(resolve("acrylic", WIN10), Material::Solid);
+        assert_eq!(resolve("acrylic", WIN11_21H2), Material::Mica);
+        assert_eq!(resolve("acrylic", WIN11_22H2), Material::Acrylic);
+    }
+
+    #[test]
     fn mica_is_available_from_the_first_windows_11_build() {
         assert_eq!(resolve("mica", WIN11_21H2 - 1), Material::Solid);
         assert_eq!(resolve("mica", WIN11_21H2), Material::Mica);
@@ -127,13 +148,13 @@ mod tests {
 
     #[test]
     fn an_unknown_name_is_solid() {
-        assert_eq!(resolve("acrylic", WIN11_22H2), Material::Solid);
+        assert_eq!(resolve("blur", WIN11_22H2), Material::Solid);
         assert_eq!(resolve("", WIN11_22H2), Material::Solid);
     }
 
     #[test]
     fn names_round_trip_with_the_frontend_spelling() {
-        for name in ["mica", "micaAlt", "solid"] {
+        for name in ["mica", "micaAlt", "acrylic", "solid"] {
             assert_eq!(resolve(name, WIN11_22H2).as_str(), name);
         }
     }

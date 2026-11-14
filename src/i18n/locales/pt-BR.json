@@ -152,12 +152,15 @@
       "native": "Do sistema"
     },
     "windowMaterial": "Material da janela",
-    "windowMaterialHint": "Deixa o fundo da janela principal translúcido, com a cor do seu papel de parede. Só vale para esta janela; no Windows 10 e com os efeitos de transparência desligados, fica sólido.",
+    "windowMaterialHint": "Mica tinge o fundo com a cor do papel de parede, de forma sutil, e não deixa ver o que está atrás. Acrílico borra o que está atrás da janela. Só vale para a janela principal; no Windows 10 e com os efeitos de transparência desligados, fica sólido.",
     "windowMaterials": {
       "mica": "Mica",
       "micaAlt": "Mica Alt",
+      "acrylic": "Acrílico",
       "solid": "Sólido"
-    }
+    },
+    "floatingAcrylic": "Acrílico nos menus flutuantes",
+    "floatingAcrylicHint": "Experimental. Vale para a troca rápida da bandeja e para o menu de clique direito, e aparece na próxima vez que abrirem. Exige o Windows 11 22H2 ou mais novo. O volume na tela e os avisos continuam sólidos."
   },
   "general": {
     "logs": "Diagnóstico",

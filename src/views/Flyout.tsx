@@ -35,6 +35,14 @@ const useStyles = makeStyles({
     flexDirection: "column",
     gap: tokens.spacingVerticalXS,
   },
+  // Acrylic: the window is the card. The system paints backdrop, corners and
+  // shadow, so the page keeps none of its own.
+  cardFlush: {
+    margin: 0,
+    backgroundColor: "transparent",
+    boxShadow: "none",
+    borderRadius: 0,
+  },
   groupLabel: {
     display: "flex",
     alignItems: "center",
@@ -80,7 +88,7 @@ const useStyles = makeStyles({
  * Compact quick-switch list shown in the tray flyout window. Lists favorite
  * output then input devices; picking one switches and closes the flyout.
  */
-export default function Flyout() {
+export default function Flyout({ flush }: { flush: boolean }) {
   const styles = useStyles();
   const { t } = useTranslation();
   const { devices, loading, error, switchTo, switching } = useDevices();
@@ -110,17 +118,17 @@ export default function Flyout() {
   const isEmpty = outputs.length === 0 && inputs.length === 0;
 
   // Keep the window sized to the content. The ResizeObserver covers content
-  // changes on its own; the effect only needs to re-run when the element is
-  // replaced, which it never is.
+  // changes on its own; the effect re-runs when `flush` flips, because the 16 px
+  // the card keeps around itself for its shadow are not there with Acrylic.
   useLayoutEffect(() => {
     const el = cardRef.current;
     if (!el) return;
-    const report = () => void setFlyoutSize(el.offsetHeight + 16);
+    const report = () => void setFlyoutSize(el.offsetHeight + (flush ? 0 : 16));
     report();
     const observer = new ResizeObserver(report);
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [flush]);
 
   const pick = async (device: AudioDevice) => {
     await switchTo(device, true);
@@ -154,7 +162,10 @@ export default function Flyout() {
     );
 
   return (
-    <div ref={cardRef} className={styles.card}>
+    <div
+      ref={cardRef}
+      className={mergeClasses(styles.card, flush && styles.cardFlush)}
+    >
       {loading ? (
         <div className={styles.empty}>
           <Spinner size="tiny" />

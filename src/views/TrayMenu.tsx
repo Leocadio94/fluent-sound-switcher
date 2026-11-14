@@ -4,6 +4,7 @@ import {
   MenuItem,
   MenuList,
   makeStyles,
+  mergeClasses,
   tokens,
 } from "@fluentui/react-components";
 import {
@@ -32,6 +33,14 @@ const useStyles = makeStyles({
     border: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
     boxShadow: tokens.shadow16,
   },
+  // Acrylic: the window is the card; see Flyout.tsx.
+  cardFlush: {
+    margin: 0,
+    backgroundColor: "transparent",
+    boxShadow: "none",
+    border: "none",
+    borderRadius: 0,
+  },
 });
 
 const ICONS: Record<string, ComponentType> = {
@@ -44,19 +53,26 @@ const ICONS: Record<string, ComponentType> = {
 };
 
 /** The tray's right-click menu, drawn by the flyout window so it can sit above fullscreen games. */
-export default function TrayMenu({ items }: { items: TrayMenuEntry[] }) {
+export default function TrayMenu({
+  items,
+  flush,
+}: {
+  items: TrayMenuEntry[];
+  flush: boolean;
+}) {
   const styles = useStyles();
   const cardRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     const el = cardRef.current;
     if (!el) return;
-    const report = () => void setFlyoutSize(el.offsetHeight + 16, true);
+    const report = () =>
+      void setFlyoutSize(el.offsetHeight + (flush ? 0 : 16), true);
     report();
     const observer = new ResizeObserver(report);
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [flush]);
 
   // Arrow keys only move between entries once one has focus, and opening with
   // the mouse leaves none focused (focusing one would draw a ring on a click).
@@ -81,7 +97,10 @@ export default function TrayMenu({ items }: { items: TrayMenuEntry[] }) {
   }, []);
 
   return (
-    <div ref={cardRef} className={styles.card}>
+    <div
+      ref={cardRef}
+      className={mergeClasses(styles.card, flush && styles.cardFlush)}
+    >
       <MenuList>
         {items.map((entry, index) => {
           if (entry.kind === "separator") return <MenuDivider key={index} />;

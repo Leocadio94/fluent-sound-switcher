@@ -1,6 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
 
-import type { GamepadHotkeys, Hotkeys, MuteIndicator } from "./config";
+import type {
+  GamepadHotkeys,
+  Hotkeys,
+  MuteIndicator,
+  WindowMaterial,
+} from "./config";
 
 export type DeviceDirection = "output" | "input";
 
@@ -161,9 +166,14 @@ export function setTitleBarStyle(style: "custom" | "native"): Promise<void> {
 
 /** Applies the main window's backdrop; resolves to the material actually in effect. */
 export function setWindowMaterial(
-  material: "mica" | "micaAlt" | "solid",
-): Promise<"mica" | "micaAlt" | "solid"> {
+  material: WindowMaterial,
+): Promise<WindowMaterial> {
   return invoke("set_window_material", { material });
+}
+
+/** Acrylic on the flyout and the tray menu; applies the next time one opens. */
+export function setFloatingAcrylic(enabled: boolean): Promise<void> {
+  return invoke<void>("set_floating_acrylic", { enabled });
 }
 
 /** Reads the accent palette; null when Windows will not report it. */
@@ -251,10 +261,14 @@ export type TrayMenuEntry =
   | { kind: "item"; id: string; label: string }
   | { kind: "separator" };
 
-/** What the flyout window should draw, pushed by the backend on every open. */
+/**
+ * What the flyout window should draw, pushed by the backend on every open.
+ * `flush` means Acrylic: the window is the card, and the system draws the
+ * backdrop, corners and shadow.
+ */
 export type FlyoutView =
-  | { kind: "devices" }
-  | { kind: "menu"; items: TrayMenuEntry[] };
+  | { kind: "devices"; flush: boolean }
+  | { kind: "menu"; items: TrayMenuEntry[]; flush: boolean };
 
 /** Runs a right-click menu entry and dismisses the menu. */
 export function trayMenuAction(id: string): Promise<void> {

@@ -167,6 +167,7 @@ const THEME_KEY = "theme";
 const SYSTEM_ACCENT_KEY = "useSystemAccent";
 const TITLE_BAR_KEY = "titleBarStyle";
 const WINDOW_MATERIAL_KEY = "windowMaterial";
+const FLOATING_ACRYLIC_KEY = "floatingAcrylic";
 const BT_AUTO_DISCONNECT_KEY = "bluetoothAutoDisconnect";
 const MIC_MUTE_ALL_KEY = "micMuteAllDevices";
 const MIC_MUTE_CALL_SHORTCUT_KEY = "micMuteCallShortcut";
@@ -551,7 +552,7 @@ export async function saveTitleBarStyle(value: TitleBarStyle): Promise<void> {
  * (`docs/janela-material.md`). The backend steps a choice down when the OS
  * cannot draw it, so what is stored is a preference, not a promise.
  */
-export const WINDOW_MATERIALS = ["mica", "micaAlt", "solid"] as const;
+export const WINDOW_MATERIALS = ["mica", "micaAlt", "acrylic", "solid"] as const;
 export type WindowMaterial = (typeof WINDOW_MATERIALS)[number];
 
 export async function loadWindowMaterial(): Promise<WindowMaterial> {
@@ -562,6 +563,21 @@ export async function loadWindowMaterial(): Promise<WindowMaterial> {
 export async function saveWindowMaterial(value: WindowMaterial): Promise<void> {
   const store = await getStore();
   await store.set(WINDOW_MATERIAL_KEY, value);
+}
+
+/**
+ * Acrylic on the quick-switch flyout and the tray menu. Experimental, so off by
+ * default. The backend takes the value from a command (the store writes
+ * asynchronously) and falls back to this key at startup.
+ */
+export async function loadFloatingAcrylic(): Promise<boolean> {
+  const store = await getStore();
+  return boolOr(await store.get(FLOATING_ACRYLIC_KEY), false);
+}
+
+export async function saveFloatingAcrylic(value: boolean): Promise<void> {
+  const store = await getStore();
+  await store.set(FLOATING_ACRYLIC_KEY, value);
 }
 
 export type { DeviceDirection };

@@ -132,6 +132,16 @@ export default function GeneralTab({
         </Dropdown>
       </SettingRow>
 
+      <SettingRow
+        label={t("settings.floatingAcrylic")}
+        hint={t("settings.floatingAcrylicHint")}
+      >
+        <Switch
+          checked={general.floatingAcrylic}
+          onChange={(_, d) => general.setFloatingAcrylic(d.checked)}
+        />
+      </SettingRow>
+
       <SettingRow label={t("settings.systemAccent")} hint={t("settings.systemAccentHint")}>
         <Switch
           checked={useSystemAccent}

@@ -166,6 +166,7 @@ pub fn run() {
             commands::get_accent_palette,
             commands::set_title_bar_style,
             commands::set_window_material,
+            commands::set_floating_acrylic,
             commands::set_language,
             commands::get_device_volume,
             commands::set_device_volume,

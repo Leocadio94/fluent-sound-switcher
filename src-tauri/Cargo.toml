@@ -63,6 +63,8 @@ windows = { version = "0.58", features = [
   # can have (`material.rs`).
   "Wdk_System_SystemServices",
   "Win32_System_SystemInformation",
+  # Rounded corners for the Acrylic flyout window (`auxwin::round_corners`).
+  "Win32_Graphics_Dwm",
   # WinRT, for the Windows accent colour (UISettings).
   "UI",
   "UI_ViewManagement",

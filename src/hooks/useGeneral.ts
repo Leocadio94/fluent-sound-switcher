@@ -3,12 +3,14 @@ import { useCallback, useEffect, useState } from "react";
 import {
   DEFAULT_MONITOR_PREFERENCE,
   loadBtAutoDisconnect,
+  loadFloatingAcrylic,
   loadMonitorPreference,
   loadShowDeviceIcon,
   loadStartMinimized,
   loadTrayClick,
   saveAutostartPreference,
   saveBtAutoDisconnect,
+  saveFloatingAcrylic,
   saveMonitorPreference,
   saveShowDeviceIcon,
   saveStartMinimized,
@@ -20,6 +22,7 @@ import {
   getAutostart,
   setAutostart as apiSetAutostart,
   setDeviceIcon as apiSetDeviceIcon,
+  setFloatingAcrylic as apiSetFloatingAcrylic,
 } from "../lib/tauri";
 
 interface UseGeneral {
@@ -35,6 +38,8 @@ interface UseGeneral {
   setMonitor: (value: MonitorPreference) => void;
   bluetoothAutoDisconnect: boolean;
   setBtAutoDisconnect: (value: boolean) => void;
+  floatingAcrylic: boolean;
+  setFloatingAcrylic: (value: boolean) => void;
 }
 
 /**
@@ -53,6 +58,7 @@ export function useGeneral(): UseGeneral {
     DEFAULT_MONITOR_PREFERENCE,
   );
   const [bluetoothAutoDisconnect, setBtAutoDisconnectState] = useState(false);
+  const [floatingAcrylic, setFloatingAcrylicState] = useState(false);
 
   useEffect(() => {
     void getAutostart()
@@ -63,6 +69,7 @@ export function useGeneral(): UseGeneral {
     void loadTrayClick().then(setTrayClickState);
     void loadMonitorPreference().then(setMonitorState);
     void loadBtAutoDisconnect().then(setBtAutoDisconnectState);
+    void loadFloatingAcrylic().then(setFloatingAcrylicState);
   }, []);
 
   const setAutostart = useCallback((value: boolean) => {
@@ -119,6 +126,16 @@ export function useGeneral(): UseGeneral {
     void saveBtAutoDisconnect(value);
   }, []);
 
+  // Applies on the next open of the flyout or the menu, so the backend gets the
+  // value directly instead of waiting on the store write.
+  const setFloatingAcrylic = useCallback((value: boolean) => {
+    setFloatingAcrylicState(value);
+    void saveFloatingAcrylic(value);
+    void apiSetFloatingAcrylic(value).catch((e) =>
+      console.error("could not change the floating Acrylic", e),
+    );
+  }, []);
+
   return {
     autostart,
     setAutostart,
@@ -132,5 +149,7 @@ export function useGeneral(): UseGeneral {
     setMonitor,
     bluetoothAutoDisconnect,
     setBtAutoDisconnect,
+    floatingAcrylic,
+    setFloatingAcrylic,
   };
 }
