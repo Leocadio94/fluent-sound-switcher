@@ -238,6 +238,12 @@ cargo test --manifest-path src-tauri/Cargo.toml
   the callback) and must use raw Win32 — **never** `WebviewWindow::unminimize()`,
   which blocks on a channel the loop only drains after the callback returns, so
   it deadlocks.
+- **Aux windows hide through `auxwin::hide_animated`**, never a bare `hide()`:
+  it emits `*-leave`, waits `EXIT_MS` and hides only if the window's generation
+  counter is unchanged. A new show must bump that counter (the flyout does it in
+  `present`) or a pending hide closes the window it just opened. Don't push a
+  "hidden" `overlay-state` to hide the overlay; it cancels the exit animation.
+  See `docs/visual-windows-11.md`.
 - HWND version mismatch: `window.hwnd()` returns a `windows` 0.61 HWND; rebuild as
   our 0.58 HWND with `HWND(raw.0)` (0.58 HWND is `*mut c_void`).
 - The `main` window is created with `visible: false` and revealed by the

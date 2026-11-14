@@ -12,6 +12,7 @@ import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 
 import { useTauriEvent } from "../hooks/useTauriEvent";
 import { getOverlayState, type OverlayState } from "../lib/tauri";
+import { useLeaving, useWindowMotion } from "../theme/motion";
 
 /** @see docs/visual-windows-11.md */
 const useStyles = makeStyles({
@@ -111,6 +112,8 @@ export default function Overlay() {
     level: 0,
   });
   const gotEvent = useRef(false);
+  const leaving = useLeaving("overlay-leave", "overlay-state");
+  const motion = useWindowMotion("rise", leaving);
 
   useTauriEvent<OverlayState>("overlay-state", (event) => {
     gotEvent.current = true;
@@ -148,7 +151,10 @@ export default function Overlay() {
         ? Speaker0Regular
         : Speaker2Regular;
     return (
-      <div aria-hidden="true" className={mergeClasses(styles.pill, styles.volume)}>
+      <div
+        aria-hidden="true"
+        className={mergeClasses(styles.pill, styles.volume, motion)}
+      >
         <VolumeIcon />
         <div className={mergeClasses(styles.track, muted && styles.trackMuted)}>
           <div className={styles.fill} style={{ width: `${percent}%` }} />
@@ -166,6 +172,7 @@ export default function Overlay() {
         styles.pill,
         muted ? styles.muted : styles.live,
         style === "icon" && styles.icon,
+        motion,
       )}
     >
       {muted ? <MicProhibitedFilled /> : <MicFilled />}

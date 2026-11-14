@@ -42,3 +42,24 @@ ajusta ao conteúdo ele ficava com largura zero e a barra nunca aparecia.
 Cada banner remonta o card (`key` = `id` do payload) para repetir a animação de
 entrada. O `id` é a geração do backend: as reemissões de segurança de 80, 200 e
 400 ms do mesmo banner carregam o mesmo `id` e não reiniciam a animação.
+
+## Animação de saída
+
+`show()` e `hide()` são instantâneos, então a saída precisa rodar antes do
+`hide()`. O backend emite `banner-leave`, `overlay-leave` ou `flyout-leave`,
+espera `EXIT_MS` (160 ms, um pouco mais que `durationFast`) e só então esconde
+(`auxwin::hide_animated`).
+
+Cada janela tem um contador de geração, e o `hide` só acontece se ele não mudou
+durante a espera: um show novo (ou um clique no ícone do tray logo depois do
+blur) cancela a saída em andamento. O mesmo contador já barra as reemissões de
+segurança, e por isso elas nunca desfazem uma saída.
+
+No frontend, `theme/motion.ts` liga o evento de saída ao de show. `leaving` vira
+`true` na saída e `false` no próximo show; a troca de `animationName` reinicia a
+animação, então a entrada repete a cada abertura sem remontar nada. A webview
+fica suspensa enquanto a janela está escondida, por isso o reset vem do evento
+de show e não de um timer. `prefers-reduced-motion` reduz a duração a 1 ms.
+
+O overlay não manda o estado de "oculto" pelo `overlay-state`: isso cancelaria a
+saída na hora.

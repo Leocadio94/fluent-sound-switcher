@@ -114,7 +114,12 @@ pub fn show(app: &AppHandle, name: &str, direction: &str) {
         thread::sleep(Duration::from_millis(SHOW_MS));
         if generation().load(Ordering::SeqCst) == generation_id {
             if let Some(window) = app_handle.get_webview_window(BANNER_LABEL) {
-                let _ = window.hide();
+                auxwin::hide_animated(
+                    &window,
+                    "banner-leave",
+                    move || generation().load(Ordering::SeqCst) == generation_id,
+                    || {},
+                );
             }
         }
     });
