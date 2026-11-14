@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { MicRegular, Speaker2Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { makeStyles, tokens } from "@fluentui/react-components";
@@ -6,20 +6,13 @@ import { makeStyles, tokens } from "@fluentui/react-components";
 import { useTauriEvent } from "../hooks/useTauriEvent";
 
 interface BannerData {
+  /** One per banner; the backend's retries of it share the same id. */
+  id: number;
   name: string;
   direction: "output" | "input";
 }
 
-/**
- * The backend re-emits each banner at 80/200/400 ms to reach a webview that was
- * still waking up (see `banner.rs`). Anything identical inside this window is
- * one of those, not a new banner.
- */
-const RETRY_WINDOW_MS = 700;
-
-// Same card as the volume OSD: opaque surface, hairline border, 8px corner. The
-// device icon is neutral rather than the accent, which has no contrast left
-// against a dark card for a dark Windows accent.
+/** @see docs/visual-windows-11.md */
 const useStyles = makeStyles({
   pill: {
     display: "flex",
@@ -74,36 +67,18 @@ const useStyles = makeStyles({
 export default function Banner() {
   const { t } = useTranslation();
   const styles = useStyles();
-  // `id` is the React key: a new banner remounts the card so its entrance plays
-  // again. Without it the window kept the same element and only the first
-  // banner ever animated.
-  const [shown, setShown] = useState<{ data: BannerData; id: number } | null>(
-    null,
-  );
-  const burst = useRef({ name: "", direction: "", at: 0 });
+  const [data, setData] = useState<BannerData | null>(null);
 
-  useTauriEvent<BannerData>("banner-show", (event) => {
-    const data = event.payload;
-    const now = Date.now();
-    const retry =
-      burst.current.name === data.name &&
-      burst.current.direction === data.direction &&
-      now - burst.current.at < RETRY_WINDOW_MS;
-    if (!retry) burst.current = { name: data.name, direction: data.direction, at: now };
-    setShown((prev) => ({
-      data,
-      id: retry && prev ? prev.id : (prev?.id ?? 0) + 1,
-    }));
-  });
+  useTauriEvent<BannerData>("banner-show", (event) => setData(event.payload));
 
-  if (!shown) return null;
-  const { data } = shown;
+  if (!data) return null;
   const Icon = data.direction === "output" ? Speaker2Regular : MicRegular;
 
   return (
-    // Decorative: the window is click-through and mirrors a change the user
-    // just made.
-    <div key={shown.id} aria-hidden="true" className={styles.pill}>
+    // Keyed by banner so each one remounts and replays its entrance; a retry
+    // carries the same id and leaves it alone. Decorative: the window is
+    // click-through.
+    <div key={data.id} aria-hidden="true" className={styles.pill}>
       <Icon />
       <div className={styles.text}>
         <span className={styles.name}>{data.name}</span>

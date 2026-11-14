@@ -13,10 +13,7 @@ import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
 import { useTauriEvent } from "../hooks/useTauriEvent";
 import { getOverlayState, type OverlayState } from "../lib/tauri";
 
-// Colours come from Fluent tokens so the card follows the light/dark theme. The
-// surface is opaque on purpose: the window is transparent, so there is nothing
-// behind it to blur, and a translucent fill just looked muddy over a game. The
-// 8px corner and the hairline border are what Windows 11 flyouts use.
+/** @see docs/visual-windows-11.md */
 const useStyles = makeStyles({
   pill: {
     display: "flex",
@@ -56,17 +53,14 @@ const useStyles = makeStyles({
   },
   // The volume face is a neutral pill: a level readout is not a state that
   // wants a red or green tint.
-  // The pill shrinks to its content, which left the track (a flex child with
-  // nothing inside) at zero width: the bar never showed. It fills the window,
-  // less the room the shadow needs (the window is 260 wide; see overlay.rs).
+  // Fills the 260 px window (`VOLUME_WIDTH` in overlay.rs) less room for the
+  // shadow; a shrink-to-fit pill left the track at zero width.
   volume: {
     width: "calc(100vw - 24px)",
     color: tokens.colorNeutralForeground1,
     gap: "14px",
     fontWeight: tokens.fontWeightRegular,
   },
-  // Same tokens as Fluent's own Slider, so the bar reads like the ones in the
-  // app: a visible rail, and the accent for what is filled.
   track: {
     position: "relative",
     flexGrow: 1,
@@ -85,8 +79,10 @@ const useStyles = makeStyles({
     transitionDuration: tokens.durationFaster,
     transitionTimingFunction: tokens.curveEasyEase,
   },
-  fillMuted: {
-    backgroundColor: tokens.colorNeutralForeground4,
+  // Dimmed rather than recoloured: any fixed grey lands too close to the rail
+  // in one of the two themes.
+  trackMuted: {
+    opacity: 0.4,
   },
   percent: {
     minWidth: "3ch",
@@ -154,11 +150,8 @@ export default function Overlay() {
     return (
       <div aria-hidden="true" className={mergeClasses(styles.pill, styles.volume)}>
         <VolumeIcon />
-        <div className={styles.track}>
-          <div
-            className={mergeClasses(styles.fill, muted && styles.fillMuted)}
-            style={{ width: `${percent}%` }}
-          />
+        <div className={mergeClasses(styles.track, muted && styles.trackMuted)}>
+          <div className={styles.fill} style={{ width: `${percent}%` }} />
         </div>
         <span className={styles.percent}>{percent}</span>
       </div>

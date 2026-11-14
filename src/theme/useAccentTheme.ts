@@ -46,22 +46,20 @@ export function useAccentTheme(enabled: boolean): {
   const [themes, setThemes] = useState(DEFAULT_THEMES);
 
   useEffect(() => {
-    if (!enabled || !palette) {
-      setThemes(DEFAULT_THEMES);
-      return;
-    }
-    const brand = paletteToBrand(palette);
-    if (!brand) {
+    const brand = enabled && palette ? paletteToBrand(palette) : null;
+    if (enabled && palette && !brand) {
       // A shade we could not parse: better the default palette than a ramp
       // built from half a reading.
       console.warn("accent palette was unreadable; keeping the default theme");
-      setThemes(DEFAULT_THEMES);
-      return;
     }
-    setThemes({
-      light: withWindowsFont(createLightTheme(brand)),
-      dark: withWindowsFont(createDarkTheme(brand)),
-    });
+    setThemes(
+      brand
+        ? {
+            light: withWindowsFont(createLightTheme(brand)),
+            dark: withWindowsFont(createDarkTheme(brand)),
+          }
+        : DEFAULT_THEMES,
+    );
   }, [enabled, palette]);
 
   return themes;
