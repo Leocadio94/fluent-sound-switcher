@@ -32,15 +32,23 @@ fn ping() -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
-        // Must come first: a second launch has to bail out before it touches
-        // the store or registers a shortcut. It just brings the first one up.
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            // Off the event-loop thread: window calls wait on that loop, and
-            // this callback may be running on it.
-            let app = app.clone();
-            std::thread::spawn(move || tray::show_main(&app));
-        }))
+    let builder = tauri::Builder::default();
+    // Must come first: a second launch has to bail out before it touches the
+    // store or registers a shortcut. Release only — `tauri dev` and the
+    // installed app share an identifier, so with it on they would hand focus to
+    // each other instead of letting you test.
+    #[cfg(not(debug_assertions))]
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+        // A repeated login launch is not the user asking for the window.
+        if args.iter().any(|a| a == "--autostart") {
+            return;
+        }
+        // Off the event-loop thread: window calls wait on that loop, and this
+        // callback may be running on it.
+        let app = app.clone();
+        std::thread::spawn(move || tray::show_main(&app));
+    }));
+    builder
         // Registered early so every later plugin/setup step can log.
         .plugin(logging::plugin())
         .plugin(tauri_plugin_store::Builder::default().build())

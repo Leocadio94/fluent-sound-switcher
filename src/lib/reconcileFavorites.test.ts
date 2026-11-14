@@ -4,6 +4,7 @@ import type { Favorites } from "./config";
 import {
   comparableName,
   missingFavorites,
+  pruneNames,
   reconcileFavorites,
   unlistedFavoriteIds,
   type ResolvedEndpoints,
@@ -163,6 +164,20 @@ describe("reconcileFavorites", () => {
   it("returns the same object when there is nothing to change", () => {
     const input = favs({ output: ["a"], names: { a: "Speakers" } });
     expect(reconcileFavorites(input, [device("a", "Speakers")], {})).toBe(input);
+  });
+});
+
+describe("pruneNames", () => {
+  it("drops names of ids that are no longer favorites", () => {
+    const pruned = pruneNames(
+      favs({ output: ["a"], names: { a: "Speakers", gone: "Old" } }),
+    );
+    expect(pruned.names).toEqual({ a: "Speakers" });
+  });
+
+  it("returns the same object when every name is still in use", () => {
+    const input = favs({ output: ["a"], names: { a: "Speakers" } });
+    expect(pruneNames(input)).toBe(input);
   });
 });
 

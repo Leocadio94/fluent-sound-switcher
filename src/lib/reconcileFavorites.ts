@@ -1,11 +1,6 @@
 import type { Favorites } from "./config";
 import type { AudioDevice, DeviceDirection, ResolvedEndpoint } from "./tauri";
 
-/**
- * Keeps favorites attached to their hardware when Windows changes an endpoint id.
- * @see docs/favoritos-e-ids-de-endpoint.md
- */
-
 const DIRECTIONS: readonly DeviceDirection[] = ["output", "input"];
 
 export type ResolvedEndpoints = Record<string, ResolvedEndpoint>;
@@ -17,11 +12,7 @@ export interface MissingFavorite {
   name: string | null;
 }
 
-/**
- * Windows prefixes the device part of a friendly name with the USB port index
- * when the same hardware sits on another port: "Headset (CX31993)" becomes
- * "Headset (3- CX31993)". Dropping it makes both names compare equal.
- */
+/** Windows renames "Headset (X)" to "Headset (3- X)" on another USB port. */
 export function comparableName(name: string): string {
   return name.replace(/\(\d+-\s*/, "(");
 }
@@ -54,6 +45,16 @@ export function missingFavorites(
     .map((id) => ({ id, name: favorites.names[id] ?? null }));
 }
 
+/** Drops the recorded names of ids that are no longer favorites. */
+export function pruneNames(favorites: Favorites): Favorites {
+  const kept = new Set([...favorites.output, ...favorites.input]);
+  const stale = Object.keys(favorites.names).filter((id) => !kept.has(id));
+  if (stale.length === 0) return favorites;
+  const names = { ...favorites.names };
+  for (const id of stale) delete names[id];
+  return { ...favorites, names };
+}
+
 function sameFavorites(a: Favorites, b: Favorites): boolean {
   const sameList = (x: string[], y: string[]) =>
     x.length === y.length && x.every((id, i) => id === y[i]);
@@ -67,20 +68,10 @@ function sameFavorites(a: Favorites, b: Favorites): boolean {
 }
 
 /**
- * Re-points favorites whose endpoint is gone at the same-named device that
- * replaced it, and records the name of every favorite it can.
- *
- * A favorite is only touched once the backend confirmed its endpoint is gone
- * (`notpresent`/`missing`). One that is merely absent from a list snapshot
- * (topology churn) resolves as unplugged or active and is left alone.
- *
- * A replacement must be the single same-named, same-direction device that is
- * not already a favorite — among the active ones when there are any. With two
- * candidates nothing changes: guessing wrong would swap the user's device for
- * another one. Several gone favorites with the same name collapse into that one
- * replacement, since they are stale ids of one device.
- *
- * Returns `favorites` itself when nothing changed.
+ * Re-points favorites whose endpoint is gone at the single same-named device
+ * that replaced it, and records the names it can. Returns `favorites` itself
+ * when nothing changed.
+ * @see docs/favoritos-e-ids-de-endpoint.md
  */
 export function reconcileFavorites(
   favorites: Favorites,
@@ -103,6 +94,7 @@ export function reconcileFavorites(
       }
       const endpoint = resolved[id];
       if (!names[id] && endpoint?.name) names[id] = endpoint.name;
+      // Unplugged or unresolved is not gone: that is a list snapshot mid-churn.
       if (endpoint?.state !== "notpresent" && endpoint?.state !== "missing") continue;
       if (!names[id]) continue;
       const key = comparableName(names[id]);
@@ -115,6 +107,7 @@ export function reconcileFavorites(
         (d) => comparableName(d.name) === key && !current.has(d.id),
       );
       const active = candidates.filter((d) => d.state === "active");
+      // Two candidates is a guess, and a wrong swap is worse than none.
       const pool = active.length > 0 ? active : candidates;
       if (pool.length !== 1) continue;
       names[pool[0].id] = pool[0].name;
@@ -127,10 +120,6 @@ export function reconcileFavorites(
     }
   }
 
-  const kept = new Set([...next.output, ...next.input]);
-  for (const id of Object.keys(names)) {
-    if (!kept.has(id)) delete names[id];
-  }
-
-  return sameFavorites(favorites, next) ? favorites : next;
+  const pruned = pruneNames(next);
+  return sameFavorites(favorites, pruned) ? favorites : pruned;
 }

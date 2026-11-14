@@ -56,9 +56,17 @@ sozinho. No flyout continua oculto, porque lá só entram favoritos ativos.
 
 - **Instância única** (`tauri-plugin-single-instance`). Cada processo mantém o
   arquivo inteiro em cache e o regrava a cada alteração; duas instâncias se
-  sobrescreviam. A segunda só traz a janela da primeira para a frente.
+  sobrescreviam. A segunda só traz a janela da primeira para a frente, e nem
+  isso quando é um `--autostart` repetido. Só nos builds de release: o
+  `tauri dev` e o app instalado dividem o identifier e um tomaria o foco do
+  outro.
 - **Nada é gravado antes de os favoritos serem lidos.** Um clique na estrela
-  nesse intervalo partia do estado vazio e apagava a outra direção.
+  nesse intervalo partia do estado vazio e apagava a outra direção. Se a
+  primeira leitura falhou, a edição lê de novo em vez de ser descartada.
+- **`missing` só vale para "o Windows não conhece esse ID"**
+  (`ERROR_NOT_FOUND` ou `E_INVALIDARG`). Qualquer outra falha de COM vira
+  `unplugged`, porque numa renegociação Bluetooth um aparelho que existe pode
+  falhar a busca, e chamá-lo de perdido faria o favorito ser trocado por outro.
 - **Uma leitura em voo não desfaz uma gravação**: cada escrita incrementa um
   contador de geração e a leitura mais velha é descartada.
 

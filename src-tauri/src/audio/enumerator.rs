@@ -7,10 +7,11 @@
 use std::ffi::c_void;
 
 use serde::Serialize;
-use windows::core::{HSTRING, PROPVARIANT, PWSTR};
+use windows::core::{HRESULT, HSTRING, PROPVARIANT, PWSTR};
 use windows::Win32::Devices::FunctionDiscovery::{
     PKEY_Device_EnumeratorName, PKEY_Device_FriendlyName,
 };
+use windows::Win32::Foundation::{ERROR_NOT_FOUND, E_INVALIDARG};
 use windows::Win32::Media::Audio::{
     eCapture, eConsole, eRender, EDataFlow, IMMDevice, IMMDeviceEnumerator, MMDeviceEnumerator,
     DEVICE_STATE, DEVICE_STATE_ACTIVE, DEVICE_STATE_DISABLED, DEVICE_STATE_NOTPRESENT,
@@ -128,12 +129,15 @@ pub fn resolve_endpoints(ids: &[String]) -> windows::core::Result<Vec<ResolvedEn
 }
 
 unsafe fn resolve(enumerator: &IMMDeviceEnumerator, id: &str) -> ResolvedEndpoint {
-    let Ok(device) = enumerator.GetDevice(&HSTRING::from(id)) else {
-        return ResolvedEndpoint {
-            id: id.to_string(),
-            name: None,
-            state: "missing",
-        };
+    let device = match enumerator.GetDevice(&HSTRING::from(id)) {
+        Ok(device) => device,
+        Err(e) => {
+            return ResolvedEndpoint {
+                id: id.to_string(),
+                name: None,
+                state: lookup_failure_state(e.code()),
+            }
+        }
     };
     ResolvedEndpoint {
         id: id.to_string(),
@@ -145,6 +149,18 @@ unsafe fn resolve(enumerator: &IMMDeviceEnumerator, id: &str) -> ResolvedEndpoin
             .GetState()
             .map(resolved_state_name)
             .unwrap_or("unplugged"),
+    }
+}
+
+/// Only "Windows has never heard of this id" is `missing`. Any other failure is
+/// treated like an unreadable `GetState`: during topology churn a device that
+/// still exists can fail a lookup, and calling it missing would let the
+/// frontend re-point its favorite at something else.
+fn lookup_failure_state(code: HRESULT) -> &'static str {
+    if code == ERROR_NOT_FOUND.to_hresult() || code == E_INVALIDARG {
+        "missing"
+    } else {
+        "unplugged"
     }
 }
 
@@ -251,7 +267,8 @@ pub(crate) unsafe fn propvariant_to_string(prop: &PROPVARIANT) -> Option<String>
 
 #[cfg(test)]
 mod tests {
-    use super::{resolved_state_name, state_name};
+    use super::{lookup_failure_state, resolved_state_name, state_name};
+    use windows::Win32::Foundation::{ERROR_NOT_FOUND, E_FAIL, E_INVALIDARG};
     use windows::Win32::Media::Audio::{
         DEVICE_STATE, DEVICE_STATE_ACTIVE, DEVICE_STATE_DISABLED, DEVICE_STATE_NOTPRESENT,
         DEVICE_STATE_UNPLUGGED,
@@ -293,6 +310,19 @@ mod tests {
             assert_eq!(endpoint.state, device.state);
         }
         assert_eq!(resolved.last().unwrap().state, "missing");
+    }
+
+    #[test]
+    fn only_a_not_found_lookup_means_missing() {
+        // Measured: a well-formed id Windows has forgotten gives ERROR_NOT_FOUND,
+        // a malformed one E_INVALIDARG.
+        assert_eq!(
+            lookup_failure_state(ERROR_NOT_FOUND.to_hresult()),
+            "missing"
+        );
+        assert_eq!(lookup_failure_state(E_INVALIDARG), "missing");
+        // Anything else is a transient COM failure: the device may well exist.
+        assert_eq!(lookup_failure_state(E_FAIL), "unplugged");
     }
 
     /// Live check that Bluetooth endpoints get flagged and correlated with
