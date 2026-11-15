@@ -11,6 +11,7 @@ interface OpenMenu {
   opened: number;
   items: TrayMenuEntry[];
 }
+
 /**
  * The flyout window serves two faces: the device quick-switch list and the
  * tray's right-click menu. The backend says which one on every open.

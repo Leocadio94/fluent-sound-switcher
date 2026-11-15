@@ -162,7 +162,7 @@ pub fn toggle(app: &AppHandle) {
         // drawn when the window appears; after, because a webview that was
         // suspended may only take it once it is visible.
         let _ = window.emit("flyout-view", &View::Devices { flush });
-        present(app, &window, height);
+        present(app, &window, height, flush);
         let _ = window.emit("flyout-view", &View::Devices { flush });
         // The webview is suspended while hidden and may have missed live
         // events, so re-push the current device + mute state on open.
@@ -193,7 +193,7 @@ pub fn show_menu(app: &AppHandle, cursor: (f64, f64)) {
             flush,
         },
     );
-    present(app, &window, estimated_menu_height(&items, flush));
+    present(app, &window, estimated_menu_height(&items, flush), flush);
     let _ = window.emit(
         "flyout-view",
         &View::Menu {
@@ -209,8 +209,11 @@ pub fn show_menu(app: &AppHandle, cursor: (f64, f64)) {
 /// The backdrop reads light or dark from the window's theme, so the app's
 /// preference is pinned on it while Acrylic is on and handed back to the system
 /// when it goes off.
-fn style_window(app: &AppHandle, window: &WebviewWindow) {
-    let acrylic = acrylic_active();
+///
+/// `acrylic` is decided once per open by the caller, the same value the page was
+/// told: a setting flipped meanwhile must not leave the card and the window
+/// disagreeing about who draws the chrome.
+fn style_window(app: &AppHandle, window: &WebviewWindow, acrylic: bool) {
     if acrylic {
         let preference = crate::config::theme_preference(app);
         if let Ok(mut pinned) = PINNED_THEME.lock() {
@@ -220,8 +223,10 @@ fn style_window(app: &AppHandle, window: &WebviewWindow) {
                     "dark" => Some(Theme::Dark),
                     _ => None,
                 };
-                let _ = window.set_theme(theme);
-                *pinned = preference;
+                // Remembered only once it took, so a failure is retried.
+                if window.set_theme(theme).is_ok() {
+                    *pinned = preference;
+                }
             }
         }
     }
@@ -243,10 +248,10 @@ fn style_window(app: &AppHandle, window: &WebviewWindow) {
 }
 
 /// Sizes, positions and reveals the window, then takes focus.
-fn present(app: &AppHandle, window: &WebviewWindow, height: f64) {
+fn present(app: &AppHandle, window: &WebviewWindow, height: f64, acrylic: bool) {
     GENERATION.fetch_add(1, Ordering::SeqCst);
     DISMISSING.store(false, Ordering::SeqCst);
-    style_window(app, window);
+    style_window(app, window, acrylic);
     place(app, window, height);
     let _ = window.show();
     let _ = window.set_focus();

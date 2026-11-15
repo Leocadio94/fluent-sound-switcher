@@ -45,6 +45,8 @@ interface WindowProps {
 interface MainChrome {
   material: WindowMaterial;
   applied: WindowMaterial;
+  /** What the backend finally applied, when the first render stopped waiting. */
+  settled?: Promise<WindowMaterial>;
 }
 
 const SOLID_CHROME: MainChrome = { material: "solid", applied: "solid" };
@@ -90,6 +92,14 @@ function Root({
         if (request === materialRequest.current) setAppliedMaterial("solid");
       });
   }, []);
+
+  // A backdrop that arrived after the first render gave up waiting for it. A
+  // choice made since then already holds the newer answer, so it is left alone.
+  useEffect(() => {
+    void chrome.settled?.then((late) => {
+      if (materialRequest.current === 0) setAppliedMaterial(late);
+    });
+  }, [chrome]);
 
   const changeAccent = useCallback((value: boolean) => {
     setUseSystemAccent(value);
@@ -214,10 +224,14 @@ async function bootstrap() {
 
   // Before the first render, so the hidden main window already has its
   // backdrop when it is revealed. The auxiliary windows have none.
-  const chrome: MainChrome =
-    label === "main"
-      ? { material, applied: await applyMainWindowChrome(props.themePref, material) }
-      : SOLID_CHROME;
+  let chrome = SOLID_CHROME;
+  if (label === "main") {
+    const { applied, settled } = await applyMainWindowChrome(
+      props.themePref,
+      material,
+    );
+    chrome = { material, applied, settled };
+  }
 
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>{content(props, chrome)}</React.StrictMode>,

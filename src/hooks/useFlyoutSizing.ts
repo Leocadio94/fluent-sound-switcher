@@ -1,4 +1,5 @@
 import { useLayoutEffect, type RefObject } from "react";
+import { listen } from "@tauri-apps/api/event";
 
 import { setFlyoutSize } from "../lib/tauri";
 
@@ -18,6 +19,12 @@ const MAX_ATTEMPTS = 3;
  * frame offsets, so the size that was asked for is not always the size obtained.
  * After every size request the viewport is measured, and any shortfall is asked
  * for on top, up to `MAX_EXTRA`.
+ *
+ * The shortfall belongs to one open on one monitor: the window can land on
+ * another screen at another DPI, and it lives suspended in between, so it is
+ * measured again on every open (`flyout-view`).
+ *
+ * @see docs/janela-material.md
  */
 export function useFlyoutSizing(
   ref: RefObject<HTMLElement | null>,
@@ -34,7 +41,10 @@ export function useFlyoutSizing(
     const wanted = () => el.offsetHeight + allowance;
 
     const verify = (attempt: number) => {
-      const missing = Math.ceil(wanted() - document.documentElement.clientHeight);
+      // A suspended or hidden webview reports a stale or empty viewport.
+      const viewport = document.documentElement.clientHeight;
+      if (document.visibilityState !== "visible" || viewport === 0) return;
+      const missing = Math.ceil(wanted() - viewport);
       if (missing <= 0 || extra >= MAX_EXTRA || attempt >= MAX_ATTEMPTS) return;
       extra = Math.min(MAX_EXTRA, extra + missing);
       void setFlyoutSize(wanted() + extra, menu);
@@ -50,9 +60,16 @@ export function useFlyoutSizing(
     report();
     const observer = new ResizeObserver(report);
     observer.observe(el);
+
+    const reopened = listen("flyout-view", () => {
+      extra = 0;
+      report();
+    });
+
     return () => {
       observer.disconnect();
       window.clearTimeout(timer);
+      void reopened.then((unlisten) => unlisten());
     };
   }, [ref, flush, menu]);
 }

@@ -150,8 +150,13 @@ export default function Flyout({ flush }: { flush: boolean }) {
         return;
       }
       if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
-      // A slider uses the arrows for itself; Tab is the way out of it.
-      if ((event.target as HTMLElement | null)?.getAttribute("role") === "slider") {
+      // A slider uses the arrows for itself; Tab is the way out of it. Fluent's
+      // renders a native range input, which carries no `role` attribute.
+      const target = event.target;
+      if (
+        (target instanceof HTMLInputElement && target.type === "range") ||
+        (target instanceof HTMLElement && target.getAttribute("role") === "slider")
+      ) {
         return;
       }
       const items = Array.from(
