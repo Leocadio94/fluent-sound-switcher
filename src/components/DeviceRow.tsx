@@ -48,17 +48,30 @@ const useStyles = makeStyles({
     border: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
     backgroundColor: tokens.colorNeutralBackground1,
   },
-  frameFullActive: {
-    border: `${tokens.strokeWidthThin} solid ${tokens.colorBrandStroke1}`,
-    backgroundColor: tokens.colorBrandBackground2,
-  },
-  frameCompactActive: {
+  // The current device is a subtle brand fill plus a small pill on the left,
+  // the way Windows 11 marks the selected entry; the brand outline it used to
+  // have is gone.
+  frameActive: {
     backgroundColor: tokens.colorBrandBackground2,
   },
   header: {
+    position: "relative",
     display: "flex",
     alignItems: "center",
     gap: tokens.spacingHorizontalS,
+  },
+  headerActive: {
+    "::before": {
+      content: '""',
+      position: "absolute",
+      left: "2px",
+      top: "50%",
+      transform: "translateY(-50%)",
+      width: "3px",
+      height: "16px",
+      borderRadius: tokens.borderRadiusCircular,
+      backgroundColor: tokens.colorCompoundBrandBackground,
+    },
   },
   headerFull: {
     paddingRight: tokens.spacingHorizontalS,
@@ -93,7 +106,8 @@ const useStyles = makeStyles({
     boxSizing: "border-box",
     padding: `${tokens.spacingVerticalSNudge} ${tokens.spacingHorizontalS}`,
     borderRadius: tokens.borderRadiusMedium,
-    ":hover": { backgroundColor: tokens.colorNeutralBackground1Hover },
+    // Translucent, so it reads the same over the solid card and over Acrylic.
+    ":hover": { backgroundColor: tokens.colorSubtleBackgroundHover },
   },
   icon: {
     color: tokens.colorNeutralForeground3,
@@ -294,14 +308,21 @@ export default function DeviceRow({
       className={mergeClasses(
         styles.frame,
         full && styles.frameFull,
-        device.isDefault &&
-          (full ? styles.frameFullActive : styles.frameCompactActive),
+        device.isDefault && styles.frameActive,
         !available && styles.unavailable,
       )}
     >
-      <div className={mergeClasses(styles.header, full && styles.headerFull)}>
+      <div
+        className={mergeClasses(
+          styles.header,
+          full && styles.headerFull,
+          device.isDefault && styles.headerActive,
+        )}
+      >
         <button
           type="button"
+          // The flyout moves between these with the arrow keys.
+          data-nav=""
           disabled={busy || !available}
           // Communicates "this is the current default" to assistive tech, which
           // previously only had the colour and the badge to go on.
@@ -343,8 +364,8 @@ export default function DeviceRow({
             {busy ? (
               <Spinner size="tiny" />
             ) : (
-              // A discreet check rather than a labelled badge: the brand border
-              // and background already say "active", but colour alone does not
+              // A discreet check rather than a labelled badge: the brand fill
+              // and the pill already say "active", but colour alone does not
               // carry for everyone.
               <CheckmarkCircleFilled
                 className={styles.check}

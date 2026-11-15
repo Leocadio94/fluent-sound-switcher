@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   MenuDivider,
   MenuItem,
@@ -17,12 +17,10 @@ import {
 } from "@fluentui/react-icons";
 import type { ComponentType } from "react";
 
-import {
-  closeFlyout,
-  setFlyoutSize,
-  trayMenuAction,
-  type TrayMenuEntry,
-} from "../lib/tauri";
+import KeyChip from "../components/KeyChip";
+import { useFlyoutSizing } from "../hooks/useFlyoutSizing";
+import { useHotkeyHints } from "../hooks/useHotkeyHints";
+import { closeFlyout, trayMenuAction, type TrayMenuEntry } from "../lib/tauri";
 import { acrylicTint } from "../theme/acrylicTint";
 
 const useStyles = makeStyles({
@@ -41,6 +39,14 @@ const useStyles = makeStyles({
     boxShadow: "none",
     border: "none",
     borderRadius: 0,
+  },
+  // Over Acrylic the entries carry no fill of their own, like the device list;
+  // only the hover and keyboard focus draw one.
+  itemFlush: {
+    backgroundColor: "transparent",
+    ":hover": { backgroundColor: tokens.colorSubtleBackgroundHover },
+    ":focus": { backgroundColor: tokens.colorSubtleBackgroundHover },
+    ":active": { backgroundColor: tokens.colorSubtleBackgroundPressed },
   },
 });
 
@@ -63,17 +69,9 @@ export default function TrayMenu({
 }) {
   const styles = useStyles();
   const cardRef = useRef<HTMLDivElement>(null);
+  const hotkeys = useHotkeyHints();
 
-  useLayoutEffect(() => {
-    const el = cardRef.current;
-    if (!el) return;
-    const report = () =>
-      void setFlyoutSize(el.offsetHeight + (flush ? 0 : 16), true);
-    report();
-    const observer = new ResizeObserver(report);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [flush]);
+  useFlyoutSizing(cardRef, flush, true);
 
   // Arrow keys only move between entries once one has focus, and opening with
   // the mouse leaves none focused (focusing one would draw a ring on a click).
@@ -106,10 +104,13 @@ export default function TrayMenu({
         {items.map((entry, index) => {
           if (entry.kind === "separator") return <MenuDivider key={index} />;
           const Icon = ICONS[entry.id];
+          const hotkey = entry.id === "toggle_mute" ? hotkeys.toggleMute : "";
           return (
             <MenuItem
               key={entry.id}
+              className={flush ? styles.itemFlush : undefined}
               icon={Icon ? <Icon /> : undefined}
+              secondaryContent={hotkey ? <KeyChip>{hotkey}</KeyChip> : undefined}
               onClick={() => void trayMenuAction(entry.id)}
             >
               {entry.label}

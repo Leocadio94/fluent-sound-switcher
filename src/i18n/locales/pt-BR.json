@@ -43,7 +43,10 @@
   "flyout": {
     "empty": "Marque dispositivos favoritos (★) na janela principal para trocar rápido por aqui.",
     "mute": "Mutar microfone",
-    "unmute": "Desmutar microfone"
+    "unmute": "Desmutar microfone",
+    "navigate": "Navegar",
+    "select": "Selecionar",
+    "close": "Fechar"
   },
   "hotkeys": {
     "cycleOutput": "Ciclar saída",
@@ -160,7 +163,7 @@
       "solid": "Sólido"
     },
     "floatingAcrylic": "Acrílico nos menus flutuantes",
-    "floatingAcrylicHint": "Experimental. Vale para a troca rápida da bandeja e para o menu de clique direito, e aparece na próxima vez que abrirem. Exige o Windows 11 22H2 ou mais novo. O volume na tela e os avisos continuam sólidos."
+    "floatingAcrylicHint": "Vale para a troca rápida da bandeja e para o menu de clique direito, e aparece na próxima vez que abrirem. Exige o Windows 11 22H2 ou mais novo. O volume na tela e os avisos continuam sólidos."
   },
   "general": {
     "logs": "Diagnóstico",

@@ -43,7 +43,10 @@
   "flyout": {
     "empty": "Mark favorite devices (★) in the main window to quick-switch from here.",
     "mute": "Mute microphone",
-    "unmute": "Unmute microphone"
+    "unmute": "Unmute microphone",
+    "navigate": "Navigate",
+    "select": "Select",
+    "close": "Close"
   },
   "hotkeys": {
     "cycleOutput": "Cycle output",
@@ -160,7 +163,7 @@
       "solid": "Solid"
     },
     "floatingAcrylic": "Acrylic on the floating menus",
-    "floatingAcrylicHint": "Experimental. Applies to the tray quick-switch and the right-click menu, the next time they open. Needs Windows 11 22H2 or newer. The volume OSD and the banners stay solid."
+    "floatingAcrylicHint": "Applies to the tray quick-switch and the right-click menu, the next time they open. Needs Windows 11 22H2 or newer. The volume OSD and the banners stay solid."
   },
   "general": {
     "logs": "Diagnostics",
