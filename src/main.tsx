@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { FluentProvider } from "@fluentui/react-components";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -10,16 +10,21 @@ import Banner from "./views/Banner";
 import { useSystemTheme, type ThemePreference } from "./theme/useSystemTheme";
 import { useAccentTheme } from "./theme/useAccentTheme";
 import {
+  DEFAULT_WINDOW_MATERIAL,
   loadLanguage,
   loadTheme,
   loadTitleBarStyle,
   loadUseSystemAccent,
+  loadWindowMaterial,
   saveTheme,
   saveTitleBarStyle,
   saveUseSystemAccent,
+  saveWindowMaterial,
   type TitleBarStyle,
+  type WindowMaterial,
 } from "./lib/config";
-import { setTitleBarStyle } from "./lib/tauri";
+import { setTitleBarStyle, setWindowMaterial } from "./lib/tauri";
+import { applyMainWindowChrome, syncWindowTheme } from "./theme/windowChrome";
 import i18n from "./i18n";
 import "./styles.css";
 
@@ -36,14 +41,27 @@ interface WindowProps {
   titleBar: TitleBarStyle;
 }
 
+/** The main window's backdrop: the stored choice and what Windows really drew. */
+interface MainChrome {
+  material: WindowMaterial;
+  applied: WindowMaterial;
+  /** What the backend finally applied, when the first render stopped waiting. */
+  settled?: Promise<WindowMaterial>;
+}
+
+const SOLID_CHROME: MainChrome = { material: "solid", applied: "solid" };
+
 function Root({
   themePref: initialTheme,
   accent: initialAccent,
   titleBar: initialTitleBar,
-}: WindowProps) {
+  chrome,
+}: WindowProps & { chrome: MainChrome }) {
   const [themePref, setThemePref] = useState<ThemePreference>(initialTheme);
   const [useSystemAccent, setUseSystemAccent] = useState(initialAccent);
   const [titleBarStyle, setTitleBar] = useState<TitleBarStyle>(initialTitleBar);
+  const [material, setMaterial] = useState(chrome.material);
+  const [appliedMaterial, setAppliedMaterial] = useState(chrome.applied);
   const themes = useAccentTheme(useSystemAccent);
   const { theme, isDark } = useSystemTheme(themePref, themes);
   useColorScheme(isDark);
@@ -53,7 +71,35 @@ function Root({
   const changeTheme = useCallback((pref: ThemePreference) => {
     setThemePref(pref);
     void saveTheme(pref);
+    void syncWindowTheme(pref);
   }, []);
+
+  // `appliedMaterial`, not `material`, decides whether the page paints: the
+  // window is transparent, so a backdrop the OS refused must not be assumed.
+  // Replies can arrive out of order when the choice flips quickly; only the
+  // latest request may set the applied material.
+  const materialRequest = useRef(0);
+  const changeMaterial = useCallback((value: WindowMaterial) => {
+    const request = ++materialRequest.current;
+    setMaterial(value);
+    void saveWindowMaterial(value);
+    void setWindowMaterial(value)
+      .then((applied) => {
+        if (request === materialRequest.current) setAppliedMaterial(applied);
+      })
+      .catch((e) => {
+        console.error("could not change the window material", e);
+        if (request === materialRequest.current) setAppliedMaterial("solid");
+      });
+  }, []);
+
+  // A backdrop that arrived after the first render gave up waiting for it. A
+  // choice made since then already holds the newer answer, so it is left alone.
+  useEffect(() => {
+    void chrome.settled?.then((late) => {
+      if (materialRequest.current === 0) setAppliedMaterial(late);
+    });
+  }, [chrome]);
 
   const changeAccent = useCallback((value: boolean) => {
     setUseSystemAccent(value);
@@ -71,7 +117,13 @@ function Root({
   }, []);
 
   return (
-    <FluentProvider theme={theme} style={{ height: "100vh" }}>
+    <FluentProvider
+      theme={theme}
+      style={{
+        height: "100vh",
+        background: appliedMaterial === "solid" ? undefined : "transparent",
+      }}
+    >
       <App
         themePref={themePref}
         onThemePrefChange={changeTheme}
@@ -79,6 +131,10 @@ function Root({
         onUseSystemAccentChange={changeAccent}
         titleBarStyle={titleBarStyle}
         onTitleBarStyleChange={changeTitleBar}
+        windowMaterial={material}
+        onWindowMaterialChange={changeMaterial}
+        translucent={appliedMaterial !== "solid"}
+        acrylic={appliedMaterial === "acrylic"}
       />
     </FluentProvider>
   );
@@ -109,7 +165,7 @@ const label = getCurrentWindow().label;
 // so the global bundle doesn't shrink the main window.
 document.documentElement.dataset.window = label;
 
-function content(props: WindowProps) {
+function content(props: WindowProps, chrome: MainChrome) {
   switch (label) {
     case "overlay":
       return (
@@ -130,7 +186,7 @@ function content(props: WindowProps) {
         </AuxWindow>
       );
     default:
-      return <Root {...props} />;
+      return <Root {...props} chrome={chrome} />;
   }
 }
 
@@ -145,11 +201,12 @@ function content(props: WindowProps) {
  * its first frame anyway.
  */
 async function bootstrap() {
-  const [language, theme, accent, titleBar] = await Promise.all([
+  const [language, theme, accent, titleBar, material] = await Promise.all([
     loadLanguage().catch(() => null),
     loadTheme().catch(() => null),
     loadUseSystemAccent().catch(() => true),
     loadTitleBarStyle().catch(() => "custom" as TitleBarStyle),
+    loadWindowMaterial().catch(() => DEFAULT_WINDOW_MATERIAL),
   ]);
 
   if (language && language !== i18n.language) {
@@ -165,8 +222,19 @@ async function bootstrap() {
     titleBar,
   };
 
+  // Before the first render, so the hidden main window already has its
+  // backdrop when it is revealed. The auxiliary windows have none.
+  let chrome = SOLID_CHROME;
+  if (label === "main") {
+    const { applied, settled } = await applyMainWindowChrome(
+      props.themePref,
+      material,
+    );
+    chrome = { material, applied, settled };
+  }
+
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-    <React.StrictMode>{content(props)}</React.StrictMode>,
+    <React.StrictMode>{content(props, chrome)}</React.StrictMode>,
   );
 }
 

@@ -32,6 +32,7 @@ import type {
   NotificationConfig,
   TitleBarStyle,
   VolumeOsd,
+  WindowMaterial,
 } from "../lib/config";
 
 const useStyles = makeStyles({
@@ -71,6 +72,8 @@ interface SettingsDialogProps {
   onUseSystemAccentChange: (value: boolean) => void;
   titleBarStyle: TitleBarStyle;
   onTitleBarStyleChange: (value: TitleBarStyle) => void;
+  windowMaterial: WindowMaterial;
+  onWindowMaterialChange: (value: WindowMaterial) => void;
   hotkeys: Hotkeys;
   onHotkeyChange: (action: keyof Hotkeys, accelerator: string) => void;
   hotkeyFailures: HotkeyFailure[];
@@ -138,6 +141,8 @@ export default function SettingsDialog(props: SettingsDialogProps) {
                 onUseSystemAccentChange={props.onUseSystemAccentChange}
                 titleBarStyle={props.titleBarStyle}
                 onTitleBarStyleChange={props.onTitleBarStyleChange}
+                windowMaterial={props.windowMaterial}
+                onWindowMaterialChange={props.onWindowMaterialChange}
                 autoSwitch={props.autoSwitch}
                 onAutoSwitchChange={props.onAutoSwitchChange}
               />

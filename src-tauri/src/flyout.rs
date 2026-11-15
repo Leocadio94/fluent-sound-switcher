@@ -10,7 +10,8 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Mutex;
 
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewWindow};
+use tauri::window::{Effect, EffectsBuilder};
+use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, Theme, WebviewWindow};
 
 use crate::auxwin;
 use crate::tray::MenuEntry;
@@ -18,7 +19,9 @@ use crate::tray::MenuEntry;
 pub const FLYOUT_LABEL: &str = "flyout";
 
 const WIDTH: f64 = 300.0;
-const MENU_WIDTH: f64 = 260.0;
+/// Wide enough for "Mutar/desmutar microfone" beside the shortcut chip on one
+/// line; at 260 it wrapped.
+const MENU_WIDTH: f64 = 320.0;
 const MARGIN: f64 = 12.0;
 const DEFAULT_HEIGHT: f64 = 220.0;
 const MIN_HEIGHT: f64 = 64.0;
@@ -46,11 +49,36 @@ static CORNER_HEIGHT: Mutex<f64> = Mutex::new(DEFAULT_HEIGHT);
 
 /// What the frontend should draw. Sent on every open: the webview is suspended
 /// while hidden and cannot tell which face it was left showing.
+///
+/// `flush` means the window is the card: with Acrylic the system paints the
+/// backdrop, the corners and the shadow, so the page drops its own margin,
+/// shadow and fill.
 #[derive(Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 enum View<'a> {
-    Devices,
-    Menu { items: &'a [MenuEntry] },
+    Devices { flush: bool },
+    Menu { items: &'a [MenuEntry], flush: bool },
+}
+
+/// The user asked for Acrylic on the floating menus (`floatingAcrylic`).
+static ACRYLIC_REQUESTED: AtomicBool = AtomicBool::new(false);
+
+/// What the window is styled as right now, so an open only touches DWM when the
+/// answer changed.
+static ACRYLIC_APPLIED: AtomicBool = AtomicBool::new(false);
+
+/// The theme pinned on the window while Acrylic is on ("system" when none).
+static PINNED_THEME: Mutex<String> = Mutex::new(String::new());
+
+/// Turns Acrylic on or off; the window restyles itself on its next open.
+pub fn set_acrylic(enabled: bool) {
+    ACRYLIC_REQUESTED.store(enabled, Ordering::SeqCst);
+}
+
+/// Requested, and this Windows can draw it. Below build 22621 the flyout stays
+/// the solid card it has always been.
+fn acrylic_active() -> bool {
+    ACRYLIC_REQUESTED.load(Ordering::SeqCst) && crate::material::supports_acrylic()
 }
 
 /// Bumped by every show and every dismissal, so a dismissal still waiting out
@@ -66,6 +94,14 @@ static DISMISSING: AtomicBool = AtomicBool::new(false);
 /// Hides the window after its exit animation.
 fn dismiss(window: &WebviewWindow) {
     if !window.is_visible().unwrap_or(false) || DISMISSING.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    // The system backdrop cannot fade with the content, so an exit animation
+    // would leave an empty pane of glass behind: close at once instead.
+    if ACRYLIC_APPLIED.load(Ordering::SeqCst) {
+        GENERATION.fetch_add(1, Ordering::SeqCst);
+        let _ = window.hide();
+        DISMISSING.store(false, Ordering::SeqCst);
         return;
     }
     let mine = GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
@@ -97,6 +133,7 @@ fn width_for(anchor: Anchor) -> f64 {
 /// One-time setup: keep it above everything, out of the taskbar/alt-tab, and
 /// dismiss it when it loses focus.
 pub fn configure(app: &AppHandle) {
+    set_acrylic(crate::config::floating_acrylic(app));
     if let Some(window) = app.get_webview_window(FLYOUT_LABEL) {
         auxwin::reassert_topmost(&window);
         let _ = window.set_skip_taskbar(true);
@@ -122,12 +159,13 @@ pub fn toggle(app: &AppHandle) {
     } else {
         set_anchor(Anchor::Corner);
         let height = CORNER_HEIGHT.lock().map_or(DEFAULT_HEIGHT, |h| *h);
+        let flush = acrylic_active();
         // Sent on both sides of the show: before, so the right face is already
         // drawn when the window appears; after, because a webview that was
         // suspended may only take it once it is visible.
-        let _ = window.emit("flyout-view", &View::Devices);
-        present(app, &window, height);
-        let _ = window.emit("flyout-view", &View::Devices);
+        let _ = window.emit("flyout-view", &View::Devices { flush });
+        present(app, &window, height, flush);
+        let _ = window.emit("flyout-view", &View::Devices { flush });
         // The webview is suspended while hidden and may have missed live
         // events, so re-push the current device + mute state on open.
         let _ = window.emit("device-changed", ());
@@ -148,16 +186,74 @@ pub fn show_menu(app: &AppHandle, cursor: (f64, f64)) {
     };
     let items = crate::tray::menu_entries(app);
     set_anchor(Anchor::Cursor(cursor.0, cursor.1));
+    let flush = acrylic_active();
     // Both sides of the show, as in `toggle`.
-    let _ = window.emit("flyout-view", &View::Menu { items: &items });
-    present(app, &window, estimated_menu_height(&items));
-    let _ = window.emit("flyout-view", &View::Menu { items: &items });
+    let _ = window.emit(
+        "flyout-view",
+        &View::Menu {
+            items: &items,
+            flush,
+        },
+    );
+    present(app, &window, estimated_menu_height(&items, flush), flush);
+    let _ = window.emit(
+        "flyout-view",
+        &View::Menu {
+            items: &items,
+            flush,
+        },
+    );
+}
+
+/// Gives the window the look this open asks for: Acrylic with the system's own
+/// corners and shadow, or the plain transparent window around a CSS card.
+///
+/// The backdrop reads light or dark from the window's theme, so the app's
+/// preference is pinned on it while Acrylic is on and handed back to the system
+/// when it goes off.
+///
+/// `acrylic` is decided once per open by the caller, the same value the page was
+/// told: a setting flipped meanwhile must not leave the card and the window
+/// disagreeing about who draws the chrome.
+fn style_window(app: &AppHandle, window: &WebviewWindow, acrylic: bool) {
+    if acrylic {
+        let preference = crate::config::theme_preference(app);
+        if let Ok(mut pinned) = PINNED_THEME.lock() {
+            if *pinned != preference {
+                let theme = match preference.as_str() {
+                    "light" => Some(Theme::Light),
+                    "dark" => Some(Theme::Dark),
+                    _ => None,
+                };
+                // Remembered only once it took, so a failure is retried.
+                if window.set_theme(theme).is_ok() {
+                    *pinned = preference;
+                }
+            }
+        }
+    }
+    if acrylic == ACRYLIC_APPLIED.swap(acrylic, Ordering::SeqCst) {
+        return;
+    }
+    if acrylic {
+        let _ = window.set_shadow(true);
+        let _ = window.set_effects(EffectsBuilder::new().effect(Effect::Acrylic).build());
+        auxwin::round_corners(window);
+    } else {
+        let _ = window.set_effects(None);
+        let _ = window.set_shadow(false);
+        let _ = window.set_theme(None);
+        if let Ok(mut pinned) = PINNED_THEME.lock() {
+            pinned.clear();
+        }
+    }
 }
 
 /// Sizes, positions and reveals the window, then takes focus.
-fn present(app: &AppHandle, window: &WebviewWindow, height: f64) {
+fn present(app: &AppHandle, window: &WebviewWindow, height: f64, acrylic: bool) {
     GENERATION.fetch_add(1, Ordering::SeqCst);
     DISMISSING.store(false, Ordering::SeqCst);
+    style_window(app, window, acrylic);
     place(app, window, height);
     let _ = window.show();
     let _ = window.set_focus();
@@ -209,12 +305,18 @@ pub fn set_size(app: &AppHandle, height: f64, for_menu: bool) {
     place(app, &window, height);
 }
 
-fn estimated_menu_height(items: &[MenuEntry]) -> f64 {
+fn estimated_menu_height(items: &[MenuEntry], flush: bool) -> f64 {
     let separators = items
         .iter()
         .filter(|e| matches!(e, MenuEntry::Separator))
         .count() as f64;
-    (items.len() as f64 - separators) * MENU_ROW + separators * MENU_SEPARATOR + MENU_CHROME
+    // The 16 px the card keeps around itself for its shadow are gone when flush.
+    let chrome = if flush {
+        MENU_CHROME - 16.0
+    } else {
+        MENU_CHROME
+    };
+    (items.len() as f64 - separators) * MENU_ROW + separators * MENU_SEPARATOR + chrome
 }
 
 /// Sizes and positions the window on the monitor it is about to land on.

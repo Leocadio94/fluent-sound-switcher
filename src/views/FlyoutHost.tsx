@@ -18,19 +18,25 @@ interface OpenMenu {
  */
 export default function FlyoutHost() {
   const [menu, setMenu] = useState<OpenMenu | null>(null);
+  const [flush, setFlush] = useState(false);
 
-  useTauriEvent<FlyoutView>("flyout-view", ({ id, payload }) =>
+  useTauriEvent<FlyoutView>("flyout-view", ({ id, payload }) => {
+    setFlush(payload.flush);
     setMenu(
       payload.kind === "menu" ? { opened: id, items: payload.items } : null,
-    ),
-  );
+    );
+  });
 
   const leaving = useLeaving("flyout-leave", "flyout-view");
-  const motion = useWindowMotion("rise", leaving);
+  const motion = useWindowMotion(flush ? "none" : "rise", leaving);
 
   return (
     <div className={motion}>
-      {menu ? <TrayMenu key={menu.opened} items={menu.items} /> : <Flyout />}
+      {menu ? (
+        <TrayMenu key={menu.opened} items={menu.items} flush={flush} />
+      ) : (
+        <Flyout flush={flush} />
+      )}
     </div>
   );
 }

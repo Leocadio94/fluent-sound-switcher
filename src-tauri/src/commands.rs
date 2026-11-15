@@ -324,6 +324,21 @@ pub fn set_title_bar_style(app: tauri::AppHandle, style: String) -> Result<(), S
         .map_err(|e| e.to_string())
 }
 
+/// Applies a backdrop material to the main window and returns the one actually
+/// in effect, which is solid when the OS cannot draw the requested one. Passed
+/// directly rather than re-read, to avoid racing the store's async write.
+#[tauri::command]
+pub fn set_window_material(app: tauri::AppHandle, material: String) -> Result<String, String> {
+    crate::material::apply(&app, &material).map(|m| m.as_str().to_string())
+}
+
+/// Turns Acrylic on or off for the flyout and the tray menu; takes effect the
+/// next time one opens. Passed directly to avoid racing the store's async write.
+#[tauri::command]
+pub fn set_floating_acrylic(enabled: bool) {
+    crate::flyout::set_acrylic(enabled);
+}
+
 /// Opens the folder holding the rotating log file, so a user can attach it to a
 /// bug report. Nothing in the GUI build reaches stdout, so this is the only way
 /// to see what the backend did.

@@ -120,6 +120,8 @@ cargo test --manifest-path src-tauri/Cargo.toml
     updater messages), keyed off the frontend's `language`.
   - `accent.rs` — the Windows accent colour and the six shades Windows derives
     around it (`UISettings`, WinRT), plus a watcher for the user changing it.
+  - `material.rs` — the main window's Mica backdrop (`set_window_material`);
+    `resolve` steps a request down to what the Windows build can draw.
   - `tray.rs` (two tray icons: mic + output device, each with a configurable
     left-click action read live from the config), `device_icon.rs` (extract
     the Windows endpoint icon → RGBA), `mute.rs` (central mute state),
@@ -290,6 +292,27 @@ cargo test --manifest-path src-tauri/Cargo.toml
 - The `main` window is declared `decorations: false` and the app draws its own
   caption (`components/TitleBar.tsx`); `titleBarStyle` in the config switches
   back to the system one live via `set_decorations`.
+- **The `main` window is `transparent` so Mica can show through.** Never hand
+  it a backdrop without going through `material::resolve`: on a build that
+  cannot draw it (Windows 10) a transparent window turns invisible, not flat.
+  The page paints transparent only when `set_window_material` *reports* a
+  material (`translucent` in `App`), never from the stored preference. Light or
+  dark comes from the window's theme, not the page's, so `theme/windowChrome.ts`
+  pins it to the app preference; drop that and Mica goes dark behind a light UI.
+  The OSD, banner and mute indicator stay solid on purpose. See
+  `docs/janela-material.md`.
+- **Acrylic flyout/menu (`floatingAcrylic`, on by default): the window *is* the card.**
+  With no slack, a window a few pixels short makes the page scroll under the
+  pointer; `useFlyoutSizing` measures the viewport after every size request and
+  asks for the shortfall. Keep both faces on it.
+  The DWM backdrop fills the window rectangle and ignores CSS `border-radius`, so
+  `flyout::style_window` sizes nothing around the card: the backend sends
+  `flush: true`, the page drops its margin/shadow/border/fill and stops adding
+  the 16 px shadow allowance to the height it reports, and corners/shadow come
+  from DWM (`set_shadow`, `auxwin::round_corners`). No enter/exit animation in
+  this mode (the glass cannot follow the content); `dismiss` hides at once. The
+  window theme is pinned from the config on each open (`theme_preference`), and
+  handed back to the system when Acrylic goes off.
 - Window controls called from the webview (`minimize`, `toggleMaximize`,
   `close`, and `data-tauri-drag-region`) need explicit permissions —
   `core:default` does not include them. They live in

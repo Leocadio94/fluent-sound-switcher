@@ -225,6 +225,38 @@ pub fn apply_overlay_exstyle(window: &WebviewWindow) {
 #[cfg(not(windows))]
 pub fn apply_overlay_exstyle(_window: &WebviewWindow) {}
 
+/// Asks DWM for the Windows 11 rounded corners on an undecorated window. An
+/// Acrylic backdrop fills the whole window rectangle and ignores the page's
+/// `border-radius`, so the corners have to come from the system.
+#[cfg(windows)]
+pub fn round_corners(window: &WebviewWindow) {
+    use windows::Win32::Foundation::HWND;
+    use windows::Win32::Graphics::Dwm::{
+        DwmSetWindowAttribute, DWMWA_WINDOW_CORNER_PREFERENCE, DWMWCP_ROUND,
+        DWM_WINDOW_CORNER_PREFERENCE,
+    };
+    let Ok(raw) = window.hwnd() else {
+        log::warn!("no HWND for the aux window; cannot round its corners");
+        return;
+    };
+    let preference = DWMWCP_ROUND;
+    // SAFETY: the pointer and size describe a live DWM_WINDOW_CORNER_PREFERENCE.
+    let result = unsafe {
+        DwmSetWindowAttribute(
+            HWND(raw.0),
+            DWMWA_WINDOW_CORNER_PREFERENCE,
+            std::ptr::from_ref(&preference).cast(),
+            std::mem::size_of::<DWM_WINDOW_CORNER_PREFERENCE>() as u32,
+        )
+    };
+    if let Err(e) = result {
+        log::warn!("could not round the window corners: {e}");
+    }
+}
+
+#[cfg(not(windows))]
+pub fn round_corners(_window: &WebviewWindow) {}
+
 /// Re-inserts a window into the topmost band by calling `SetWindowPos(HWND_TOPMOST)`
 /// on its real HWND.
 ///

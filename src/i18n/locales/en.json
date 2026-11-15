@@ -43,7 +43,10 @@
   "flyout": {
     "empty": "Mark favorite devices (★) in the main window to quick-switch from here.",
     "mute": "Mute microphone",
-    "unmute": "Unmute microphone"
+    "unmute": "Unmute microphone",
+    "navigate": "Navigate",
+    "select": "Select",
+    "close": "Close"
   },
   "hotkeys": {
     "cycleOutput": "Cycle output",
@@ -150,7 +153,17 @@
     "titleBars": {
       "custom": "App",
       "native": "System"
-    }
+    },
+    "windowMaterial": "Window material",
+    "windowMaterialHint": "Mica tints the background with your wallpaper colour, subtly, and does not show what is behind it. Acrylic blurs what is behind the window. Main window only; on Windows 10 and with transparency effects turned off it stays solid.",
+    "windowMaterials": {
+      "mica": "Mica",
+      "micaAlt": "Mica Alt",
+      "acrylic": "Acrylic",
+      "solid": "Solid"
+    },
+    "floatingAcrylic": "Acrylic on the floating menus",
+    "floatingAcrylicHint": "Applies to the tray quick-switch and the right-click menu, the next time they open. Needs Windows 11 22H2 or newer. The volume OSD and the banners stay solid."
   },
   "general": {
     "logs": "Diagnostics",
