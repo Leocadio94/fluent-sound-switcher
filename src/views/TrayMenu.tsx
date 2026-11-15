@@ -23,6 +23,7 @@ import {
   trayMenuAction,
   type TrayMenuEntry,
 } from "../lib/tauri";
+import { acrylicTint } from "../theme/acrylicTint";
 
 const useStyles = makeStyles({
   card: {
@@ -36,7 +37,7 @@ const useStyles = makeStyles({
   // Acrylic: the window is the card; see Flyout.tsx.
   cardFlush: {
     margin: 0,
-    backgroundColor: "transparent",
+    backgroundColor: acrylicTint(tokens.colorNeutralBackground1),
     boxShadow: "none",
     border: "none",
     borderRadius: 0,

@@ -123,6 +123,7 @@ function Root({
         windowMaterial={material}
         onWindowMaterialChange={changeMaterial}
         translucent={appliedMaterial !== "solid"}
+        acrylic={appliedMaterial === "acrylic"}
       />
     </FluentProvider>
   );

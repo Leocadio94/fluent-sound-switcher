@@ -18,7 +18,13 @@ O volume na tela, o banner e o indicador de mudo continuam sólidos.
   e a Mica sai preta. Para ver a diferença, teste com um papel de parede estático
   e colorido.
 - **Mica Alt** é a mesma ideia, mais escura e com mais contraste.
-- **Acrílico** borra o que está atrás da janela, e esse sim se vê através.
+- **Acrílico** borra o que está atrás da janela, e esse sim se vê através. O
+  Acrílico do sistema não tem tinta ajustável, então por cima dele fica uma
+  camada do fundo do tema a 60% (`theme/acrylicTint.ts`, `ACRYLIC_TINT_PERCENT`),
+  que mantém o blur e dá contraste ao texto sobre fundo claro. Vale para a janela
+  principal em Acrílico e para os cards do flyout e do menu; a Mica não leva
+  camada, porque já é discreta. É um número só: mais alto escurece e borra
+  menos.
 - **Sólido** é o fundo opaco de sempre.
 
 ## Janela principal

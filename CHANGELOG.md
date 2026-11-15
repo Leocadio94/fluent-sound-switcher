@@ -18,6 +18,8 @@ the project follows phased iterations (see `README.md`).
   sistema desenha canto e sombra; sem animação de entrada e saída. O volume na
   tela, o banner e o indicador de mudo continuam sólidos. Ver
   `docs/janela-material.md`.
+- O Acrílico leva uma camada escura do tema por cima (60%), para o texto não se
+  perder sobre um fundo claro; o blur continua aparecendo.
 
 ### Changed
 

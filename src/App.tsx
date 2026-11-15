@@ -37,6 +37,7 @@ import {
   mainWindowReady,
   previewNotification,
 } from "./lib/tauri";
+import { acrylicTint } from "./theme/acrylicTint";
 import type { ThemePreference } from "./theme/useSystemTheme";
 import type { TitleBarStyle, WindowMaterial } from "./lib/config";
 
@@ -51,6 +52,11 @@ const useStyles = makeStyles({
   // Lets the window's Mica show through; the cards keep their own fill.
   rootTranslucent: {
     backgroundColor: "transparent",
+  },
+  // Acrylic blurs whatever is behind the window, so it needs a tint to keep the
+  // text readable over a bright wallpaper. Mica is already quiet and gets none.
+  rootAcrylic: {
+    backgroundColor: acrylicTint(tokens.colorNeutralBackground2),
   },
   header: {
     display: "flex",
@@ -96,6 +102,8 @@ interface AppProps {
   onWindowMaterialChange: (value: WindowMaterial) => void;
   /** The window really has a backdrop, so the page must not paint over it. */
   translucent: boolean;
+  /** The backdrop is Acrylic, which wants a tint over it. */
+  acrylic: boolean;
 }
 
 export default function App({
@@ -108,6 +116,7 @@ export default function App({
   windowMaterial,
   onWindowMaterialChange,
   translucent,
+  acrylic,
 }: AppProps) {
   const styles = useStyles();
   const { t } = useTranslation();
@@ -195,7 +204,11 @@ export default function App({
 
   return (
     <div
-      className={mergeClasses(styles.root, translucent && styles.rootTranslucent)}
+      className={mergeClasses(
+        styles.root,
+        translucent && styles.rootTranslucent,
+        acrylic && styles.rootAcrylic,
+      )}
     >
       {/* Windows draws the caption itself in "native" mode. */}
       {titleBarStyle === "custom" && (

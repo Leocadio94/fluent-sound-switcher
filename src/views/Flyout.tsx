@@ -23,6 +23,7 @@ import { useVolume } from "../hooks/useVolume";
 import { useTauriEvent } from "../hooks/useTauriEvent";
 import { useVolumeOsd } from "../hooks/useVolumeOsd";
 import { closeFlyout, setFlyoutSize, type AudioDevice } from "../lib/tauri";
+import { acrylicTint } from "../theme/acrylicTint";
 
 const useStyles = makeStyles({
   card: {
@@ -39,7 +40,7 @@ const useStyles = makeStyles({
   // shadow, so the page keeps none of its own.
   cardFlush: {
     margin: 0,
-    backgroundColor: "transparent",
+    backgroundColor: acrylicTint(tokens.colorNeutralBackground1),
     boxShadow: "none",
     borderRadius: 0,
   },
