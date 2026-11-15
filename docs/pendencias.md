@@ -27,10 +27,9 @@ de saída (0.8.0).
   `DeviceRow`, ações que aparecem no hover e `Collapse` animado no painel de
   volume. Os cards de dispositivo seguem opacos (`colorNeutralBackground1`) sobre
   a Mica; ver se leem bem antes de trocar o token.
-- **Acrílico no flyout e no menu da bandeja**, feito como opção experimental
-  (desligada). A janela vira o card e o DWM desenha canto e sombra; ver
-  `janela-material.md`. Falta ver na tela. Se ficar bom, vale ligar por padrão;
-  se não, é só deixar desligado ou remover.
+- **Acrílico no flyout e no menu da bandeja**, feito e ligado por padrão (visto na
+  tela pelo desenvolvedor). A janela vira o card e o DWM desenha canto e sombra;
+  ver `janela-material.md`.
 
 ## Distribuição
 
@@ -54,8 +53,16 @@ Nada disto foi visto renderizado por quem escreveu o código.
   na primeira abertura depois de iniciar o app, que pode não animar.
 - **Atualizador com o plugin de instância única**: o relançamento depois de
   atualizar não foi testado.
-- **Acrílico no flyout e no menu da bandeja** (Configurações → Geral, ligar e
-  abrir de novo):
+- **Menu de clique direito e troca rápida, depois do ajuste de altura:**
+  - o menu deixou de "sambar" ao passar o mouse do primeiro ao último item (se
+    ainda sambar, a janela ficou curta demais para o `useFlyoutSizing` cobrir: a
+    medida certa precisa ser feita no aparelho);
+  - os itens do menu não têm fundo próprio, só no hover e no foco;
+  - setas, Home/End, Enter e Esc na troca rápida, com e sem o slider de volume;
+  - o rodapé cabe nos 300 px, e os atalhos ao lado de "Saída", "Entrada" e do
+    mutar não quebram a linha com atalhos longos;
+  - a pílula do aparelho em uso, na lista e na troca rápida.
+- **Acrílico no flyout e no menu da bandeja**, o que ainda vale conferir:
   - o vidro aparece e a janela tem o tamanho do conteúdo, sem faixa transparente
     em volta nem corte embaixo;
   - cantos arredondados e sombra do sistema, e a borda de 1 px do DWM;

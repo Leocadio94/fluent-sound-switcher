@@ -8,23 +8,38 @@ the project follows phased iterations (see `README.md`).
 
 ### Added
 
-- **Material da janela principal** (Configurações → Geral): Mica (padrão), Mica
-  Alt, Acrílico ou Sólido. A Mica tinge o fundo com a cor do papel de parede e é
+- **Material da janela principal** (Configurações → Geral): Acrílico (padrão),
+  Mica, Mica Alt ou Sólido. A Mica tinge o fundo com a cor do papel de parede e é
   sutil; o Acrílico borra o que está atrás da janela. O Acrílico exige o Windows
   11 22H2; antes disso vira Mica, e no Windows 10 tudo fica sólido. Com os
   efeitos de transparência do Windows desligados o sistema pinta uma cor sólida.
-- **Acrílico nos menus flutuantes** (experimental, desligado): a troca rápida da
+- **Acrílico nos menus flutuantes** (ligado por padrão): a troca rápida da
   bandeja e o menu de clique direito. A janela passa a ter o tamanho do card e o
   sistema desenha canto e sombra; sem animação de entrada e saída. O volume na
   tela, o banner e o indicador de mudo continuam sólidos. Ver
   `docs/janela-material.md`.
 - O Acrílico leva uma camada escura do tema por cima (60%), para o texto não se
   perder sobre um fundo claro; o blur continua aparecendo.
+- **Troca rápida pelo teclado:** as setas (e Home/End) andam entre os aparelhos e
+  o botão de mutar, Enter escolhe e Esc fecha. Um rodapé lembra as teclas.
+- **Atalhos à vista:** os cabeçalhos "Saída" e "Entrada" mostram o atalho de
+  ciclar, e o botão de mutar e o item do menu da bandeja mostram o de mutar.
 
 ### Changed
 
 - O tema da janela (e, com ele, a barra de título do sistema) agora segue a
   preferência de tema do app, e não só a do Windows.
+- **O aparelho em uso** ganha uma pílula à esquerda e um preenchimento sutil, no
+  lugar do contorno colorido, na lista e na troca rápida.
+- **Menu de clique direito sem fundo em cada item** sobre o Acrílico, como a
+  lista de aparelhos; só o hover e o foco desenham preenchimento.
+
+### Fixed
+
+- **O menu de clique direito "sambava" ao passar o mouse:** com o Acrílico a
+  janela é o próprio card, sem folga, e uns pixels de diferença entre o tamanho
+  pedido e o obtido faziam a página rolar sob o ponteiro. O card agora mede o
+  viewport depois de pedir o tamanho e pede a diferença.
 
 ## [0.8.0] - 2026-11-14
 

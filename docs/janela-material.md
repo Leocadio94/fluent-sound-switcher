@@ -2,10 +2,13 @@
 
 Configurações → Geral tem duas opções:
 
-- **Material da janela** (só a janela principal): **Mica** (padrão), **Mica Alt**,
-  **Acrílico** ou **Sólido**.
-- **Acrílico nos menus flutuantes** (experimental, desligado): a troca rápida da
+- **Material da janela** (só a janela principal): **Acrílico** (padrão), **Mica**,
+  **Mica Alt** ou **Sólido**.
+- **Acrílico nos menus flutuantes** (ligado por padrão): a troca rápida da
   bandeja e o menu de clique direito.
+
+O padrão é o Acrílico nos dois. Onde o Windows não o desenha, o backend rebaixa
+sozinho (ver `material::resolve`), então o padrão é seguro em qualquer versão.
 
 O volume na tela, o banner e o indicador de mudo continuam sólidos.
 
@@ -66,7 +69,18 @@ CSS. Por isso, com o Acrílico ligado, **a janela passa a ser o card**:
 - sem animação de entrada nem de saída: o backdrop não anda nem some junto com o
   conteúdo, e animar só o conteúdo deixaria um vidro vazio por 160 ms. `dismiss`
   esconde na hora quando o Acrílico está aplicado;
-- o aviso de build vale aqui também: abaixo da 22621 o flyout segue sólido.
+- o aviso de build vale aqui também: abaixo da 22621 o flyout segue sólido;
+- sem folga, qualquer diferença entre a altura pedida e a obtida faz a página
+  rolar sob o ponteiro (o menu "sambava" ao passar o mouse). Uma janela sem
+  decoração com sombra tem deslocamentos de moldura escondidos, e o `tao` os soma
+  ao tamanho na hora do pedido (`set_inner_size`). A causa exata não foi medida;
+  `hooks/useFlyoutSizing.ts` mede o viewport depois de cada pedido e pede a
+  diferença (até 48 px, 3 tentativas), o que cobre qualquer causa.
+
+Dentro do card, na troca rápida: setas, Home/End, Enter e Esc (o primeiro
+comando de seta é quem dá o foco, porque focar ao abrir desenharia um anel num
+clique de mouse), rodapé com as teclas e o atalho global de cada ação ao lado do
+cabeçalho e do botão de mutar (`hooks/useHotkeyHints.ts`, relido a cada abertura).
 
 ## Claro e escuro
 

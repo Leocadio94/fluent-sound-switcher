@@ -301,7 +301,10 @@ cargo test --manifest-path src-tauri/Cargo.toml
   pins it to the app preference; drop that and Mica goes dark behind a light UI.
   The OSD, banner and mute indicator stay solid on purpose. See
   `docs/janela-material.md`.
-- **Acrylic flyout/menu (`floatingAcrylic`, opt-in): the window *is* the card.**
+- **Acrylic flyout/menu (`floatingAcrylic`, on by default): the window *is* the card.**
+  With no slack, a window a few pixels short makes the page scroll under the
+  pointer; `useFlyoutSizing` measures the viewport after every size request and
+  asks for the shortfall. Keep both faces on it.
   The DWM backdrop fills the window rectangle and ignores CSS `border-radius`, so
   `flyout::style_window` sizes nothing around the card: the backend sends
   `flush: true`, the page drops its margin/shadow/border/fill and stops adding
