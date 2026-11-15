@@ -19,7 +19,9 @@ use crate::tray::MenuEntry;
 pub const FLYOUT_LABEL: &str = "flyout";
 
 const WIDTH: f64 = 300.0;
-const MENU_WIDTH: f64 = 260.0;
+/// Wide enough for "Mutar/desmutar microfone" beside the shortcut chip on one
+/// line; at 260 it wrapped.
+const MENU_WIDTH: f64 = 320.0;
 const MARGIN: f64 = 12.0;
 const DEFAULT_HEIGHT: f64 = 220.0;
 const MIN_HEIGHT: f64 = 64.0;

@@ -11,12 +11,12 @@ Feito: **A** (favoritos estáveis, 0.7.1), a parte do **C** que cobre o volume n
 tela e o banner no estilo do Windows 11, a fonte Segoe UI Variable e a animação
 de saída (0.8.0).
 
-- **D, flyout e menu da bandeja mais próximos do nativo.** O flyout de troca
-  rápida tem 300 px e corta o nome de alguns aparelhos: precisa de mais largura
-  (`WIDTH` em `flyout.rs`; o menu de clique direito tem `MENU_WIDTH` próprio e
-  pode pedir o mesmo). Junto: pílula de seleção à esquerda no lugar do check,
-  tipografia e cabeçalhos de seção como no painel de som do Windows, e o botão
-  de mutar o microfone virando item de menu Fluent.
+- **D, flyout e menu da bandeja mais próximos do nativo.** Feito: pílula de
+  seleção, cabeçalhos de seção com o atalho, teclado e a largura do menu de
+  clique direito (`MENU_WIDTH`, 320 px). Falta: o flyout de troca rápida tem 300
+  px (`WIDTH` em `flyout.rs`) e ainda corta o nome de alguns aparelhos, como
+  "Headset Wireless (Harmony WHG…"; e o botão de mutar o microfone virar item de
+  menu Fluent.
 - **B, contraste do accent.** Hoje o Fluent web usa `brand[100]`/`brand[70]` e um
   accent escuro perde contraste (ícone e texto). Mapear como o WinUI (escuro:
   Light2 no preenchimento e Light3 no texto; claro: Dark1 e Dark2), com uma guarda

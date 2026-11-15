@@ -36,6 +36,8 @@ the project follows phased iterations (see `README.md`).
 
 ### Fixed
 
+- O menu de clique direito ficou mais largo (320 px): com o atalho ao lado, o
+  item "Mutar/desmutar microfone" quebrava em duas linhas.
 - **O menu de clique direito "sambava" ao passar o mouse:** com o Acrílico a
   janela é o próprio card, sem folga, e uns pixels de diferença entre o tamanho
   pedido e o obtido faziam a página rolar sob o ponteiro. O card agora mede o
