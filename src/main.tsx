@@ -10,6 +10,7 @@ import Banner from "./views/Banner";
 import { useSystemTheme, type ThemePreference } from "./theme/useSystemTheme";
 import { useAccentTheme } from "./theme/useAccentTheme";
 import {
+  DEFAULT_WINDOW_MATERIAL,
   loadLanguage,
   loadTheme,
   loadTitleBarStyle,
@@ -195,7 +196,7 @@ async function bootstrap() {
     loadTheme().catch(() => null),
     loadUseSystemAccent().catch(() => true),
     loadTitleBarStyle().catch(() => "custom" as TitleBarStyle),
-    loadWindowMaterial().catch(() => "mica" as WindowMaterial),
+    loadWindowMaterial().catch(() => DEFAULT_WINDOW_MATERIAL),
   ]);
 
   if (language && language !== i18n.language) {

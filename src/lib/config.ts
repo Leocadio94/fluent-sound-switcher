@@ -206,7 +206,8 @@ function getStore(): Promise<Store> {
         [OVERLAY_MONITOR_KEY]: DEFAULT_MONITOR_PREFERENCE,
         [SYSTEM_ACCENT_KEY]: true,
         [TITLE_BAR_KEY]: "custom",
-        [WINDOW_MATERIAL_KEY]: "mica",
+        [WINDOW_MATERIAL_KEY]: DEFAULT_WINDOW_MATERIAL,
+        [FLOATING_ACRYLIC_KEY]: true,
         [VOLUME_OSD_KEY]: DEFAULT_VOLUME_OSD,
       },
     }).then(async (store) => {
@@ -555,9 +556,16 @@ export async function saveTitleBarStyle(value: TitleBarStyle): Promise<void> {
 export const WINDOW_MATERIALS = ["mica", "micaAlt", "acrylic", "solid"] as const;
 export type WindowMaterial = (typeof WINDOW_MATERIALS)[number];
 
+/** Acrylic: it is what the Windows 11 surfaces use, and the backend steps it down where unsupported. */
+export const DEFAULT_WINDOW_MATERIAL: WindowMaterial = "acrylic";
+
 export async function loadWindowMaterial(): Promise<WindowMaterial> {
   const store = await getStore();
-  return oneOf(await store.get(WINDOW_MATERIAL_KEY), WINDOW_MATERIALS, "mica");
+  return oneOf(
+    await store.get(WINDOW_MATERIAL_KEY),
+    WINDOW_MATERIALS,
+    DEFAULT_WINDOW_MATERIAL,
+  );
 }
 
 export async function saveWindowMaterial(value: WindowMaterial): Promise<void> {
@@ -566,13 +574,14 @@ export async function saveWindowMaterial(value: WindowMaterial): Promise<void> {
 }
 
 /**
- * Acrylic on the quick-switch flyout and the tray menu. Experimental, so off by
- * default. The backend takes the value from a command (the store writes
- * asynchronously) and falls back to this key at startup.
+ * Acrylic on the quick-switch flyout and the tray menu, on by default (the
+ * backend keeps them solid below Windows 11 22H2). The backend takes the value
+ * from a command (the store writes asynchronously) and falls back to this key
+ * at startup.
  */
 export async function loadFloatingAcrylic(): Promise<boolean> {
   const store = await getStore();
-  return boolOr(await store.get(FLOATING_ACRYLIC_KEY), false);
+  return boolOr(await store.get(FLOATING_ACRYLIC_KEY), true);
 }
 
 export async function saveFloatingAcrylic(value: boolean): Promise<void> {

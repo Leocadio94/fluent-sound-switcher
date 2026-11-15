@@ -404,13 +404,13 @@ pub fn theme_preference(app: &AppHandle) -> String {
         .to_string()
 }
 
-/// Whether the quick-switch flyout and the tray menu use Acrylic. Experimental,
-/// so off by default.
+/// Whether the quick-switch flyout and the tray menu use Acrylic. On by default;
+/// `flyout::acrylic_active` still keeps them solid where Windows cannot draw it.
 pub fn floating_acrylic(app: &AppHandle) -> bool {
     read(app)
         .get("floatingAcrylic")
         .and_then(|v| v.as_bool())
-        .unwrap_or(false)
+        .unwrap_or(true)
 }
 
 /// UI language for the backend-owned strings (tray menu, notifications).

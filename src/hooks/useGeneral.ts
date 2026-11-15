@@ -58,7 +58,7 @@ export function useGeneral(): UseGeneral {
     DEFAULT_MONITOR_PREFERENCE,
   );
   const [bluetoothAutoDisconnect, setBtAutoDisconnectState] = useState(false);
-  const [floatingAcrylic, setFloatingAcrylicState] = useState(false);
+  const [floatingAcrylic, setFloatingAcrylicState] = useState(true);
 
   useEffect(() => {
     void getAutostart()
