@@ -13,6 +13,7 @@ import MissingFavoriteRow from "../components/MissingFavoriteRow";
 import type { DeviceVolume } from "../hooks/useVolume";
 import type { MissingFavorite } from "../lib/reconcileFavorites";
 import type { AudioDevice, BtDevice, DeviceDirection } from "../lib/tauri";
+import { visibleDevices } from "../lib/visibleDevices";
 
 const useStyles = makeStyles({
   section: {
@@ -152,6 +153,8 @@ interface DeviceListProps extends VolumeProps {
   isFavorite: (direction: DeviceDirection, id: string) => boolean;
   onToggleFavorite: (direction: DeviceDirection, id: string) => void;
   showOnlyFavorites: boolean;
+  /** Hide disconnected devices even when they are favorites. */
+  hideUnavailable: boolean;
   /** Favorites whose device is not listed, per direction. */
   missing: Record<DeviceDirection, MissingFavorite[]>;
   onRemoveMissing: (direction: DeviceDirection, ids: string[]) => void;
@@ -167,6 +170,7 @@ export default function DeviceList({
   isFavorite,
   onToggleFavorite,
   showOnlyFavorites,
+  hideUnavailable,
   missing,
   onRemoveMissing,
   btDevices,
@@ -177,14 +181,9 @@ export default function DeviceList({
   onToggleMute,
   showSliders,
 }: DeviceListProps) {
-  // Unavailable devices are kept only when they are favorites: that is the
-  // case worth showing, since a sleeping headset would otherwise drop out of
-  // the list and out of the cycle order. Every other disconnected endpoint
-  // Windows remembers would just be clutter.
-  const visible = devices.filter((device) => {
-    const favorite = isFavorite(device.direction, device.id);
-    if (showOnlyFavorites && !favorite) return false;
-    return device.state === "active" || favorite;
+  const visible = visibleDevices(devices, isFavorite, {
+    onlyFavorites: showOnlyFavorites,
+    hideUnavailable,
   });
   const outputs = visible.filter((d) => d.direction === "output");
   const inputs = visible.filter((d) => d.direction === "input");

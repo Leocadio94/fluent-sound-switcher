@@ -3,8 +3,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   EMPTY_FAVORITES,
   loadFavorites,
+  loadHideUnavailable,
   loadShowOnlyFavorites,
   saveFavorites,
+  saveHideUnavailable,
   saveShowOnlyFavorites,
   type Favorites,
 } from "../lib/config";
@@ -24,10 +26,12 @@ import { useTauriEvent } from "./useTauriEvent";
 interface UseFavorites {
   favorites: Favorites;
   showOnlyFavorites: boolean;
+  hideUnavailable: boolean;
   isFavorite: (direction: DeviceDirection, id: string) => boolean;
   toggleFavorite: (direction: DeviceDirection, id: string) => void;
   removeFavorites: (direction: DeviceDirection, ids: string[]) => void;
   setShowOnlyFavorites: (value: boolean) => void;
+  setHideUnavailable: (value: boolean) => void;
 }
 
 /**
@@ -42,6 +46,7 @@ interface UseFavorites {
 export function useFavorites(devices?: AudioDevice[]): UseFavorites {
   const [favorites, setFavorites] = useState<Favorites>(EMPTY_FAVORITES);
   const [showOnlyFavorites, setShowOnlyFavoritesState] = useState(false);
+  const [hideUnavailable, setHideUnavailableState] = useState(false);
   const latest = useRef(favorites);
   // Nothing is written until the stored favorites were read: a write from the
   // empty initial state would wipe the other direction.
@@ -86,6 +91,7 @@ export function useFavorites(devices?: AudioDevice[]): UseFavorites {
   const reload = useCallback(() => {
     void read();
     void loadShowOnlyFavorites().then(setShowOnlyFavoritesState);
+    void loadHideUnavailable().then(setHideUnavailableState);
   }, [read]);
 
   useEffect(() => {
@@ -173,12 +179,19 @@ export function useFavorites(devices?: AudioDevice[]): UseFavorites {
     void saveShowOnlyFavorites(value);
   }, []);
 
+  const setHideUnavailable = useCallback((value: boolean) => {
+    setHideUnavailableState(value);
+    void saveHideUnavailable(value);
+  }, []);
+
   return {
     favorites,
     showOnlyFavorites,
+    hideUnavailable,
     isFavorite,
     toggleFavorite,
     removeFavorites,
     setShowOnlyFavorites,
+    setHideUnavailable,
   };
 }

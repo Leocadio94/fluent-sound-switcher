@@ -60,6 +60,7 @@ top, every time.
 ## ✨ Features
 
 - 🔁 **Switch** output/input devices from a curated favorites list (you choose which show up).
+- 🙈 **Hide disconnected devices** *(optional)* — drops disconnected devices from the list, favorites included (Settings → General). Off by default: a sleeping headset normally keeps its place.
 - 🔊 **Per-device volume** — a slider on the device you are using, and on any other at a click. Mute outputs as well as the mic.
 - ⌨️ **Global hotkeys** — cycle output, cycle input, toggle mic mute, volume up/down, toggle output mute. Fully rebindable, media keys included.
 - 🎮 **Gamepad shortcuts** *(optional)* — hold **LB + RB** on an XInput controller and press a button for the same actions, mid-game. Off by default (Settings → Hotkeys → Gamepad).

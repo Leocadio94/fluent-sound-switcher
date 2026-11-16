@@ -123,6 +123,8 @@
     },
     "autostart": "Start with Windows",
     "startMinimized": "Start minimized (to tray)",
+    "hideUnavailable": "Hide disconnected devices",
+    "hideUnavailableHint": "Hides disconnected devices from the list, favorites included. Connect a Bluetooth device from the title bar menu.",
     "showDeviceIcon": "Device icon in tray",
     "showDeviceIconHint": "Second icon showing the current output (the microphone stays primary).",
     "trayClickMic": "Left-click action on the microphone icon",

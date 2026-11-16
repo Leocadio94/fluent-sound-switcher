@@ -36,6 +36,8 @@ interface GeneralTabProps {
     key: K,
     value: AutoSwitchConfig[K],
   ) => void;
+  hideUnavailable: boolean;
+  onHideUnavailableChange: (value: boolean) => void;
 }
 
 export default function GeneralTab({
@@ -49,6 +51,8 @@ export default function GeneralTab({
   onWindowMaterialChange,
   autoSwitch,
   onAutoSwitchChange,
+  hideUnavailable,
+  onHideUnavailableChange,
 }: GeneralTabProps) {
   const { t, i18n } = useTranslation();
   const general = useGeneral();
@@ -161,6 +165,16 @@ export default function GeneralTab({
           disabled={!general.autostart}
           checked={general.startMinimized}
           onChange={(_, d) => general.setStartMinimized(d.checked)}
+        />
+      </SettingRow>
+
+      <SettingRow
+        label={t("settings.hideUnavailable")}
+        hint={t("settings.hideUnavailableHint")}
+      >
+        <Switch
+          checked={hideUnavailable}
+          onChange={(_, d) => onHideUnavailableChange(d.checked)}
         />
       </SettingRow>
 

@@ -123,6 +123,8 @@
     },
     "autostart": "Iniciar com o Windows",
     "startMinimized": "Iniciar minimizado (na bandeja)",
+    "hideUnavailable": "Ocultar dispositivos desconectados",
+    "hideUnavailableHint": "Esconde da lista os dispositivos desconectados, mesmo os favoritos. Conecte um Bluetooth pelo menu da barra de título.",
     "showDeviceIcon": "Ícone do dispositivo na bandeja",
     "showDeviceIconHint": "Segundo ícone mostrando a saída atual (o microfone continua sendo o principal).",
     "trayClickMic": "Ação do clique no ícone do microfone",
