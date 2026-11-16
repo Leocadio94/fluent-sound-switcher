@@ -130,6 +130,8 @@ export default function App({
     removeFavorites,
     showOnlyFavorites,
     setShowOnlyFavorites,
+    hideUnavailable,
+    setHideUnavailable,
   } = useFavorites(devices);
   const missing = useMemo(
     () => ({
@@ -250,6 +252,8 @@ export default function App({
         onAutoSwitchChange={setAutoSwitchField}
         volumeOsd={osd}
         onVolumeOsdChange={setOsdField}
+        hideUnavailable={hideUnavailable}
+        onHideUnavailableChange={setHideUnavailable}
       />
 
       <main className={styles.content}>
@@ -325,6 +329,7 @@ export default function App({
               isFavorite={isFavorite}
               onToggleFavorite={toggleFavorite}
               showOnlyFavorites={showOnlyFavorites}
+              hideUnavailable={hideUnavailable}
               missing={missing}
               onRemoveMissing={removeFavorites}
               btDevices={bluetooth.devices}

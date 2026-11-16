@@ -152,6 +152,7 @@ export const DEFAULT_AUTO_SWITCH: AutoSwitchConfig = {
 const STORE_FILE = "config.json";
 const FAVORITES_KEY = "favorites";
 const ONLY_FAVORITES_KEY = "showOnlyFavorites";
+const HIDE_UNAVAILABLE_KEY = "hideUnavailableDevices";
 const HOTKEYS_KEY = "hotkeys";
 const GAMEPAD_HOTKEYS_KEY = "gamepadHotkeys";
 const MUTE_INDICATOR_KEY = "muteIndicator";
@@ -196,6 +197,7 @@ function getStore(): Promise<Store> {
       defaults: {
         [FAVORITES_KEY]: EMPTY_FAVORITES,
         [ONLY_FAVORITES_KEY]: false,
+        [HIDE_UNAVAILABLE_KEY]: false,
         [HOTKEYS_KEY]: DEFAULT_HOTKEYS,
         [GAMEPAD_HOTKEYS_KEY]: DEFAULT_GAMEPAD_HOTKEYS,
         [MUTE_INDICATOR_KEY]: DEFAULT_MUTE_INDICATOR,
@@ -246,6 +248,17 @@ export async function loadShowOnlyFavorites(): Promise<boolean> {
 export async function saveShowOnlyFavorites(value: boolean): Promise<void> {
   const store = await getStore();
   await store.set(ONLY_FAVORITES_KEY, value);
+}
+
+/** Whether the main list hides disconnected devices, favorites included. */
+export async function loadHideUnavailable(): Promise<boolean> {
+  const store = await getStore();
+  return boolOr(await store.get(HIDE_UNAVAILABLE_KEY), false);
+}
+
+export async function saveHideUnavailable(value: boolean): Promise<void> {
+  const store = await getStore();
+  await store.set(HIDE_UNAVAILABLE_KEY, value);
 }
 
 export async function loadHotkeys(): Promise<Hotkeys> {

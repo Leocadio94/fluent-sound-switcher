@@ -101,6 +101,8 @@ interface SettingsDialogProps {
     key: K,
     value: VolumeOsd[K],
   ) => void;
+  hideUnavailable: boolean;
+  onHideUnavailableChange: (value: boolean) => void;
 }
 
 /**
@@ -145,6 +147,8 @@ export default function SettingsDialog(props: SettingsDialogProps) {
                 onWindowMaterialChange={props.onWindowMaterialChange}
                 autoSwitch={props.autoSwitch}
                 onAutoSwitchChange={props.onAutoSwitchChange}
+                hideUnavailable={props.hideUnavailable}
+                onHideUnavailableChange={props.onHideUnavailableChange}
               />
             )}
             {tab === "hotkeys" && (

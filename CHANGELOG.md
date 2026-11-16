@@ -4,6 +4,16 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows phased iterations (see `README.md`).
 
+## [Unreleased]
+
+### Added
+
+- **Ocultar dispositivos desconectados** (Configurações → Geral): esconde da lista
+  principal os dispositivos desconectados, inclusive os favoritos. Antes um
+  favorito desconectado sempre aparecia, e com "Somente favoritos" ligado a lista
+  se enchia de fones Bluetooth "Desconectado". Desligado por padrão; o Bluetooth
+  continua acessível pelo menu da barra de título.
+
 ## [0.9.0] - 2026-11-15
 
 ### Added

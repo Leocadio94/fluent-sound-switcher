@@ -333,8 +333,9 @@ cargo test --manifest-path src-tauri/Cargo.toml
 - `list_devices` returns unplugged and disabled endpoints as well as active
   ones (`state` field), so a sleeping headset keeps its place in the list and
   the cycle order. Anything that acts on a device — switching, cycling, volume —
-  must check `is_available()` first; the UI shows an unavailable device only
-  when it is a favourite.
+  must check `is_available()` first; the main list shows an unavailable device
+  only when it is a favourite and `hideUnavailableDevices` is off
+  (`lib/visibleDevices.ts`). The flyout always hides them.
 - A failing `GetState()` maps to `unplugged`, **never** to `active`: during
   topology churn (Bluetooth handshakes) stale COM objects fail that call, and
   treating the failure as active rendered ghost rows — a disabled HDMI output
