@@ -91,7 +91,9 @@ export function useFavorites(devices?: AudioDevice[]): UseFavorites {
   const reload = useCallback(() => {
     void read();
     void loadShowOnlyFavorites().then(setShowOnlyFavoritesState);
-    void loadHideUnavailable().then(setHideUnavailableState);
+    void loadHideUnavailable()
+      .then(setHideUnavailableState)
+      .catch((e) => console.error("could not load hideUnavailable", e));
   }, [read]);
 
   useEffect(() => {
@@ -181,7 +183,9 @@ export function useFavorites(devices?: AudioDevice[]): UseFavorites {
 
   const setHideUnavailable = useCallback((value: boolean) => {
     setHideUnavailableState(value);
-    void saveHideUnavailable(value);
+    void saveHideUnavailable(value).catch((e) =>
+      console.error("could not save hideUnavailable", e),
+    );
   }, []);
 
   return {
